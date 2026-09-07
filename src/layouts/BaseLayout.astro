@@ -48,13 +48,13 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
     </script>
   </head>
   <body data-accent={accent}>
-    <nav class="sitenav" transition:persist>
+    <nav class="sitenav">
       <div class="sitenav-inner">
         <a class="brand" href="/">shopify dev handbook</a>
         <div class="sitenav-links">
           {navLinks.map((link) => {
             const linkPath = link.href.replace(/\/+$/, '') || '/';
-            const isCurrent = linkPath === path;
+            const isCurrent = path === linkPath || (linkPath !== '/' && path.startsWith(linkPath + '/'));
             return (
               <a href={link.href} aria-current={isCurrent ? 'page' : undefined}>
                 {link.label}
@@ -76,16 +76,37 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
     <script>
       // Theme toggle — delegated on document so it keeps working across
       // ClientRouter (View Transitions) page swaps.
-      function setTheme(theme: string) {
+      function getPreferredTheme(): string {
+        try {
+          const stored = localStorage.getItem('theme');
+          if (stored) return stored;
+        } catch (e) {}
+        return window.matchMedia('(prefers-color-scheme: light)').matches ? 'warm' : 'dark';
+      }
+
+      function applyTheme(theme: string) {
         if (theme === 'warm') {
           document.documentElement.setAttribute('data-theme', 'warm');
         } else {
           document.documentElement.removeAttribute('data-theme');
         }
+      }
+
+      function setTheme(theme: string) {
+        applyTheme(theme);
         try {
           localStorage.setItem('theme', theme);
         } catch (e) {}
       }
+
+      // Astro's ClientRouter resets <html>'s attributes to match the
+      // incoming page's raw (server-rendered) markup on every SPA
+      // navigation — which has no data-theme, since it's only ever set
+      // client-side. Without this, warm mode silently reverts to dark
+      // on the very next link click. Re-apply right after every swap.
+      document.addEventListener('astro:after-swap', () => {
+        applyTheme(getPreferredTheme());
+      });
 
       document.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;

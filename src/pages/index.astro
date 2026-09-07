@@ -1,14 +1,81 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+
+const steps = [
+  {
+    n: 0,
+    title: 'Set up your tools & accounts',
+    accent: 'gold',
+    body: "Before any code: install Node.js and the Shopify CLI, and get two free Shopify-side accounts — a Partner account and a development store. The Roadmap's setup checklist walks through what each one is and why you need it. Do this once, first.",
+    cta: { href: '/roadmap#setup', label: 'Do the setup checklist →' },
+    skip: null,
+  },
+  {
+    n: 1,
+    title: 'Learn how Shopify apps actually work',
+    accent: 'violet',
+    body: "Before touching code, understand what you're building. What is a Shopify app, really? What happens when a merchant clicks Install? What's a scope, a webhook, an access token? This is a short conceptual course — no code, no assumed backend knowledge — and every other page on this site assumes you've read it.",
+    cta: { href: '/crash-courses/how-shopify-apps-work', label: 'Start the platform course →' },
+    skip: null,
+  },
+  {
+    n: 2,
+    title: 'Fill in whatever web-dev pieces you\'re missing',
+    accent: 'purple',
+    body: "Shopify's current app template runs on React, TypeScript, React Router, GraphQL, and Prisma. If any of those are new to you, a short crash course covers each one from zero — assuming only HTML, CSS, and plain JavaScript.",
+    cta: { href: '/crash-courses', label: 'Browse the toolkit courses →' },
+    skip: 'Already comfortable with React and TypeScript? Skip straight to Step 3.',
+  },
+  {
+    n: 3,
+    title: 'Build a real app, start to finish',
+    accent: 'blue',
+    body: 'One guided, straight-line build: scaffold the official app template, tour every generated file so nothing feels like a black box, build one small real feature end to end, and deploy it — free the whole way. This is where Steps 1 and 2 stop being theory.',
+    cta: { href: '/getting-started', label: 'Build your first app →' },
+    skip: null,
+  },
+  {
+    n: 4,
+    title: 'Go deeper with the full curriculum',
+    accent: 'gold',
+    body: "Once you've built something and have a feel for what you don't know yet, come back here. The Roadmap is the full module-by-module reference — auth, webhooks, billing, shipping, deployment — plus a backend-fundamentals track and a toolchain/config-literacy track underneath it all.",
+    cta: { href: '/roadmap', label: 'Open the full Roadmap →' },
+    skip: "You don't need to read it front to back — jump to whichever module you need.",
+  },
+  {
+    n: 5,
+    title: 'Reach beyond the admin app',
+    accent: 'green',
+    body: "Your app's own pages are only part of the platform. Theme app extensions, Admin UI extensions, checkout & customer account UI extensions, and Shopify Functions are how you reach the storefront, checkout, and Admin's own surfaces.",
+    cta: { href: '/extensions', label: 'Explore extensions →' },
+    skip: null,
+  },
+  {
+    n: 6,
+    title: 'Keep it current',
+    accent: 'orange',
+    body: "Shopify changes its recommended stack more often than most platforms — templates, API versions, CLI behavior. Skim this before starting a new feature, or whenever something here stops matching what you see in your own project.",
+    cta: { href: '/changelog', label: "See what's new →" },
+    skip: null,
+  },
+];
+
+const quickLinks = [
+  { href: '/roadmap', label: 'Roadmap' },
+  { href: '/getting-started', label: 'Getting Started' },
+  { href: '/crash-courses', label: 'Crash Courses' },
+  { href: '/extensions', label: 'Extensions' },
+  { href: '/changelog', label: 'Changelog' },
+];
 ---
 <BaseLayout
   title="Shopify Dev Handbook"
-  description="Learn Shopify app and extension development from the ground up — the curriculum, the hands-on build, the extension surfaces, and what's actually changed recently."
+  description="A step-by-step path into Shopify app development for people who've never built one before — from what a Shopify app even is, through building and deploying a real one, to reaching the storefront and checkout."
   accent="gold"
 >
   <div class="hero">
     <h1>Shopify Dev Handbook</h1>
-    <p class="lede">Learn Shopify app and extension development from the ground up — the curriculum, the hands-on build, the extension surfaces, and what's actually changed recently — in one place.</p>
+    <p class="lede">The official docs are a great reference — once you know what you're looking for. This site is the part before that: a step-by-step path that assumes nothing, starting from "what is a Shopify app?" and ending with a real, deployed one.</p>
     <p class="free-note">Every tool, account, and resource linked across this site has a genuine free tier.</p>
   </div>
 
@@ -21,44 +88,29 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <span class="chip">See full details on the <a href="/changelog" class="changelog-link">Changelog →</a></span>
   </div>
 
-  <div class="grid">
-    <a class="pagecard card-roadmap" href="/roadmap">
-      <div class="eyebrow">Curriculum</div>
-      <h2>Learning Roadmap</h2>
-      <p>The structured, module-by-module curriculum: React → TypeScript → GraphQL → the app template → auth → Prisma → webhooks/billing → shipping, plus a full backend-fundamentals track and a toolchain/config-literacy track (package.json, tsconfig, JSDoc, build tools, debugging).</p>
-      <div class="go">Start learning →</div>
-    </a>
-
-    <a class="pagecard card-start" href="/getting-started">
-      <div class="eyebrow">Hands-on tutorial</div>
-      <h2>Your First App</h2>
-      <p>One straight walkthrough: <code>shopify app init</code>, a guided tour of every generated file, building a small real feature end to end, and deploying it for free.</p>
-      <div class="go">Build something →</div>
-    </a>
-
-    <a class="pagecard card-ext" href="/extensions">
-      <div class="eyebrow">Deep dive</div>
-      <h2>App Extensions</h2>
-      <p>Theme app extensions, Admin UI extensions, checkout &amp; customer account UI extensions, and Shopify Functions — what each is for, how they're built, tested, and shipped.</p>
-      <div class="go">Explore extensions →</div>
-    </a>
-
-    <a class="pagecard card-changelog" href="/changelog">
-      <div class="eyebrow">Stay current</div>
-      <h2>Changelog</h2>
-      <p>Shopify changes its recommended stack often. This page tracks only the changes that are necessary to know or genuinely major — checked automatically on a weekly schedule.</p>
-      <div class="go">See what's new →</div>
-    </a>
+  <div class="path-head">
+    <h2>Start here</h2>
+    <p>Follow this in order the first time. Each step says what you'll have when you're done — and when it's fine to skip ahead.</p>
   </div>
 
-  <div class="path">
-    <h2>Suggested path</h2>
-    <ol>
-      <li><b>New to React/TypeScript/GraphQL?</b> Start with the <a href="/roadmap">Roadmap</a>'s Shopify track — do the fundamentals in order, or jump into a <a href="/crash-courses">Crash Course</a> for the one you need right now.</li>
-      <li><b>Already comfortable with the fundamentals, want to build something now?</b> Jump straight to <a href="/getting-started">Your First App</a> and come back to the Roadmap for whatever feels shaky.</li>
-      <li><b>Main app working?</b> Move on to <a href="/extensions">Extensions</a> to reach the storefront, checkout, and Admin's own surfaces.</li>
-      <li><b>Anytime.</b> Skim the <a href="/changelog">Changelog</a> before starting a new feature — Shopify's recommended stack shifts more often than most platforms.</li>
-    </ol>
+  <div class="rail">
+    {steps.map((s) => (
+      <div class="node" id={`step-${s.n}`} data-accent={s.accent}>
+        <div class="card">
+          <h3>{s.title}</h3>
+          <p>{s.body}</p>
+          {s.skip && <p class="skip">{s.skip}</p>}
+          <a class="cta" href={s.cta.href}>{s.cta.label}</a>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <div class="jump">
+    <div class="jump-label">Already partway through? Jump straight to a section</div>
+    <div class="jump-links">
+      {quickLinks.map((l) => <a href={l.href}>{l.label}</a>)}
+    </div>
   </div>
 
   <footer class="sitefooter">
@@ -71,7 +123,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     font-family: 'IBM Plex Mono', monospace; font-weight: 700;
     font-size: clamp(2.1rem, 6vw, 3.2rem); margin: 0 0 18px; letter-spacing: -0.015em;
   }
-  .hero .lede { font-size: var(--fs-lede); max-width: 46ch; }
+  .hero .lede { font-size: var(--fs-lede); max-width: 60ch; }
   .hero .free-note {
     font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem;
     color: var(--green); margin: 0 0 52px;
@@ -85,41 +137,70 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   .stackstrip .chip b { color: var(--text); font-weight: 600; }
   .changelog-link { color: var(--orange); }
 
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 56px; }
-  .pagecard {
-    display: block; text-decoration: none; background: var(--surface);
-    border: 1px solid var(--line); border-radius: 14px; padding: 28px 28px 26px;
-    transition: border-color 0.15s ease, transform 0.15s ease; box-shadow: var(--shadow);
+  .path-head { margin-bottom: 28px; border-bottom: 1px solid var(--line); padding-bottom: 18px; }
+  .path-head h2 {
+    font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.3rem; margin: 0 0 10px; color: var(--text);
   }
-  .pagecard:hover { border-color: var(--accent-local); transform: translateY(-2px); }
-  .pagecard .eyebrow {
-    font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px;
-  }
-  .pagecard h2 { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.35rem; margin: 0 0 12px; color: var(--text); }
-  .pagecard p { font-size: var(--fs-small); color: var(--text-dim); margin: 0 0 18px; line-height: 1.6; }
-  .pagecard .go { font-size: 0.9rem; font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+  .path-head p { margin: 0; color: var(--text-dim); font-size: var(--fs-small); max-width: 60ch; }
 
-  .card-roadmap { --accent-local: var(--gold); }
-  .card-roadmap .eyebrow, .card-roadmap .go { color: var(--gold); }
-  .card-start { --accent-local: var(--blue); }
-  .card-start .eyebrow, .card-start .go { color: var(--blue); }
-  .card-ext { --accent-local: var(--green); }
-  .card-ext .eyebrow, .card-ext .go { color: var(--green); }
-  .card-changelog { --accent-local: var(--orange); }
-  .card-changelog .eyebrow, .card-changelog .go { color: var(--orange); }
-
-  .path {
-    background: var(--surface); border: 1px solid var(--line);
-    border-radius: 14px; padding: 30px 32px; margin-bottom: 48px; box-shadow: var(--shadow);
+  .rail { position: relative; padding-left: 44px; counter-reset: step -1; margin-bottom: 56px; }
+  .rail::before {
+    content: "";
+    position: absolute;
+    left: 16px; top: 6px; bottom: 6px; width: 1px;
+    background: var(--line);
   }
-  .path h2 { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.05rem; margin: 0 0 20px; color: var(--gold); }
-  .path ol { margin: 0; padding-left: 22px; font-size: var(--fs-body); }
-  .path li { margin-bottom: 14px; }
-  .path a { color: var(--text); text-decoration: underline; text-decoration-color: var(--line); }
-  .path a:hover { text-decoration-color: var(--text); }
-
-  @media (max-width: 620px) {
-    .grid { grid-template-columns: 1fr; }
+  .node { position: relative; margin-bottom: 28px; scroll-margin-top: 24px; }
+  .node::before {
+    counter-increment: step;
+    content: counter(step);
+    position: absolute;
+    left: -44px; top: 2px; width: 33px; height: 33px;
+    border-radius: 50%;
+    background: var(--surface-alt);
+    border: 1px solid var(--node-accent, var(--accent));
+    color: var(--node-accent, var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 0.88rem;
   }
+  .node[data-accent="gold"] { --node-accent: var(--gold); }
+  .node[data-accent="violet"] { --node-accent: var(--violet); }
+  .node[data-accent="purple"] { --node-accent: var(--purple); }
+  .node[data-accent="blue"] { --node-accent: var(--blue); }
+  .node[data-accent="green"] { --node-accent: var(--green); }
+  .node[data-accent="orange"] { --node-accent: var(--orange); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 26px 28px; box-shadow: var(--shadow);
+  }
+  .card h3 {
+    font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.2rem; margin: 0 0 12px; color: var(--text);
+  }
+  .card p { margin: 0 0 14px; font-size: var(--fs-small); color: var(--text-dim); line-height: 1.65; max-width: 68ch; }
+  .card .skip {
+    font-size: 0.85rem; font-style: italic; color: var(--node-accent, var(--accent)); opacity: 0.9;
+  }
+  .card .cta {
+    display: inline-block; margin-top: 4px; font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9rem; font-weight: 600; color: var(--node-accent, var(--accent)); text-decoration: none;
+  }
+  .card .cta:hover { text-decoration: underline; }
+
+  .jump {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 22px 26px; margin-bottom: 48px; box-shadow: var(--shadow);
+  }
+  .jump-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 14px;
+  }
+  .jump-links { display: flex; flex-wrap: wrap; gap: 10px; }
+  .jump-links a {
+    font-size: 0.9rem; text-decoration: none; border: 1px solid var(--line);
+    border-radius: 20px; padding: 8px 16px; color: var(--text); font-weight: 500;
+  }
+  .jump-links a:hover { border-color: var(--accent); color: var(--accent); }
 </style>

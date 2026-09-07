@@ -1,0 +1,324 @@
+---
+import CourseLayout from '../../layouts/CourseLayout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const chapters = [
+  { id: 'what-is-an-app', title: 'What is a Shopify app, really?' },
+  { id: 'distribution-and-embedding', title: 'Distribution & embedding' },
+  { id: 'sandboxes', title: 'Your two sandboxes' },
+  { id: 'oauth', title: 'How installation works: OAuth' },
+  { id: 'scopes-tokens', title: 'Scopes & access tokens' },
+  { id: 'admin-api', title: 'Talking to the store: the Admin API' },
+  { id: 'webhooks', title: 'Staying in sync: webhooks' },
+  { id: 'billing', title: 'Getting paid: billing basics' },
+  { id: 'extensions-bridge', title: 'Beyond the admin app' },
+];
+
+const scopesConfigCode = `# shopify.app.toml
+[access_scopes]
+scopes = "read_products,write_orders,read_customers"
+# Every scope you list here is a permission you're asking the
+# merchant to grant. Shopify shows this exact list on the
+# approval screen before they click Allow.`;
+
+const tokenUseCode = `// Every server-side call to Shopify carries the access token —
+// you never see this token yourself in the code you write day to
+// day, because authenticate.admin() reads it from the session
+// and attaches it for you:
+const { admin, session } = await authenticate.admin(request);
+
+// "admin" here is already authenticated — every call it makes
+// carries session.accessToken behind the scenes.
+await admin.graphql(\`#graphql
+  query { shop { name } }
+\`);`;
+
+const webhookConfigCode = `# shopify.app.toml
+[[webhooks.subscriptions]]
+topics = ["orders/create"]
+uri = "/webhooks/orders/create"
+
+[[webhooks.subscriptions]]
+topics = ["customers/data_request", "customers/redact", "shop/redact"]
+uri = "/webhooks/compliance"
+# The three compliance topics in that second block aren't optional —
+# every app needs handlers for them, custom or public, paid or free.`;
+
+const webhookHandlerCode = `// app/routes/webhooks.orders.create.tsx
+import { authenticate } from "../shopify.server";
+
+export async function action({ request }) {
+  const { topic, shop, payload } = await authenticate.webhook(request);
+  // authenticate.webhook() verifies Shopify's signature for you —
+  // if the signature doesn't match, it throws before your code
+  // below ever runs, so you can trust "payload" is genuinely
+  // from Shopify and hasn't been tampered with in transit.
+
+  console.log(\`New order on \${shop}:\`, payload.id);
+  return new Response(null, { status: 200 });
+}`;
+---
+<CourseLayout
+  title="How Shopify Apps Work — Shopify Dev Handbook"
+  description="The conceptual foundation every other course on this site assumes: what a Shopify app actually is, how installation and permissions work, and how an app talks to a store. No code — just the shape of the platform, explained from zero."
+  accent="gold"
+  courseTitle="How Shopify Apps Work"
+  courseTagline="Before any code: what a Shopify app actually is, how a merchant installs one, and how it's allowed to touch a store's data. Every other course on this site assumes you've read this one."
+  readTime="45–55 min"
+  chapters={chapters}
+  next={{ href: '/crash-courses/typescript', title: 'TypeScript' }}
+>
+  <section class="chapter" id="what-is-an-app">
+    <div class="chapter-num">Chapter 01</div>
+    <h2>What is a Shopify app, really?</h2>
+    <p>A Shopify <strong>store</strong> is two things at once: a public storefront customers browse and buy from, and a private back office — the <strong>Admin</strong> — where the merchant manages products, orders, and customers. You've probably seen the storefront half of a store without ever thinking about it. The Admin is the part that matters here.</p>
+
+    <p>A Shopify <strong>app</strong> adds new functionality into that Admin — a new page, a new button on an order, a new report — <em>without Shopify's own engineers having to build it</em>. Anyone can build one. That's the whole point of the platform: Shopify built the store, and opened up a way for other developers (you) to extend it.</p>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Think of the Admin as the merchant's control panel. Installing your app is like adding a new tab to that control panel. But — and this is the single most important fact in this entire course — <strong>your tab isn't hosted by Shopify.</strong> It's a completely ordinary web application that <em>you</em> build and run on your own server. Shopify just displays it, inside a frame, at the moment the merchant clicks on your app's name in their sidebar.</p>
+    </div>
+
+    <p>This is why everything in the <a href="/crash-courses/react-router-7">React Router 7</a> and <a href="/crash-courses/node">Node.js</a> courses matters: your app is a real server that has to be written, hosted, and kept running by you, exactly like any other website — it just happens to render inside Shopify's Admin instead of its own blank page. Shopify's role is narrower than it feels at first: it hosts the store and the Admin shell, authenticates who's allowed to see what, and gives your app a well-defined way to ask for data. Everything your app actually <em>does</em> is code you write and infrastructure you run.</p>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>A store has a public storefront and a private Admin (back office) — apps extend the Admin.</li>
+        <li>An app's code runs on a server <em>you</em> control, not on Shopify's servers — Shopify only displays it.</li>
+        <li>This is the architectural fact everything else in this course builds on.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="distribution-and-embedding">
+    <div class="chapter-num">Chapter 02</div>
+    <h2>Distribution &amp; embedding</h2>
+    <p>"What kind of app am I building?" is actually two separate questions that tutorials often blur together. Keep them apart and a lot of confusing shopify.dev terminology stops being confusing.</p>
+
+    <h3>Question one: who can install it? (distribution)</h3>
+    <div class="compare">
+      <div>
+        <h4>Merchant-created custom app</h4>
+        <p>A merchant builds this themselves, directly in their own Admin (Settings → Apps → Develop apps), for their own store only. No Partner account, no App Store, no review. The simplest possible case — usually a one-off internal integration.</p>
+      </div>
+      <div>
+        <h4>Partner-built custom app</h4>
+        <p>You (a developer, using a Partner account) build this for one specific client's store and install it directly, without listing it anywhere. Common for agency/freelance client work.</p>
+      </div>
+    </div>
+    <div class="compare">
+      <div>
+        <h4>Public (App Store) app</h4>
+        <p>Built by a Partner, submitted for Shopify's review, and listed on the Shopify App Store — installable by <em>any</em> merchant. Must meet stricter requirements (covered throughout this course) since anyone can install it.</p>
+      </div>
+      <div>
+        <h4>This site's focus</h4>
+        <p>The <code>shopify app init</code> template and every walkthrough here build toward a Partner-built app — the same shape whether you eventually keep it custom for one client or submit it to the App Store later. The code doesn't change; only the distribution step at the end does.</p>
+      </div>
+    </div>
+
+    <h3>Question two: where does it render? (embedding)</h3>
+    <p>Separately from who can install it, an app is either <strong>embedded</strong> (it renders inside an iframe within Shopify's own Admin, sitting behind Shopify's navigation and design) or <strong>standalone</strong> (it's a fully separate website the merchant would have to navigate to outside the Admin). Embedded is the default — and effectively required for App Store apps — because it feels like part of Shopify rather than a foreign site the merchant has to remember exists. Every app built from the current official template is embedded from the moment you scaffold it.</p>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Distribution answers "who's allowed to install this." Embedding answers "where does it show up once installed." They're independent choices — but for almost everyone starting today, the answer to the second question is simply "embedded," so you can stop thinking about it and focus on the first.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Distribution (custom vs. public) and embedding (embedded vs. standalone) are two separate, independent decisions.</li>
+        <li>This site builds embedded apps throughout — the current recommended default, regardless of distribution.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="sandboxes">
+    <div class="chapter-num">Chapter 03</div>
+    <h2>Your two sandboxes</h2>
+    <p>Before writing any code, you need two free things that are easy to confuse with each other the first time.</p>
+
+    <h3>Your Partner account</h3>
+    <p>A <strong>Partner account</strong> is your developer identity on Shopify — separate from any merchant account. It's free, and it's where you register apps, generate credentials for them, create development stores, and (later, if you choose) submit an app to the App Store. Think of it as your workbench: nothing you do inside it is visible to real merchants until you deliberately ship something.</p>
+
+    <h3>Your development store</h3>
+    <p>A <strong>development store</strong> is a full, real Shopify store — with a real Admin, real product catalog, real checkout — created from your Partner account for free, purely for building and testing against. It can hold fake products, generate test orders, and simulate paid charges without ever touching real money or real customers. You install your in-progress app onto a development store the exact same way a merchant eventually installs the finished version.</p>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Your Partner account is your developer login. Your development store is a practice store that behaves exactly like a real one, so you can build and break things safely. You'll typically have one Partner account and, over time, several development stores — one per project, or one for each different scenario you want to test.</p>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Where this shows up</div>
+      <p>The Roadmap page's <a href="/roadmap">"Before you start" checklist</a> is exactly this: create a free Partner account, then a free development store from inside it. Do that before opening <a href="/getting-started">Getting Started</a> — every command in that walkthrough assumes both already exist.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Partner account = your developer identity; free; where apps and stores are created and managed.</li>
+        <li>Development store = a free, fully functional practice store, isolated from any real business.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="oauth">
+    <div class="chapter-num">Chapter 04</div>
+    <h2>How installation works: OAuth</h2>
+    <p>Here's exactly what happens, in order, the moment a merchant installs your app — whether that's you clicking an install link during development, or a real merchant clicking Install from the App Store:</p>
+
+    <ol>
+      <li>The merchant's browser is sent to your app's URL, with the store's domain attached (something like <code>?shop=my-shop.myshopify.com</code>).</li>
+      <li>Your app notices it doesn't yet have permission for this store, and redirects the browser to a Shopify-hosted authorization screen — listing exactly which permissions (<strong>scopes</strong>, next chapter) your app is requesting.</li>
+      <li>The merchant reviews that list and clicks <strong>Install</strong> (or cancels).</li>
+      <li>Shopify redirects the browser back to your app, carrying a short-lived, one-time authorization code.</li>
+      <li>Your app's <em>server</em> — not the browser — exchanges that code for a permanent <strong>access token</strong>, by calling Shopify directly.</li>
+      <li>Your app stores that token, associated with that specific store, and the install is complete.</li>
+    </ol>
+
+    <p>This entire back-and-forth is called <strong>OAuth</strong> — a standard used by thousands of platforms, not something Shopify invented. It exists so the merchant only ever enters no separate password for your app at all, and so your app never has to see or store Shopify login credentials — only a scoped token for exactly what was approved.</p>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>OAuth is a formal way of saying "hand this specific visitor a signed permission slip, but only after they've explicitly agreed to exactly what's written on it." Your app never learns the merchant's password — it only ever receives that permission slip (the access token), scoped to precisely what was approved.</p>
+    </div>
+
+    <p>You will almost never write this six-step dance by hand. It's implemented for you inside the official Shopify library the app template already wires up — every time you see this line in a loader or action:</p>
+    <CodeBlock code={tokenUseCode} lang="ts" />
+    <p>...<code>authenticate.admin(request)</code> is confirming the OAuth handshake already happened for this store and handing you an already-authenticated client. Understanding the six steps above is what makes that one line stop feeling like a magic incantation.</p>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>OAuth is the standard install/permission flow — a redirect to Shopify, an approval screen, a redirect back, and a server-to-server token exchange.</li>
+        <li>Your app never sees a password — only a scoped access token, after explicit merchant approval.</li>
+        <li><code>authenticate.admin()</code> in the app template handles every step of this for you.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="scopes-tokens">
+    <div class="chapter-num">Chapter 05</div>
+    <h2>Scopes &amp; access tokens</h2>
+    <p>A <strong>scope</strong> is one specific, named permission — <code>read_products</code>, <code>write_orders</code>, <code>read_customers</code>, and so on. You declare exactly which scopes your app needs in a config file, and that's precisely what the merchant sees on the approval screen from the previous chapter:</p>
+    <CodeBlock code={scopesConfigCode} lang="toml" title="shopify.app.toml" />
+
+    <p>An <strong>access token</strong> is the credential you receive after approval — think of it as a long, random password that proves "this specific app was granted these specific scopes for this specific store." Every API call your app makes carries this token, and Shopify checks it against both the store and the granted scopes before allowing anything through. Ask for data outside your granted scopes, and the request is refused — regardless of whether the code is "correct."</p>
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Requesting more scopes than you actually use.</b> Beyond being poor practice, merchants (and App Store reviewers) are wary of broad, unexplained permission requests — ask only for what the feature in front of you genuinely needs.</li>
+        <li><b>Treating the access token like public data.</b> It's a secret, on par with a password. It's stored and used entirely on your server (inside <code>.server.ts</code> files, per the <a href="/crash-courses/node">Node.js course</a>) and must never be sent to, or embedded in, code that runs in the merchant's browser.</li>
+      </ul>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>A scope is one named permission; you declare the full list your app needs up front.</li>
+        <li>An access token proves your app holds a specific set of granted scopes for a specific store.</li>
+        <li>Tokens are secrets — server-side only, never exposed to the browser.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="admin-api">
+    <div class="chapter-num">Chapter 06</div>
+    <h2>Talking to the store: the Admin API</h2>
+    <p>Once your app holds an access token, it uses that token to make requests to Shopify's <strong>Admin API</strong> — the interface through which every product, order, and customer record actually gets read or written. New apps use the GraphQL version of this API exclusively (the older REST version is legacy) — the full mechanics of writing a query live in their own dedicated course, the <a href="/crash-courses/graphql">GraphQL crash course</a>. This chapter is only about the shape of the relationship: your server holds the token, your server calls the API, Shopify checks the token's scopes on every single call.</p>
+
+    <p>One practical fact worth knowing early: the Admin API isn't unlimited. Shopify enforces rate limits so that one app's heavy usage can't slow the platform down for everyone else — GraphQL specifically uses a "query cost" system, where more complex queries cost more of your available budget per second rather than a simple request count. You don't need the exact numbers memorized (they're in the <a href="https://shopify.dev/docs/api/usage/limits" target="_blank" rel="noopener">Admin API rate limits docs</a>, and they do shift over time), just the existence of the limit — it's why apps generally fetch only the fields they actually need, which is precisely what GraphQL is built for.</p>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>The access token is your ID badge. The Admin API is the building you swipe into. Every door (every field, every mutation) checks your badge's clearance level (its scopes) before letting you through — and the building also has a speed limit on how fast you're allowed to move through it.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>The Admin API is how your app reads and writes actual store data, authenticated by the access token.</li>
+        <li>It's GraphQL-only for new apps, and rate-limited by query cost, not a flat request count.</li>
+        <li>See the <a href="/crash-courses/graphql">GraphQL course</a> for how to actually write a query.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="webhooks">
+    <div class="chapter-num">Chapter 07</div>
+    <h2>Staying in sync: webhooks</h2>
+    <p>Suppose your app needs to know the moment a new order comes in. One option is to repeatedly ask the Admin API "any new orders yet?" on a timer — called <strong>polling</strong>. It works, but it's wasteful (most checks find nothing new), slow to react (you only find out on your next check), and it burns through the rate limit from the previous chapter for no benefit.</p>
+
+    <p>A <strong>webhook</strong> flips this around: you tell Shopify once, in advance, "notify me the instant this kind of event happens," and Shopify sends your server an HTTP request the moment it does — no polling required:</p>
+    <CodeBlock code={webhookConfigCode} lang="toml" title="shopify.app.toml" />
+
+    <p>Your app then just needs a route that receives that request:</p>
+    <CodeBlock code={webhookHandlerCode} lang="tsx" title="app/routes/webhooks.orders.create.tsx" />
+
+    <p>Notice the second block in the config above — <code>customers/data_request</code>, <code>customers/redact</code>, and <code>shop/redact</code>. These are <strong>mandatory compliance webhooks</strong>: every app, custom or public, free or paid, must implement handlers for them. They exist so merchants (and their customers) can exercise data-privacy rights — requesting a copy of their data, or having it deleted — and Shopify enforces that every app respects that regardless of what the app otherwise does.</p>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Polling is calling a friend every five minutes to ask "anything new?" A webhook is giving them your number and asking them to text you the moment something happens. One wastes both your time; the other only bothers you exactly when it matters.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Webhooks push events to your app the instant they happen, instead of you polling for them.</li>
+        <li>Every app must implement the mandatory GDPR compliance webhooks, no exceptions.</li>
+        <li>Shopify signs every webhook; <code>authenticate.webhook()</code> verifies that signature before your handler code runs.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="billing">
+    <div class="chapter-num">Chapter 08</div>
+    <h2>Getting paid: billing basics</h2>
+    <p>If your app charges for itself, Shopify's own billing system handles the actual money movement — the charge appears on the merchant's regular Shopify invoice, rather than you having to collect card details and run payments yourself. Three shapes cover almost every pricing model:</p>
+    <ul>
+      <li><strong>Recurring charges</strong> — a monthly or annual subscription, optionally with a free trial period.</li>
+      <li><strong>One-time charges</strong> — a single charge, for something like a lifetime unlock or a paid setup service.</li>
+      <li><strong>Usage-based charges</strong> — a variable amount tied to actual usage (e.g. per order processed), typically capped at a merchant-approved maximum per billing cycle.</li>
+    </ul>
+
+    <p>For an App Store app, Shopify also takes a revenue share out of what you charge — the current rate and the exact terms live in the Partner Program Agreement, which is worth reading directly on shopify.dev rather than relying on a number that might be stale by the time you read this.</p>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Why this is safe to experiment with</div>
+      <p>Every billing flow can be tested end to end on a development store using <strong>test charges</strong> — real code paths, fake money. You'll see this pattern constantly in billing tutorials: a boolean flag that marks a charge as a test, so you can build and verify your entire billing flow without ever touching a real payment.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Shopify's billing API handles charging merchants directly through their existing Shopify invoice.</li>
+        <li>Three charge types cover almost everything: recurring, one-time, and usage-based.</li>
+        <li>Test charges let you build and verify billing on a development store with zero real money involved.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="extensions-bridge">
+    <div class="chapter-num">Chapter 09</div>
+    <h2>Beyond the admin app</h2>
+    <p>Everything in this course so far describes your <strong>app</strong> — the thing that lives inside an iframe in the Admin, that you fully control, built on the stack the rest of this site's courses teach. But a store has surfaces your app's iframe can never reach: the storefront theme, the checkout flow, the customer account pages, a point-of-sale device on a counter.</p>
+
+    <p>Reaching those requires a different mechanism: <strong>extensions</strong> — small, sandboxed pieces of code that <em>Shopify itself</em> renders directly into those surfaces, at a specific slot you target, running under much stricter limits (a tiny bundle size cap, a narrower API) than your main app enjoys. They ship alongside your app, versioned and deployed together, but they are not the same thing as your app, and they don't use the OAuth flow from Chapter 4 the same way — they run inside Shopify's own rendering, not yours.</p>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Your app is a room you built and furnished yourself, that Shopify lets a merchant walk into. An extension is more like a poster you're allowed to hang in one of Shopify's <em>own</em> rooms — you don't control the room, only what's on that one spot of wall, and you have to follow Shopify's rules about posters.</p>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ You've finished this course</div>
+      <p>You now have the full conceptual map: what an app is, who can install one and where it renders, the two sandboxes you build in, how installation and permissions actually work, how your app talks to a store and stays in sync with it, how billing works, and where extensions fit. Everything from here is <em>how</em>, not <em>what</em> — head into the <a href="/crash-courses/typescript">technical crash courses</a> for the pieces you're missing, or straight to <a href="/getting-started">Getting Started</a> to build a real one. The full <a href="/extensions">Extensions</a> page is the deep dive on everything introduced in this chapter.</p>
+    </div>
+  </section>
+</CourseLayout>

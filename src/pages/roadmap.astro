@@ -8,40 +8,41 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 >
   <header>
     <h1 class="page-title">Learning Roadmap for Shopify App Development</h1>
-    <p class="lede">Everything free, step by step: three tracks — building real embedded Shopify apps on the React Router 7 stack, a general backend foundation underneath it, and a dedicated track for reading the config files, JSDoc, and build tooling that most tutorials skip and most developers get stuck on.</p>
+    <p class="lede">The full reference for going deeper: three tracks — building real embedded Shopify apps on the React Router 7 stack, a general backend foundation underneath it, and a dedicated track for reading the config files, JSDoc, and build tooling that most tutorials skip and most developers get stuck on.</p>
+    <p class="lede-note">New here? The <a href="/">homepage</a> walks the whole site in order. This page is what you come back to once you've built something and want to go deeper on a specific module — read modules in any order you need, not necessarily top to bottom.</p>
   </header>
 
-  <details class="setup" open>
+  <details class="setup" id="setup" open>
     <summary>Before you start — accounts &amp; tools (all free, no card needed unless noted)</summary>
     <div class="setup-grid">
       <div>
         <h4>Local machine</h4>
         <ul>
-          <li><a href="https://nodejs.org/en/download" target="_blank" rel="noopener">Node.js LTS</a> — install via <a href="https://github.com/nvm-sh/nvm" target="_blank" rel="noopener">nvm</a> (or <a href="https://github.com/coreybutler/nvm-windows" target="_blank" rel="noopener">nvm-windows</a>) so you can switch versions</li>
-          <li><a href="https://code.visualstudio.com/" target="_blank" rel="noopener">VS Code</a> + extensions: ESLint, Prisma, GraphQL: Language Feature Support</li>
-          <li><a href="https://git-scm.com/downloads" target="_blank" rel="noopener">Git</a></li>
+          <li><a href="https://nodejs.org/en/download" target="_blank" rel="noopener">Node.js LTS</a> — install via <a href="https://github.com/nvm-sh/nvm" target="_blank" rel="noopener">nvm</a> (or <a href="https://github.com/coreybutler/nvm-windows" target="_blank" rel="noopener">nvm-windows</a>) so you can switch versions. <span class="why">This is the JavaScript runtime everything else runs on — the CLI, your app's server, and its build tools all need it installed first.</span></li>
+          <li><a href="https://code.visualstudio.com/" target="_blank" rel="noopener">VS Code</a> + extensions: ESLint, Prisma, GraphQL: Language Feature Support. <span class="why">Not required, but these three give you real-time type errors and autocomplete for the exact files this stack uses most.</span></li>
+          <li><a href="https://git-scm.com/downloads" target="_blank" rel="noopener">Git</a>. <span class="why">Version control — the Shopify CLI sets up a repo for you when you scaffold an app, but Git itself has to already be installed for that to work, and you'll need it again to deploy.</span></li>
         </ul>
       </div>
       <div>
         <h4>Shopify side</h4>
         <ul>
-          <li><a href="https://www.shopify.com/partners" target="_blank" rel="noopener">Shopify Partner account</a> — free, no store purchase needed</li>
-          <li>A free <a href="https://shopify.dev/docs/apps/tools/development-stores" target="_blank" rel="noopener">development store</a>, created from the Partner dashboard</li>
-          <li><a href="https://shopify.dev/docs/apps/build/scaffold-app" target="_blank" rel="noopener">Shopify CLI</a> — installed per-project via <code>npm</code>, not globally</li>
+          <li><a href="https://www.shopify.com/partners" target="_blank" rel="noopener">Shopify Partner account</a> — free, no store purchase needed. <span class="why">Your developer identity on Shopify: it's how Shopify knows which apps and stores belong to you, and it's where development stores and app records live.</span></li>
+          <li>A free <a href="https://shopify.dev/docs/apps/tools/development-stores" target="_blank" rel="noopener">development store</a>, created from the Partner dashboard. <span class="why">A real, fully-working store that only you can see — for installing and testing your app safely. It's separate from any live store you'd actually sell through.</span></li>
+          <li><a href="https://shopify.dev/docs/apps/build/scaffold-app" target="_blank" rel="noopener">Shopify CLI</a> — installed per-project via <code>npm</code>, not globally. <span class="why">The one tool this entire workflow runs through: it scaffolds new apps, runs a local dev tunnel so Shopify's servers can reach your machine, generates extensions, and deploys.</span></li>
         </ul>
       </div>
       <div>
         <h4>Free hosted database (pick one)</h4>
         <ul>
-          <li><a href="https://neon.com/" target="_blank" rel="noopener">Neon</a> — free Postgres, permanent plan, no card</li>
-          <li><a href="https://supabase.com/" target="_blank" rel="noopener">Supabase</a> — free Postgres + extras, no card</li>
+          <li><a href="https://neon.com/" target="_blank" rel="noopener">Neon</a> — free Postgres, permanent plan, no card. <span class="why">You'll swap this in for the CLI's local SQLite database once you're ready to deploy for real — Prisma just points at a different connection string, no code changes.</span></li>
+          <li><a href="https://supabase.com/" target="_blank" rel="noopener">Supabase</a> — free Postgres + extras, no card. <span class="why">Same idea as Neon, with auth/storage extras bundled in that you likely won't need for your first app, but are there if you do.</span></li>
         </ul>
       </div>
       <div>
         <h4>Free hosting (pick one, for later)</h4>
         <ul>
-          <li><a href="https://vercel.com/" target="_blank" rel="noopener">Vercel</a> — Hobby plan, free forever for personal projects</li>
-          <li><a href="https://render.com/docs/free" target="_blank" rel="noopener">Render</a> — free web service (spins down when idle)</li>
+          <li><a href="https://vercel.com/" target="_blank" rel="noopener">Vercel</a> — Hobby plan, free forever for personal projects. <span class="why">Where your app's server actually runs once it's live, as opposed to just running on your own machine during development.</span></li>
+          <li><a href="https://render.com/docs/free" target="_blank" rel="noopener">Render</a> — free web service (spins down when idle). <span class="why">An alternative to Vercel; the free tier sleeps after inactivity, so the first request after a quiet period is noticeably slow.</span></li>
         </ul>
       </div>
     </div>
@@ -1750,7 +1751,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   }
 
   .setup-grid ul { margin: 0; padding-left: 20px; font-size: var(--fs-small); }
-  .setup-grid li { margin-bottom: 8px; }
+  .setup-grid li { margin-bottom: 12px; }
+  .setup-grid .why { display: block; color: var(--text-dim); opacity: 0.85; margin-top: 3px; }
+
+  .lede-note {
+    font-size: var(--fs-small); color: var(--text-dim); max-width: 62ch; margin: 0 0 16px;
+  }
+  .lede-note a { color: var(--text-dim); text-decoration-color: var(--line); }
+  .lede-note a:hover { color: var(--accent); }
   .setup-grid a { color: var(--text); }
   .setup-note {
     margin-top: 18px;

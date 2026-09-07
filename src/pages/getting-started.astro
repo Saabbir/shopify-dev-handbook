@@ -71,6 +71,7 @@ const deployCommand = `shopify app deploy`;
     <p>A tiny embedded app called <b>Product Notes</b> — a merchant picks a product and saves a private note against it (supplier info, restock reminders, whatever). Small enough to finish in a sitting, but it touches every piece that matters: the Admin GraphQL API, a loader and an action, Prisma persistence, and Polaris UI.</p>
     <ul>
       <li>Assumes you've done the setup checklist on the <a href="/roadmap">Roadmap</a> page — Node.js, a Shopify Partner account, and a free development store.</li>
+      <li>Assumes you know what happens when a merchant installs an app, what a scope and an access token are, and what OAuth is doing behind the scenes — covered start to finish in the <a href="/crash-courses/how-shopify-apps-work">How Shopify Apps Work</a> course if any of that's new.</li>
       <li>If you haven't touched React, TypeScript, or GraphQL yet, this will still make sense structurally, but the Roadmap's first three modules (or the matching <a href="/crash-courses">Crash Courses</a>) will make every line of code actually click.</li>
     </ul>
   </div>
@@ -272,7 +273,8 @@ const deployCommand = `shopify app deploy`;
 </BaseLayout>
 
 <style>
-  .rail { position: relative; padding-left: 44px; counter-reset: step; }
+  .goal { margin-bottom: 48px; }
+  .rail { position: relative; padding-left: 44px; counter-reset: step; margin-top: 8px; }
   .rail::before {
     content: "";
     position: absolute;
