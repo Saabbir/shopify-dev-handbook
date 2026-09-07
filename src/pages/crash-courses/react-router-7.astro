@@ -1,0 +1,343 @@
+---
+import CourseLayout from '../../layouts/CourseLayout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const chapters = [
+  { id: 'why-routing', title: 'Why apps need routing' },
+  { id: 'file-routes', title: 'File-based routes' },
+  { id: 'loaders', title: 'Loaders: getting data before render' },
+  { id: 'actions-forms', title: 'Actions & forms: sending data back' },
+  { id: 'nested-layouts', title: 'Nested routes & layouts' },
+  { id: 'in-the-app', title: 'How the app template wires it together' },
+];
+
+const spaRoutingCode = `// A React app with no router is a single page. Every "different
+// screen" you've seen in a React tutorial without a router is
+// really just: some state that decides which component to show.
+const [page, setPage] = useState("home");
+
+if (page === "home") return <HomePage />;
+if (page === "settings") return <SettingsPage />;
+// The URL bar never changes. Refresh, and you're back on "home".
+// Share a link to "settings"? There isn't one — it's not a URL.`;
+
+const fileRouteMapCode = `app/routes/
+├── app._index.tsx       →  /app
+├── app.settings.tsx      →  /app/settings
+├── app.products.$id.tsx  →  /app/products/:id
+└── auth.$.tsx            →  /auth/*
+
+// The dot (.) in a filename creates a URL segment.
+// A "$" prefix means "this segment is a dynamic parameter" —
+// $id captures whatever's actually in the URL at that position.`;
+
+const dynamicParamCode = `// app/routes/app.products.$id.tsx
+import type { LoaderFunctionArgs } from "react-router";
+
+export async function loader({ params }: LoaderFunctionArgs) {
+  // Visiting /app/products/gid-123 makes params.id === "gid-123"
+  const productId = params.id;
+  // ...fetch that one product...
+}`;
+
+const loaderBasicCode = `// app/routes/app._index.tsx
+import type { LoaderFunctionArgs } from "react-router";
+import { useLoaderData } from "react-router";
+import { authenticate } from "../shopify.server";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const { admin } = await authenticate.admin(request);
+
+  const response = await admin.graphql(\`#graphql
+    query { shop { name } }
+  \`);
+  const data = await response.json();
+
+  return { shopName: data.data.shop.name as string };
+}
+
+export default function Page() {
+  const { shopName } = useLoaderData<typeof loader>();
+  return <h1>Welcome, {shopName}</h1>;
+}`;
+
+const loaderTimingCode = `// The order that actually happens, every time this page is visited:
+//
+//  1. Browser requests /app
+//  2. Server runs loader() — fetches data, still no HTML yet
+//  3. Server renders the Page component WITH that data already
+//     available, and sends back real, filled-in HTML
+//  4. Page appears already populated — no loading spinner needed
+//     for the initial view, because there was never a moment
+//     where the component rendered before its data existed.`;
+
+const oldWayFetchCode = `// The "old" pattern this replaces — fetching after the component
+// already rendered once, empty:
+function Page() {
+  const [shopName, setShopName] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/shop").then((r) => r.json()).then((d) => setShopName(d.name));
+  }, []);
+
+  if (!shopName) return <p>Loading...</p>; // this flash happens EVERY time
+  return <h1>Welcome, {shopName}</h1>;
+}
+// A loader skips this entire empty-then-filled cycle for first render.`;
+
+const actionCode = `// Same file, a second export — this one runs when a form on
+// this route is SUBMITTED, not when the page is visited:
+import type { ActionFunctionArgs } from "react-router";
+import { authenticate } from "../shopify.server";
+import prisma from "../db.server";
+
+export async function action({ request }: ActionFunctionArgs) {
+  const { session } = await authenticate.admin(request);
+  const formData = await request.formData();
+  const body = formData.get("body") as string;
+
+  await prisma.note.create({
+    data: { shop: session.shop, body },
+  });
+
+  return { ok: true };
+}`;
+
+const formCode = `import { Form, useActionData } from "react-router";
+
+export default function Page() {
+  const actionData = useActionData<typeof action>();
+
+  return (
+    <Form method="post">
+      <textarea name="body" placeholder="Write a note..." />
+      <button type="submit">Save</button>
+      {actionData?.ok && <p>Saved!</p>}
+    </Form>
+  );
+}
+// This <Form> is React Router's own component, not the plain HTML
+// <form>. It intercepts the submit, posts to THIS route's action,
+// and — this is the part that replaces manual state management —
+// automatically re-runs the loader afterward so the page reflects
+// the new data. No fetch(), no manual refetch, no setState dance.`;
+
+const fetcherCode = `import { useFetcher } from "react-router";
+
+function PinButton({ noteId }: { noteId: string }) {
+  const fetcher = useFetcher();
+
+  return (
+    <fetcher.Form method="post" action="/app/notes/pin">
+      <input type="hidden" name="noteId" value={noteId} />
+      <button type="submit">Pin</button>
+    </fetcher.Form>
+  );
+}
+// Same loader/action mechanics as <Form>, but it does NOT navigate
+// or scroll the page — useFetcher() is for in-place actions like a
+// "pin" button inside a list, versus a page-level "Save and continue".`;
+
+const nestedRouteCode = `app/routes/
+├── app.tsx              →  layout for everything under /app
+├── app._index.tsx        →  /app          (renders inside app.tsx)
+└── app.settings.tsx      →  /app/settings (also renders inside app.tsx)
+
+// app.tsx — a layout route
+import { Outlet } from "react-router";
+
+export default function AppLayout() {
+  return (
+    <div>
+      <nav>{/* nav shared by every /app/* page */}</nav>
+      <Outlet /> {/* the matching child route renders here */}
+    </div>
+  );
+}`;
+
+const fullAppRouteCode = `// app/routes/app._index.tsx — loader, action, and component together
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+import { Form, useLoaderData, useActionData } from "react-router";
+import { authenticate } from "../shopify.server";
+import prisma from "../db.server";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const { session } = await authenticate.admin(request);
+  const notes = await prisma.note.findMany({ where: { shop: session.shop } });
+  return { notes };
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+  const { session } = await authenticate.admin(request);
+  const formData = await request.formData();
+  const body = formData.get("body") as string;
+
+  await prisma.note.create({ data: { shop: session.shop, body } });
+  return { ok: true };
+}
+
+export default function NotesPage() {
+  const { notes } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
+
+  return (
+    <div>
+      <Form method="post">
+        <textarea name="body" />
+        <button type="submit">Add note</button>
+      </Form>
+      {actionData?.ok && <p>Saved!</p>}
+
+      <ul>
+        {notes.map((note) => (
+          <li key={note.id}>{note.body}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+// loader (read) + action (write) + component (display) —
+// one file is the entire "backend endpoint and frontend page"
+// for this screen. This is the exact shape built by hand,
+// piece by piece, in Getting Started.`;
+---
+<CourseLayout
+  title="React Router 7 Crash Course — Shopify Dev Handbook"
+  description="The routing and data layer the Shopify app template runs on: file-based routes, server-side loaders and actions, and how a page gets its data without a separate API layer."
+  accent="purple"
+  courseTitle="React Router 7"
+  courseTagline="The framework the Shopify app template is built on. It decides which component renders for a URL, and gives every route a built-in way to read and write data — no separate API layer required."
+  readTime="40–50 min"
+  chapters={chapters}
+  prev={{ href: '/crash-courses/react', title: 'React' }}
+  next={{ href: '/crash-courses/node', title: 'Node.js' }}
+>
+  <section class="chapter" id="why-routing">
+    <div class="chapter-num">Chapter 01</div>
+    <h2>Why apps need routing</h2>
+    <p>The <a href="/crash-courses/react">React course</a> built components and swapped what's on screen using state — but state-based swapping has a real limitation:</p>
+    <CodeBlock code={spaRoutingCode} lang="tsx" />
+    <p>Real apps need actual, sharable, refreshable URLs: <code>/app/settings</code> should always show settings, whether you clicked to get there or pasted the link directly. That's <strong>routing</strong> — mapping URLs to what should render — and React Router is the library that does it.</p>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>A router's job is simple to state and easy to underestimate: look at the current URL, and decide which component renders. Everything else in this course — file-based routes, loaders, actions — is really just "how do we also get that route's data at the right time," bolted onto that one core job.</p>
+    </div>
+
+    <h3>"Framework mode"</h3>
+    <p>React Router 7 can be used two ways: as a plain client-side library (you wire up the routes yourself), or in <strong>framework mode</strong>, where the file structure of your project <em>is</em> the route configuration, and routes can run code on the server, not just in the browser. The Shopify app template uses framework mode — that's what the rest of this course covers.</p>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Routing maps a URL to the component that should render for it.</li>
+        <li>Without routing, "different screens" are just state — invisible to the URL bar, refresh, and shared links.</li>
+        <li>The Shopify app template uses React Router's framework mode, where files define routes.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="file-routes">
+    <div class="chapter-num">Chapter 02</div>
+    <h2>File-based routes</h2>
+    <p>In framework mode, every file under <code>app/routes/</code> becomes a URL — you never hand-write a route table. The filename encodes the URL path:</p>
+    <CodeBlock code={fileRouteMapCode} lang="text" />
+
+    <p>Two symbols do all the work: a <strong>dot</strong> (<code>.</code>) separates URL segments, and a <strong>dollar sign</strong> (<code>$</code>) marks a segment as dynamic — a placeholder that matches anything, captured as a parameter:</p>
+    <CodeBlock code={dynamicParamCode} lang="tsx" title="app/routes/app.products.$id.tsx" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>If you've used a folder of numbered images and known that <code>photo-3.jpg</code> means "the third photo" just from its name — file-based routing is the same idea, applied to URLs instead of files. The route file's name <em>is</em> its address.</p>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself</div>
+      <p>Open the <code>app/routes/</code> folder in a real Shopify app template project and match every filename to the URL it produces before reading any further. The pattern above is genuinely the whole system — there's no hidden config file to check against.</p>
+    </div>
+  </section>
+
+  <section class="chapter" id="loaders">
+    <div class="chapter-num">Chapter 03</div>
+    <h2>Loaders: getting data before render</h2>
+    <p>A <strong>loader</strong> is a function exported from a route file that runs on the server, before that route's component renders:</p>
+    <CodeBlock code={loaderBasicCode} lang="tsx" title="app/routes/app._index.tsx" />
+
+    <p><code>useLoaderData()</code> reads whatever the loader returned — no fetching inside the component, no loading state to manage for the initial view, because the data already exists by the time the component ever runs:</p>
+    <CodeBlock code={loaderTimingCode} lang="text" />
+
+    <p>Compare that to fetching from inside the component with <code>useEffect</code> — the pattern from the end of the <a href="/crash-courses/react">React course</a>:</p>
+    <CodeBlock code={oldWayFetchCode} lang="tsx" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>A loader answers "what data does this page need?" on the server, before anything is sent to the browser. The page arrives already filled in — the same way a server-rendered HTML page from a decade ago never showed a spinner for its own content, just built somewhere modern JavaScript can still live alongside it.</p>
+    </div>
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Trying to call a loader like a normal function.</b> You never call <code>loader()</code> yourself — React Router calls it for you when the route matches, and hands the result to <code>useLoaderData()</code>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="actions-forms">
+    <div class="chapter-num">Chapter 04</div>
+    <h2>Actions &amp; forms: sending data back</h2>
+    <p>A loader handles reads. An <strong>action</strong> is its counterpart for writes — exported from the same file, and triggered when a form on that route is submitted:</p>
+    <CodeBlock code={actionCode} lang="tsx" />
+
+    <p>Pair it with React Router's own <code>Form</code> component (capital F — not the plain HTML <code>&lt;form&gt;</code>):</p>
+    <CodeBlock code={formCode} lang="tsx" />
+
+    <p><code>Form</code> intercepts the submit, posts to this route's <code>action</code>, and — the part that replaces a whole category of manual state juggling — automatically re-runs the <code>loader</code> afterward, so the page reflects the new data with no <code>fetch()</code> and no manual refetch call anywhere in your code.</p>
+
+    <h3>Actions without navigating: <code>useFetcher</code></h3>
+    <p>A full <code>Form</code> submission also navigates and scrolls, which is right for a "Save" button on its own page but wrong for something like a "pin" button inside a list. <code>useFetcher()</code> gives you the same loader/action round trip, in place:</p>
+    <CodeBlock code={fetcherCode} lang="tsx" />
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>A loader runs on GET — reads data before the page renders.</li>
+        <li>An action runs on a form submission — handles writes.</li>
+        <li><code>Form</code> wires a submit straight to the route's action and refreshes loader data automatically.</li>
+        <li><code>useFetcher()</code> does the same without navigating — for in-place actions.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="nested-layouts">
+    <div class="chapter-num">Chapter 05</div>
+    <h2>Nested routes &amp; layouts</h2>
+    <p>Filenames that share a prefix before the last dot nest inside each other. A file with no trailing segment (like <code>app.tsx</code>) acts as a <strong>layout</strong> — shared UI (navigation, a header) that wraps whichever child route currently matches:</p>
+    <CodeBlock code={nestedRouteCode} lang="tsx" />
+
+    <p><code>&lt;Outlet /&gt;</code> is the placeholder that says "the matched child route renders exactly here." Every screen inside <code>/app/*</code> in a real Shopify app shares its navigation this way — written once, in <code>app.tsx</code>, instead of copy-pasted into every route file.</p>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Think of a layout route as a picture frame, and <code>&lt;Outlet /&gt;</code> as the empty space inside it. Every child route is a different picture — the frame around it never changes.</p>
+    </div>
+  </section>
+
+  <section class="chapter" id="in-the-app">
+    <div class="chapter-num">Chapter 06</div>
+    <h2>How the app template wires it together</h2>
+    <p>Every piece from this course combines into the exact shape you'll write over and over in a Shopify app — a loader for the read, an action for the write, and a component that displays both:</p>
+    <CodeBlock code={fullAppRouteCode} lang="tsx" title="app/routes/app._index.tsx" />
+
+    <p>Notice what's <em>not</em> here: no separate <code>/api/notes</code> endpoint, no client-side <code>fetch</code> call, no manual "refetch after saving" logic. The route file is simultaneously the backend endpoint and the frontend page for this one screen.</p>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Where this shows up</div>
+      <p>This is precisely the pattern built by hand, one export at a time, in <a href="/getting-started">Getting Started</a>. If you haven't done that walkthrough yet, this course is exactly the background it assumes.</p>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Where to go next</div>
+      <p>Move on to <a href="/crash-courses/node">Node.js</a> — loaders and actions both run in Node on the server, and the next course covers what that actually means: modules, npm, and <code>async</code>/<code>await</code> from first principles.</p>
+    </div>
+  </section>
+</CourseLayout>

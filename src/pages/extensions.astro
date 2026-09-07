@@ -1,0 +1,277 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="Shopify App Extensions Guide — Shopify Dev Handbook"
+  description="Everything your embedded admin app can't reach — the storefront, checkout, POS, and Shopify Admin's own surfaces — is reached through extensions instead."
+  accent="green"
+>
+  <header>
+    <h1 class="page-title">Shopify App Extensions</h1>
+    <p class="lede">Everything your embedded admin app can't reach — the storefront, checkout, POS, and Shopify Admin's own surfaces — is reached through extensions instead. This page is the dedicated deep dive the Roadmap's extensions module only summarizes.</p>
+  </header>
+
+  <div class="concept">
+    <h2>The one idea that makes all of this click</h2>
+    <p>Your main app (the one you built in <a href="/getting-started">Getting Started</a>) runs as a page embedded in Shopify Admin, under your control end to end. An <b>extension</b> is different: it's a small piece of code that <i>Shopify itself</i> renders, inside a surface you don't control — a checkout step, a theme section, an Admin sidebar block. That's why extensions feel more restricted than your main app: sandboxed runtime, a narrow API surface, a strict size limit. You're a guest in someone else's UI, not the host.</p>
+    <ul>
+      <li>Every extension is generated with <code>shopify app generate extension</code>, which scaffolds a <code>shopify.extension.toml</code> config file describing its type and <b>target</b> (exactly which surface/slot it renders into).</li>
+      <li>Extensions ship bundled with your main app's config as one <b>app version</b> — <code>shopify app deploy</code> versions and releases them together, and a bad release can be rolled back.</li>
+      <li>UI extensions specifically have a hard <b>64 KB compressed</b> bundle size limit — this shapes what dependencies you can even bring in.</li>
+    </ul>
+  </div>
+
+  <table class="matrix">
+    <tr><th>Family</th><th>Where it renders</th><th>Typical use</th></tr>
+    <tr><td>Theme App Extensions</td><td>Storefront, via the theme editor</td><td>Product page widgets, banners, custom sections merchants place themselves</td></tr>
+    <tr><td>Admin UI Extensions</td><td>Shopify Admin (product/order/customer pages, action menus)</td><td>Contextual actions and info blocks inside Admin's own pages</td></tr>
+    <tr><td>Checkout &amp; Customer Account UI Extensions</td><td>Checkout steps, Thank you/Order status, customer accounts</td><td>Upsells, custom fields, order tracking, loyalty widgets</td></tr>
+    <tr><td>Shopify Functions</td><td>Nowhere visible — server-side logic only</td><td>Custom discounts, shipping rates, payment/delivery customization, cart/checkout validation</td></tr>
+  </table>
+
+  <section class="family" id="theme-app">
+    <div class="fam-head"><h2>Theme App Extensions</h2><span class="fam-tag">storefront</span></div>
+    <p class="fam-tagline">Merchant-placed blocks and sections on the live storefront — no theme code edits required.</p>
+    <div class="card">
+      <ul>
+        <li>App blocks and app embed blocks — units a merchant drags into their theme via the theme editor, same as any native theme section</li>
+        <li>Liquid templates plus static assets (CSS/JS/images) bundled with the extension</li>
+        <li>Merchant-controlled: they choose where it goes and can remove it without touching code</li>
+      </ul>
+
+      <details>
+        <summary>Tools you'll actually use</summary>
+        <div class="res-list"><ul>
+          <li><code>shopify app generate extension</code> — choose "Theme app extension"</li>
+          <li>A dev store's theme editor, in preview mode via the CLI, to place and test the block live</li>
+        </ul></div>
+      </details>
+
+      <details>
+        <summary>Step-by-step path</summary>
+        <ol class="path">
+          <li>Generate a theme app extension and inspect the Liquid file it scaffolds.</li>
+          <li>Run <code>shopify app dev</code> and open the printed theme editor preview link.</li>
+          <li>Add the app block to a template in the preview and confirm it renders with your own content.</li>
+          <li>Pass a merchant-configurable setting (defined in the block's schema) and read it from Liquid.</li>
+        </ol>
+      </details>
+
+      <details>
+        <summary>Free resources</summary>
+        <div class="res-list"><ul>
+          <li><a href="https://shopify.dev/docs/apps/build/online-store/theme-app-extensions" target="_blank" rel="noopener">shopify.dev — Theme app extensions</a></li>
+          <li><a href="https://shopify.dev/docs/storefronts/themes/architecture/blocks/app-blocks" target="_blank" rel="noopener">App blocks reference</a></li>
+        </ul></div>
+      </details>
+
+      <details>
+        <summary>Where people get lost</summary>
+        <ul class="pitfalls">
+          <li><b>Expecting React</b> — theme app extensions render with Liquid, the theming templating language, not your app's React/Polaris code.</li>
+          <li><b>Assuming it's installed automatically</b> — merchants have to add the block themselves via the theme editor; your app can only prompt/deep-link them there, not force-install it.</li>
+        </ul>
+      </details>
+    </div>
+  </section>
+
+  <section class="family" id="admin-ext">
+    <div class="fam-head"><h2>Admin UI Extensions</h2><span class="fam-tag">Shopify Admin</span></div>
+    <p class="fam-tagline">Contextual actions and blocks injected directly into Admin's own product, order, and customer pages.</p>
+    <div class="card">
+      <ul>
+        <li>Action extensions — appear as menu items (e.g. on an order's "more actions" menu) that open a modal your extension controls</li>
+        <li>Block extensions — render inline on an Admin resource page (e.g. a custom block on the product details page)</li>
+        <li>Built with Polaris Web Components, so they visually match native Admin UI automatically</li>
+      </ul>
+
+      <details>
+        <summary>Tools you'll actually use</summary>
+        <div class="res-list"><ul>
+          <li><code>shopify app generate extension</code> — choose an Admin action or Admin block extension</li>
+          <li>Polaris Web Components — the same component set used across the extension surfaces, not the React Polaris library your main app uses</li>
+        </ul></div>
+      </details>
+
+      <details>
+        <summary>Step-by-step path</summary>
+        <ol class="path">
+          <li>Generate an Admin block extension targeting the product details page.</li>
+          <li>Read the extension's <code>target</code> in <code>shopify.extension.toml</code> and match it against the reference to see what data it's handed.</li>
+          <li>Render a Polaris Web Components block showing data about the current resource (e.g. the product being viewed).</li>
+          <li>Add an action extension that opens a modal and calls your app's own API from inside it.</li>
+        </ol>
+      </details>
+
+      <details>
+        <summary>Free resources</summary>
+        <div class="res-list"><ul>
+          <li><a href="https://shopify.dev/docs/api/admin-extensions" target="_blank" rel="noopener">Admin Extensions API reference</a></li>
+          <li><a href="https://shopify.dev/docs/apps/build/app-extensions" target="_blank" rel="noopener">shopify.dev — App extensions overview</a></li>
+        </ul></div>
+      </details>
+
+      <details>
+        <summary>Where people get lost</summary>
+        <ul class="pitfalls">
+          <li><b>Wrong target picked at generation time</b> — each Admin surface (product page, order page, customer page…) is a distinct target string; picking the wrong one means your extension never shows up where you expected. Re-check the target list rather than guessing.</li>
+          <li><b>Trying to reuse main-app Polaris React components</b> — Admin extensions use Polaris Web Components, a different (but visually matching) component set built for this sandboxed context.</li>
+        </ul>
+      </details>
+    </div>
+  </section>
+
+  <section class="family" id="checkout-ext">
+    <div class="fam-head"><h2>Checkout &amp; Customer Account UI Extensions</h2><span class="fam-tag">checkout / accounts</span></div>
+    <p class="fam-tagline">The only supported way to customize checkout since <code>checkout.liquid</code> and Shopify Scripts were fully retired — see the <a href="/changelog">Changelog</a> for the exact sunset dates.</p>
+    <div class="card">
+      <ul>
+        <li>Multiple targets across checkout steps and the Thank you/Order status pages, plus customer account pages</li>
+        <li>Built with a sandboxed React-like framework (<code>@shopify/ui-extensions-react</code>) — components, not raw DOM</li>
+        <li>Extra scrutiny at review time: performance budgets and an allow-listed set of APIs, since these run inside a live checkout</li>
+      </ul>
+
+      <details>
+        <summary>Tools you'll actually use</summary>
+        <div class="res-list"><ul>
+          <li><code>@shopify/ui-extensions-react</code></li>
+          <li>Checkout dev tooling in the CLI — live preview against a real (test-mode) checkout on your dev store</li>
+        </ul></div>
+      </details>
+
+      <details>
+        <summary>Step-by-step path</summary>
+        <ol class="path">
+          <li>Generate a checkout UI extension and pick a target (e.g. the Thank you page).</li>
+          <li>Render static content first and confirm it appears on a test checkout.</li>
+          <li>Read data the target hands you (e.g. order/cart info) via the extension's provided hooks.</li>
+          <li>Call your own app's backend from inside the extension for anything dynamic.</li>
+        </ol>
+      </details>
+
+      <details>
+        <summary>Free resources</summary>
+        <div class="res-list"><ul>
+          <li><a href="https://shopify.dev/docs/api/checkout-ui-extensions" target="_blank" rel="noopener">Checkout UI Extensions API</a></li>
+          <li><a href="https://shopify.dev/docs/api/customer-account-ui-extensions" target="_blank" rel="noopener">Customer Account UI Extensions API</a></li>
+        </ul></div>
+      </details>
+
+      <details>
+        <summary>Where people get lost</summary>
+        <ul class="pitfalls">
+          <li><b>Reaching for a deprecated hook</b> — the Changelog page already flags <code>useBuyerJourneyIntercept</code> as deprecated; always check the current API reference rather than an older tutorial's hook names.</li>
+          <li><b>Underestimating review time</b> — checkout extensions go through more scrutiny than an Admin block; budget for it before a launch date.</li>
+        </ul>
+      </details>
+    </div>
+  </section>
+
+  <section class="family" id="functions">
+    <div class="fam-head"><h2>Shopify Functions</h2><span class="fam-tag">server-side logic</span></div>
+    <p class="fam-tagline">No UI at all — small, fast functions that plug custom logic into Shopify's own checkout/cart computation.</p>
+    <div class="card">
+      <ul>
+        <li>Custom discounts, shipping rate customization, payment/delivery method customization, cart and checkout validation</li>
+        <li>Written in JavaScript/TypeScript (compiled to WebAssembly) or Rust — you never run a server for these; Shopify runs the compiled function for you at request time</li>
+        <li>Pure input → output: a Function receives structured input (cart, discount context, etc.) and returns a structured decision, with no network calls or side effects allowed inside it</li>
+      </ul>
+
+      <details>
+        <summary>Tools you'll actually use</summary>
+        <div class="res-list"><ul>
+          <li><code>shopify app generate extension</code> — choose a Function type (e.g. "Discount function")</li>
+          <li>The JS API package (e.g. <code>@shopify/shopify_function</code>) that compiles your JS/TS to Wasm as part of the build</li>
+          <li>Function input/output previewed locally via the CLI before deploying</li>
+        </ul></div>
+      </details>
+
+      <details>
+        <summary>Step-by-step path</summary>
+        <ol class="path">
+          <li>Generate a discount function and read its generated input/output types — this is the whole contract.</li>
+          <li>Write the simplest possible rule (e.g. a flat 10% off) and run it against sample input locally.</li>
+          <li>Attach it to a discount in your dev store's Admin and confirm it applies at checkout.</li>
+        </ol>
+      </details>
+
+      <details>
+        <summary>Free resources</summary>
+        <div class="res-list"><ul>
+          <li><a href="https://shopify.dev/docs/apps/build/functions" target="_blank" rel="noopener">shopify.dev — Shopify Functions</a></li>
+          <li><a href="https://shopify.dev/docs/api/functions" target="_blank" rel="noopener">Functions API reference</a></li>
+        </ul></div>
+      </details>
+
+      <details>
+        <summary>Where people get lost</summary>
+        <ul class="pitfalls">
+          <li><b>Expecting to call your own API from inside a Function</b> — Functions can't make network calls; anything dynamic has to be pre-computed into the input Shopify hands it (via metafields, typically) before the function runs.</li>
+          <li><b>Confusing Functions with Shopify Scripts</b> — Scripts are retired entirely; Functions are the current, actively developed replacement, and the two have quite different programming models.</li>
+        </ul>
+      </details>
+    </div>
+  </section>
+
+  <div class="concept">
+    <h2>Testing and shipping extensions</h2>
+    <p>All four families share the same lifecycle:</p>
+    <ul>
+      <li><code>shopify app generate extension</code> scaffolds it into your app's <code>extensions/</code> folder</li>
+      <li><code>shopify app dev</code> gives you a live preview against your dev store — the theme editor for theme extensions, a real (test-mode) checkout for checkout extensions, Admin itself for Admin extensions</li>
+      <li><code>shopify app deploy</code> bundles every extension with your app's configuration into one versioned <b>app version</b>, which you then release to merchants — a broken release can be rolled back to the previous version</li>
+    </ul>
+  </div>
+
+  <div class="next">
+    <h2>Where to go from here</h2>
+    <div class="next-links">
+      <a href="/getting-started">Build the main app first →</a>
+      <a href="/roadmap">Roadmap →</a>
+      <a href="/changelog">Changelog →</a>
+    </div>
+  </div>
+
+  <footer class="sitefooter">
+    Extension targets, APIs, and size limits change more often than almost anything else in the Shopify ecosystem — always cross-check the <a href="https://shopify.dev/docs/apps/build/app-extensions" target="_blank" rel="noopener">official app extensions overview</a> and the <a href="/changelog">Changelog</a> before shipping.
+  </footer>
+</BaseLayout>
+
+<style>
+  section.family { margin: 56px 0; }
+  .fam-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; flex-wrap: wrap; }
+  .fam-head h2 { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.4rem; margin: 0; }
+  .fam-tag {
+    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em;
+    font-weight: 700; padding: 3px 9px; border-radius: 10px;
+    border: 1px solid var(--line); color: var(--text-dim);
+  }
+  .fam-tagline { color: var(--text-dim); font-size: var(--fs-small); margin: 0 0 20px; }
+
+  .card > ul { margin: 0 0 18px; padding-left: 20px; font-size: var(--fs-body); }
+  .card > ul > li { margin-bottom: 8px; }
+
+  .path { padding-left: 22px; margin: 0; font-size: var(--fs-small); }
+  .path li { margin-bottom: 10px; }
+
+  .matrix {
+    width: 100%; border-collapse: collapse; font-size: 0.95rem;
+    margin: 32px 0 52px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .matrix th, .matrix td { text-align: left; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+  .matrix th { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--text-dim); background: var(--surface-alt); }
+  .matrix tr:last-child td { border-bottom: none; }
+
+  .next {
+    margin-top: 56px; border: 1px solid var(--line); border-radius: 14px;
+    padding: 28px 30px; background: var(--surface); box-shadow: var(--shadow);
+  }
+  .next h2 { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.1rem; margin: 0 0 16px; }
+  .next-links { display: flex; flex-wrap: wrap; gap: 12px; }
+  .next-links a {
+    font-size: 0.92rem; text-decoration: none; border: 1px solid var(--line);
+    border-radius: 20px; padding: 8px 16px; color: var(--text); font-weight: 500;
+  }
+  .next-links a:hover { border-color: var(--accent); color: var(--accent); }
+</style>

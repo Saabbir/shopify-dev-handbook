@@ -1,0 +1,333 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+
+const installCli = `# requires Node.js 22.12 or higher — check with \`node -v\`
+npm install -g @shopify/cli@latest`;
+
+const checkVersion = `shopify version`;
+
+const scaffold = `shopify app init`;
+
+const runDev = `shopify app dev`;
+
+const prismaModel = `model Note {
+  id        String   @id @default(cuid())
+  shop      String
+  productId String
+  body      String
+  updatedAt DateTime @updatedAt
+}`;
+
+const prismaMigrate = `npx prisma migrate dev --name add-note`;
+
+const loaderCode = `export async function loader({ request }) {
+  const { admin, session } = await authenticate.admin(request);
+
+  const response = await admin.graphql(\`
+    query {
+      products(first: 10) {
+        edges { node { id title } }
+      }
+    }
+  \`);
+  const { data } = await response.json();
+  const products = data.products.edges.map((e) => e.node);
+
+  const notes = await db.note.findMany({ where: { shop: session.shop } });
+
+  return { products, notes };
+}`;
+
+const actionCode = `export async function action({ request }) {
+  const { session } = await authenticate.admin(request);
+  const formData = await request.formData();
+  const productId = formData.get("productId");
+  const body = formData.get("body");
+
+  await db.note.upsert({
+    where: { shop_productId: { shop: session.shop, productId } },
+    update: { body },
+    create: { shop: session.shop, productId, body },
+  });
+
+  return { ok: true };
+}`;
+
+const deployCommand = `shopify app deploy`;
+---
+<BaseLayout
+  title="Your First Shopify App — Shopify Dev Handbook"
+  description="One straight line from an empty folder to a deployed, installed app: scaffold it, tour every generated file, build one real feature, ship it. Free the whole way."
+  accent="blue"
+>
+  <header>
+    <h1 class="page-title">Your First Shopify App, Start to Finish</h1>
+    <p class="lede">One straight line from an empty folder to a deployed, installed app: scaffold it, tour every generated file, build one real feature, ship it. Free the whole way.</p>
+  </header>
+
+  <div class="goal">
+    <h2>What you'll build</h2>
+    <p>A tiny embedded app called <b>Product Notes</b> — a merchant picks a product and saves a private note against it (supplier info, restock reminders, whatever). Small enough to finish in a sitting, but it touches every piece that matters: the Admin GraphQL API, a loader and an action, Prisma persistence, and Polaris UI.</p>
+    <ul>
+      <li>Assumes you've done the setup checklist on the <a href="/roadmap">Roadmap</a> page — Node.js, a Shopify Partner account, and a free development store.</li>
+      <li>If you haven't touched React, TypeScript, or GraphQL yet, this will still make sense structurally, but the Roadmap's first three modules (or the matching <a href="/crash-courses">Crash Courses</a>) will make every line of code actually click.</li>
+    </ul>
+  </div>
+
+  <div class="rail">
+
+    <div class="node" id="step-cli">
+      <div class="card">
+        <h3>1. Install the Shopify CLI</h3>
+        <p>The CLI scaffolds apps, runs a local dev tunnel, generates extensions, and deploys — it's the one tool this entire workflow runs through. Install it globally, once, not per-project.</p>
+        <CodeBlock code={installCli} lang="bash" />
+        <p>Confirm it installed:</p>
+        <CodeBlock code={checkVersion} lang="bash" />
+        <details>
+          <summary>Free resources</summary>
+          <div class="res-list"><ul>
+            <li><a href="https://shopify.dev/docs/api/shopify-cli" target="_blank" rel="noopener">shopify.dev — Shopify CLI reference</a></li>
+          </ul></div>
+        </details>
+      </div>
+    </div>
+
+    <div class="node" id="step-scaffold">
+      <div class="card">
+        <h3>2. Scaffold the app</h3>
+        <p>Run this from the folder where you keep projects — it creates a new subfolder for you:</p>
+        <CodeBlock code={scaffold} lang="bash" />
+        <p>It'll ask you a few things:</p>
+        <ol>
+          <li><b>App name</b> — anything; it becomes the folder name and the app's display name (you can change both later).</li>
+          <li><b>Template</b> — choose <b>"Build a React Router app"</b>. This is Shopify's current recommended path — the older Remix template is superseded now that Remix itself merged into React Router.</li>
+        </ol>
+        <p>The CLI creates the folder, installs every dependency, and sets up a local Prisma/SQLite database — no separate <code>npm install</code> step needed.</p>
+        <details>
+          <summary>Where people get lost</summary>
+          <ul class="pitfalls">
+            <li><b>Picking an unfamiliar template "to explore"</b> — stick to the React Router template for this walkthrough; the file tour below assumes it.</li>
+            <li><b>Running it inside an existing git repo</b> — the CLI initializes its own git repo in the new folder; nesting it inside another repo you care about gets confusing fast. Run it somewhere clean.</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Free resources</summary>
+          <div class="res-list"><ul>
+            <li><a href="https://shopify.dev/docs/apps/build/scaffold-app" target="_blank" rel="noopener">shopify.dev — Scaffold an app</a></li>
+            <li><a href="https://github.com/Shopify/shopify-app-template-react-router" target="_blank" rel="noopener">shopify-app-template-react-router on GitHub</a></li>
+          </ul></div>
+        </details>
+      </div>
+    </div>
+
+    <div class="node" id="step-tour">
+      <div class="card">
+        <h3>3. Tour the generated files before changing anything</h3>
+        <p><code>cd</code> into the new folder and open it in VS Code. Before writing a line of your own code, know what you're looking at — this is the single habit that makes the rest of this stack stop feeling like a black box.</p>
+
+        <div class="filetour">
+          <div class="filerow">
+            <div class="fname">package.json <span class="flag flag-read">skim once</span></div>
+            <p>Check <code>scripts</code> — <code>dev</code>, <code>build</code>, <code>deploy</code> are the ones you'll actually run, mostly through <code>shopify app dev</code> instead of directly.</p>
+          </div>
+          <div class="filerow">
+            <div class="fname">shopify.app.toml <span class="flag flag-edit">you'll edit this</span></div>
+            <p>Your app's identity on Shopify's side: client ID, requested scopes, the app URL, and where extensions live. Changing scopes here and running <code>shopify app deploy</code> is how you request new permissions.</p>
+          </div>
+          <div class="filerow">
+            <div class="fname">app/shopify.server.ts <span class="flag flag-read">read this first</span></div>
+            <p>Where auth actually happens — exports the <code>authenticate</code> helper every loader/action calls, sets up session storage, and configures the API version. This is the file behind everything the <a href="/roadmap">Roadmap's OAuth module</a> describes.</p>
+          </div>
+          <div class="filerow">
+            <div class="fname">app/db.server.ts <span class="flag flag-read">read this</span></div>
+            <p>A single shared Prisma Client instance. Import <code>db</code> (or whatever it's named here) from this file anywhere you need the database — never create a second <code>PrismaClient</code>.</p>
+          </div>
+          <div class="filerow">
+            <div class="fname">app/routes/app._index.tsx <span class="flag flag-edit">you'll edit this</span></div>
+            <p>The app's home page inside Admin. This is where Step 4 below adds the Product Notes UI.</p>
+          </div>
+          <div class="filerow">
+            <div class="fname">app/routes/webhooks.*.tsx <span class="flag flag-read">read, don't touch yet</span></div>
+            <p>The mandatory compliance webhook handlers (customer data request/redact, shop redact) — already implemented for you. Read them once so "webhook handler" isn't an abstract idea.</p>
+          </div>
+          <div class="filerow">
+            <div class="fname">prisma/schema.prisma <span class="flag flag-edit">you'll edit this</span></div>
+            <p>Starts with just a <code>Session</code> model (how the template persists OAuth sessions). Step 4 adds a <code>Note</code> model here.</p>
+          </div>
+          <div class="filerow">
+            <div class="fname">vite.config.ts <span class="flag flag-skip">skip for now</span></div>
+            <p>Dev server and build configuration. You won't need to touch this for a first app — worth reading once you're comfortable, covered on the <a href="/roadmap">Roadmap's Toolchain track</a>.</p>
+          </div>
+          <div class="filerow">
+            <div class="fname">extensions/ <span class="flag flag-skip">empty for now</span></div>
+            <p>Where generated extensions land — nothing here yet. Covered on the <a href="/extensions">Extensions page</a>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="node" id="step-dev">
+      <div class="card">
+        <h3>4. Run it for the first time</h3>
+        <CodeBlock code={runDev} lang="bash" />
+        <p>The first run asks which Partner organization and which app record to use (it creates one), then asks you to pick a development store to install on. After that it:</p>
+        <ul>
+          <li>Starts your app's dev server locally</li>
+          <li>Opens a public tunnel to it (so Shopify's servers, which don't know what <code>localhost</code> is, can reach your app)</li>
+          <li>Updates <code>shopify.app.toml</code>'s URLs to point at that tunnel automatically</li>
+          <li>Prompts you to install the app on the dev store you picked</li>
+        </ul>
+        <p>Once it finishes, open the printed Admin URL — you should see a blank-ish app page embedded inside Shopify Admin. That's your baseline: a real, authenticated, embedded app doing nothing yet.</p>
+        <details>
+          <summary>Where people get lost</summary>
+          <ul class="pitfalls">
+            <li><b>Closing the terminal running <code>shopify app dev</code></b> — it needs to keep running; it's your dev server and tunnel both. Use a second terminal tab for everything else.</li>
+            <li><b>"It worked yesterday, blank page today"</b> — dev tunnels are ephemeral; a restarted <code>shopify app dev</code> gets a new tunnel URL and updates the config automatically, but a browser tab left open on the old URL won't follow. Reopen it from the terminal's printed link.</li>
+          </ul>
+        </details>
+      </div>
+    </div>
+
+    <div class="node" id="step-build">
+      <div class="card">
+        <h3>5. Build the feature: Product Notes</h3>
+        <p>Four small changes, in order.</p>
+
+        <p><b>a) Extend the Prisma schema</b> — add a <code>Note</code> model to <code>prisma/schema.prisma</code>:</p>
+        <CodeBlock code={prismaModel} lang="prisma" title="prisma/schema.prisma" />
+        <CodeBlock code={prismaMigrate} lang="bash" />
+        <p>Read the migration file Prisma just generated under <code>prisma/migrations/</code> — confirm it's the <code>CREATE TABLE</code> you'd expect.</p>
+
+        <p><b>b) Load data</b> — in <code>app/routes/app._index.tsx</code>, the loader authenticates, queries a handful of products via the Admin GraphQL API, and reads any existing note for the first one:</p>
+        <CodeBlock code={loaderCode} lang="tsx" title="app/routes/app._index.tsx" />
+
+        <p><b>c) Save data</b> — an action that upserts a note for the selected product:</p>
+        <CodeBlock code={actionCode} lang="tsx" title="app/routes/app._index.tsx" />
+        <p>(Add a compound unique constraint on <code>[shop, productId]</code> in the schema for that <code>upsert</code> to work — one more small migration.)</p>
+
+        <p><b>d) The UI</b> — Polaris components, a product picker (<code>Select</code> is enough for 10 products), a <code>TextField</code> for the note, and a submit button wired to a React Router <code>Form</code> posting to the action. Loader data comes in via <code>useLoaderData()</code>; after the action runs, <code>useActionData()</code> tells you it saved so you can show a Polaris <code>Toast</code>.</p>
+
+        <details>
+          <summary>Where people get lost</summary>
+          <ul class="pitfalls">
+            <li><b>Forgetting <code>npx prisma generate</code></b> after adding the model — <code>db.note</code> won't exist on the typed client until you do (usually automatic after <code>migrate dev</code>, but worth knowing if TypeScript complains).</li>
+            <li><b>Trying to call <code>db.note</code> from a component</b> — Prisma only runs on the server; it belongs in the loader/action, never in the component body.</li>
+            <li><b>Testing the GraphQL query in isolation first</b> — if the products query looks wrong, paste it into GraphiQL against your dev store before assuming the loader code is the problem.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Free resources</summary>
+          <div class="res-list"><ul>
+            <li><a href="https://shopify.dev/docs/api/admin-graphql" target="_blank" rel="noopener">Shopify Admin GraphQL API</a></li>
+            <li><a href="https://www.prisma.io/docs/orm/prisma-client/queries/crud#upsert" target="_blank" rel="noopener">Prisma — upsert</a></li>
+            <li><a href="https://polaris.shopify.com/components" target="_blank" rel="noopener">Polaris components</a></li>
+            <li><a href="https://reactrouter.com/en/main/components/form" target="_blank" rel="noopener">React Router — Form</a></li>
+          </ul></div>
+        </details>
+      </div>
+    </div>
+
+    <div class="node" id="step-test">
+      <div class="card">
+        <h3>6. Test it on the dev store</h3>
+        <p>With <code>shopify app dev</code> still running, reload the app in Admin. Pick a product, type a note, save, refresh the page, and confirm the note is still there — that round trip (load → mutate → persist → reload) is the entire shape of almost every feature you'll ever build on this stack.</p>
+      </div>
+    </div>
+
+    <div class="node" id="step-deploy">
+      <div class="card">
+        <h3>7. Deploy it for real</h3>
+        <p>Two separate things get deployed: your <b>server</b> (the actual running app) and your <b>app configuration</b> (URLs, scopes — what Shopify knows about your app). Both need doing.</p>
+        <ol>
+          <li>Push the project to a GitHub repo.</li>
+          <li>Provision a free production Postgres database (Neon or Supabase — see the Roadmap's Prisma module) and swap the connection string in via <code>DATABASE_URL</code>.</li>
+          <li>Connect the repo to a free host (Vercel or Render — see the Roadmap's DevOps module) and set env vars there, including <code>DATABASE_URL</code>.</li>
+          <li>Run <code>npx prisma migrate deploy</code> against the production database as part of the deploy step.</li>
+          <li>Update <code>shopify.app.toml</code>'s <code>application_url</code> and redirect URLs to your real production URL, then run:
+            <CodeBlock code={deployCommand} lang="bash" />
+            This pushes your app's configuration to Shopify — separate from your server going live.
+          </li>
+          <li>Reinstall the app on your dev store using the production URL and repeat the Product Notes test from Step 6, now against the live deployment.</li>
+        </ol>
+        <p>For the full picture on free hosting options, env vars, and what commonly breaks between local and production, the Roadmap's <a href="/roadmap">DevOps / Deployment module</a> goes deeper than this page needs to.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="next">
+    <h2>Where to go from here</h2>
+    <div class="next-links">
+      <a href="/extensions">Add a checkout or theme extension →</a>
+      <a href="/roadmap">Fill in the fundamentals on the Roadmap →</a>
+      <a href="/changelog">Check what's changed recently →</a>
+    </div>
+  </div>
+
+  <footer class="sitefooter">
+    Every command and file path here reflects Shopify's current React Router app template as of September 2026 — exact generated file names can shift slightly between CLI versions. When in doubt, <a href="https://shopify.dev/docs/apps/build/scaffold-app" target="_blank" rel="noopener">shopify.dev's own scaffolding guide</a> is the tiebreaker.
+  </footer>
+</BaseLayout>
+
+<style>
+  .rail { position: relative; padding-left: 44px; counter-reset: step; }
+  .rail::before {
+    content: "";
+    position: absolute;
+    left: 16px; top: 6px; bottom: 6px; width: 1px;
+    background: var(--line);
+  }
+  .node { position: relative; margin-bottom: 40px; scroll-margin-top: 24px; }
+  .node::before {
+    counter-increment: step;
+    content: counter(step);
+    position: absolute;
+    left: -44px; top: 2px; width: 33px; height: 33px;
+    border-radius: 50%;
+    background: var(--surface-alt);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 0.88rem;
+  }
+
+  .card h3 {
+    font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.25rem; margin: 0 0 14px;
+  }
+  .card p { margin: 0 0 16px; }
+  .card ul, .card ol { padding-left: 22px; margin: 0 0 16px; }
+  .card li { margin-bottom: 8px; }
+
+  .filetour { display: grid; gap: 14px; margin: 0 0 16px; }
+  .filerow {
+    border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; background: var(--surface-alt);
+  }
+  .filerow .fname {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.95rem; font-weight: 600; color: var(--accent);
+    display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;
+  }
+  .filerow p { margin: 0; font-size: var(--fs-small); color: var(--text-dim); }
+  .flag {
+    font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 700;
+    padding: 2px 8px; border-radius: 8px; border: 1px solid var(--line);
+  }
+  .flag-edit { color: var(--gold); border-color: var(--gold); }
+  .flag-read { color: var(--purple); border-color: var(--purple); }
+  .flag-skip { color: var(--text-dim); }
+
+  .next {
+    margin-top: 56px; border: 1px solid var(--line); border-radius: 14px;
+    padding: 28px 30px; background: var(--surface); box-shadow: var(--shadow);
+  }
+  .next h2 { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.1rem; margin: 0 0 16px; }
+  .next-links { display: flex; flex-wrap: wrap; gap: 12px; }
+  .next-links a {
+    font-size: 0.92rem; text-decoration: none; border: 1px solid var(--line);
+    border-radius: 20px; padding: 8px 16px; color: var(--text); font-weight: 500;
+  }
+  .next-links a:hover { border-color: var(--accent); color: var(--accent); }
+</style>

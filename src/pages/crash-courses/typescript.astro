@@ -1,0 +1,436 @@
+---
+import CourseLayout from '../../layouts/CourseLayout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const chapters = [
+  { id: 'why-typescript', title: 'Why TypeScript exists' },
+  { id: 'seeing-it-run', title: 'Where the checking actually happens' },
+  { id: 'basic-types', title: 'Basic types & inference' },
+  { id: 'objects-interfaces', title: 'Describing objects: interfaces' },
+  { id: 'unions-narrowing', title: 'Union types & narrowing' },
+  { id: 'functions', title: 'Typing functions' },
+  { id: 'any-unknown-never', title: '"any" vs "unknown" vs "never"' },
+  { id: 'in-the-app', title: 'TypeScript in the Shopify app template' },
+];
+
+const bugCode = `function formatPrice(amount) {
+  return "$" + amount.toFixed(2);
+}
+
+// Works fine right up until someone calls it like this:
+formatPrice("19.99");
+// TypeError: amount.toFixed is not a function`;
+
+const annotatedCode = `function formatPrice(amount: number): string {
+  return "$" + amount.toFixed(2);
+}
+
+formatPrice("19.99");
+// Property 'toFixed' does not exist on type 'string'... wait, actually:
+// Argument of type 'string' is not assignable to parameter of type 'number'.
+// ^ Caught before the code ever runs.`;
+
+const inferCode = `let title = "Wireless Mouse";     // inferred: string
+let price = 24.99;                // inferred: number
+let inStock = true;                // inferred: boolean
+let tags = ["electronics", "new"]; // inferred: string[]
+
+title = 42;
+// Type 'number' is not assignable to type 'string'.`;
+
+const explicitCode = `// No value to infer from yet — say what it will hold:
+let discountCode: string | null = null;
+
+// Function boundaries: TypeScript can't guess what callers will pass.
+function applyTax(price: number, rate: number): number {
+  return price * (1 + rate);
+}`;
+
+const interfaceCode = `interface Note {
+  id: string;
+  productId: string;
+  body: string;
+  updatedAt: Date;
+}
+
+function summarize(note: Note): string {
+  return note.body.slice(0, 40) + "...";
+}
+
+// Pass anything that doesn't match this shape, and TypeScript stops you:
+summarize({ id: "1", body: "hi" });
+// Property 'productId' is missing in type
+//   '{ id: string; body: string; }' but required in type 'Note'.
+// Property 'updatedAt' is missing...`;
+
+const optionalCode = `interface Note {
+  id: string;
+  productId: string;
+  body: string;
+  pinned?: boolean; // the "?" means this key can be left out entirely
+}
+
+const a: Note = { id: "1", productId: "p1", body: "Fragile — pack with care" };
+const b: Note = { id: "2", productId: "p2", body: "Gift wrap", pinned: true };
+// Both are valid Notes.`;
+
+const typeAliasCode = `// "type" can name any shape, not just objects:
+type ID = string;
+type Note = { id: ID; body: string };
+type Status = "ok" | "error"; // a union — covered in the next chapter
+
+// interface and type do the same job for plain objects.
+// This site uses "interface" for objects and "type" for everything else,
+// which is a common convention — not a hard rule.`;
+
+const unionBasicCode = `let sort: "newest" | "oldest" | "price";
+
+sort = "newest"; // fine — matches one of the three exact strings
+sort = "cheapest";
+// Type '"cheapest"' is not assignable to type '"newest" | "oldest" | "price"'.`;
+
+const narrowCode = `type Result =
+  | { ok: true; note: Note }
+  | { ok: false; error: string };
+
+function render(result: Result) {
+  if (result.ok) {
+    return result.note.body;   // TypeScript knows ".note" exists in this branch
+  }
+  return result.error;         // and ".error" exists in this one instead
+}
+
+render({ ok: true, error: "oops" });
+// Object literal may only specify known properties, and 'error' does not
+// exist in type '{ ok: true; note: Note; }'.`;
+
+const nullableCode = `function findNote(id: string, notes: Note[]): Note | undefined {
+  return notes.find((n) => n.id === id);
+}
+
+const note = findNote("1", notes);
+console.log(note.body);
+// 'note' is possibly 'undefined'.
+
+// Narrow it first:
+if (note) {
+  console.log(note.body); // fine — TypeScript knows it's not undefined here
+}`;
+
+const funcParamsCode = `function applyDiscount(price: number, percent: number): number {
+  return price - price * (percent / 100);
+}
+
+// Optional parameter — caller can leave it out:
+function greetCustomer(name: string, storeName?: string): string {
+  return storeName ? \`Welcome to \${storeName}, \${name}!\` : \`Welcome, \${name}!\`;
+}
+
+// Default value — same idea, but with a fallback baked in:
+function pageSize(requested: number = 20): number {
+  return Math.min(requested, 100);
+}`;
+
+const arrowFuncCode = `// Arrow functions are typed the same way:
+const double = (n: number): number => n * 2;
+
+// You'll see this exact shape constantly in the app template —
+// a callback passed to .map(), .filter(), or an event handler:
+const bodies: string[] = notes.map((note: Note): string => note.body);`;
+
+const anyCode = `function handleWebhook(payload: any) {
+  console.log(payload.line_items[0].sku);
+  // Compiles. TypeScript trusts you completely — and if "payload" doesn't
+  // actually have "line_items", this crashes at runtime with no warning.
+}`;
+
+const unknownCode = `async function getBody(res: Response): Promise<string> {
+  const data: unknown = await res.json();
+
+  if (typeof data === "object" && data !== null && "body" in data) {
+    return String((data as { body: unknown }).body);
+  }
+  throw new Error("Unexpected response shape");
+}
+// "unknown" forces the check above to exist before "data" can be used.
+// Delete the "if" and TypeScript refuses to compile — that's the point.`;
+
+const neverCode = `function assertUnreachable(x: never): never {
+  throw new Error("Didn't expect to get here: " + x);
+}
+
+type Status = "ok" | "error";
+
+function describe(status: Status): string {
+  if (status === "ok") return "All good";
+  if (status === "error") return "Something failed";
+  return assertUnreachable(status);
+  // If a third status is ever added to the Status type, this line stops
+  // compiling — TypeScript is telling you: "you forgot to handle it."
+}`;
+
+const loaderCode = `// app/routes/app._index.tsx — a real loader from the app template
+import type { LoaderFunctionArgs } from "react-router";
+import { authenticate } from "../shopify.server";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const { admin } = await authenticate.admin(request);
+
+  const response = await admin.graphql(\`#graphql
+    query getShopName {
+      shop { name }
+    }\`);
+
+  const data = await response.json();
+  return { shopName: data.data.shop.name as string };
+}`;
+
+const prismaTypeCode = `// Prisma generates a type for every model in schema.prisma.
+// You never hand-write this — it's produced from your schema:
+import type { Note } from "@prisma/client";
+
+async function pinNote(note: Note) {
+  // note.id, note.productId, note.body, note.updatedAt —
+  // all typed and autocompleted, because Prisma already knows the shape.
+}`;
+---
+<CourseLayout
+  title="TypeScript Crash Course — Shopify Dev Handbook"
+  description="TypeScript from first principles, for readers who only know HTML, CSS, and JavaScript. Types, interfaces, unions, and where they show up in a real Shopify app."
+  accent="violet"
+  courseTitle="TypeScript"
+  courseTagline="JavaScript with a spell-checker for your data. If you can write a JS function, you can read this — every new idea is introduced from something you already know."
+  readTime="45–55 min"
+  chapters={chapters}
+  next={{ href: '/crash-courses/react', title: 'React' }}
+>
+  <section class="chapter" id="why-typescript">
+    <div class="chapter-num">Chapter 01</div>
+    <h2>Why TypeScript exists</h2>
+    <p>JavaScript will let you do almost anything, including things that are obviously mistakes. Call a function with the wrong kind of value, and JavaScript won't stop you — it'll just wait until that code actually runs, and then fail:</p>
+    <CodeBlock code={bugCode} lang="js" title="plain JavaScript" />
+    <p>That error only shows up if this exact line runs, with this exact bad input. If it's buried behind a checkout button nobody tests locally, it ships — and a merchant finds it for you.</p>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>TypeScript is JavaScript, plus a step before your code ever runs that asks: "does every value here match what the code expects?" If not, it refuses to compile and tells you exactly where and why — on your screen, in your editor, before you even save the file.</p>
+    </div>
+
+    <p>Add one type annotation, and the same mistake gets caught immediately, at the call site, with a specific message instead of a crash in production:</p>
+    <CodeBlock code={annotatedCode} lang="ts" />
+
+    <p>That's the entire pitch. TypeScript adds no new runtime behavior — it disappears completely when your code actually runs (more on that next). What it adds is a compiler that reads your code first and refuses to let obvious shape-mismatches through.</p>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>JavaScript lets mismatched values through until the exact buggy line executes.</li>
+        <li>TypeScript checks the shapes of your values <em>before</em> the code runs, at compile time.</li>
+        <li>A <code>.ts</code> or <code>.tsx</code> file is a JavaScript file with type annotations added.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="seeing-it-run">
+    <div class="chapter-num">Chapter 02</div>
+    <h2>Where the checking actually happens</h2>
+    <p>Browsers and Node.js don't understand types — they only run JavaScript. So somewhere between you writing <code>.ts</code> and the code executing, the types have to disappear. That step is called <strong>compiling</strong> (TypeScript people also say "transpiling"), and the tool that does it is <code>tsc</code> (the TypeScript compiler).</p>
+
+    <p>Two separate things happen when you save a <code>.ts</code> file:</p>
+    <ul>
+      <li><strong>Type checking</strong> — does everything line up? This is where errors are reported.</li>
+      <li><strong>Emitting JavaScript</strong> — strip every type annotation out, leaving plain <code>.js</code> that Node or the browser can run.</li>
+    </ul>
+
+    <p>Here's the part that surprises most beginners: <strong>type checking does not stop your code from running.</strong> By default, <code>tsc</code> will print the errors <em>and still produce the JavaScript output</em>. The compiler is a linter with very strong opinions, not a gate — the actual enforcement is you (or your team, or your CI pipeline) agreeing not to ship code with red errors.</p>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Think of TypeScript as spell-check for code. Red squiggles under a word don't stop you from printing the document — they just make it very obvious something's wrong before you hand it to someone else.</p>
+    </div>
+
+    <p>You almost never run <code>tsc</code> by hand on a Shopify app. It's already wired into the tools you're using:</p>
+    <ul>
+      <li>Your editor (VS Code, most notably) runs the TypeScript checker in the background and underlines problems as you type — this is what you'll actually see, second by second.</li>
+      <li><code>npm run dev</code> (via Vite, which the app template uses) compiles your files on the fly so the app runs in the browser.</li>
+      <li><code>npm run build</code> runs a full type check as part of building for production — this is usually the first place a forgotten error gets caught for real.</li>
+    </ul>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself</div>
+      <p>Open the <a href="https://www.typescriptlang.org/play" target="_blank" rel="noopener">TypeScript Playground</a> — no install required. Paste in the buggy <code>formatPrice</code> example from Chapter 1, hover over the red squiggle, and read the exact error message TypeScript gives you. Then fix it by adding <code>: number</code> and watch the error disappear.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>The TypeScript compiler both checks types and strips them out to produce plain JavaScript.</li>
+        <li>Type errors are warnings, not runtime blockers, by default — your editor and build step are what make them matter.</li>
+        <li>You'll meet TypeScript mostly as red squiggles in your editor, not as a command you run.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="basic-types">
+    <div class="chapter-num">Chapter 03</div>
+    <h2>Basic types &amp; inference</h2>
+    <p>The core JavaScript types all have TypeScript names that look exactly like you'd guess: <code>string</code>, <code>number</code>, <code>boolean</code>, arrays like <code>string[]</code>, and so on. The good news is you rarely have to write these by hand.</p>
+
+    <p>TypeScript watches what value you assign to a variable and figures out its type automatically — this is called <strong>inference</strong>:</p>
+    <CodeBlock code={inferCode} lang="ts" />
+
+    <p>Notice nothing here has an explicit type annotation, yet TypeScript still caught the mistake on the last line. It looked at <code>"Wireless Mouse"</code>, decided <code>title</code> is a <code>string</code>, and held it to that from then on.</p>
+
+    <h3>When do you actually write a type?</h3>
+    <p>Mainly in two situations: when there's no starting value to infer from, and at the boundary of a function (its parameters and, usually, its return type):</p>
+    <CodeBlock code={explicitCode} lang="ts" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Let TypeScript guess wherever it can — that's most local variables. Tell it explicitly wherever it can't guess — that's mostly function inputs, since a function doesn't know what someone will eventually pass in.</p>
+    </div>
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Over-annotating.</b> Writing <code>let title: string = "Wireless Mouse"</code> isn't wrong, but it's noise — TypeScript already knows. Save explicit annotations for places inference can't reach.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="objects-interfaces">
+    <div class="chapter-num">Chapter 04</div>
+    <h2>Describing objects: interfaces</h2>
+    <p>Most of the data flowing through a real app isn't a lone string or number — it's an object with several fields: a product, an order, a note. An <code>interface</code> gives that shape a name, so you can reuse it everywhere that shape shows up:</p>
+    <CodeBlock code={interfaceCode} lang="ts" />
+
+    <p>Once <code>Note</code> exists, any function that accepts or returns a note can say so — and TypeScript checks every call site against the full shape, not just the fields you happened to test.</p>
+
+    <h3>Optional fields</h3>
+    <p>Not every field has to be present on every object. Add a <code>?</code> after the key name to mark it optional:</p>
+    <CodeBlock code={optionalCode} lang="ts" />
+
+    <h3><code>interface</code> vs <code>type</code></h3>
+    <p>There's a second keyword, <code>type</code>, that also names shapes. For plain object shapes, the two are close to interchangeable — the difference matters more as codebases grow, and isn't worth dwelling on yet. A common convention (used across this site) is <code>interface</code> for object shapes, and <code>type</code> for everything else — unions, aliases for primitives, function signatures:</p>
+    <CodeBlock code={typeAliasCode} lang="ts" />
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself</div>
+      <p>In the Playground, define an interface for something from your own life — a <code>Recipe</code> with a <code>title</code>, a <code>minutes</code> number, and an optional <code>notes</code> string. Write a function that takes a <code>Recipe</code> and returns a formatted string. Then call it with an object missing a required field and read the error.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li><code>interface</code> names an object shape so it can be reused and checked everywhere.</li>
+        <li><code>fieldName?: Type</code> makes a field optional.</li>
+        <li><code>type</code> can name any shape, including ones that aren't plain objects.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="unions-narrowing">
+    <div class="chapter-num">Chapter 05</div>
+    <h2>Union types &amp; narrowing</h2>
+    <p>A <strong>union type</strong> says "this value is one of these specific possibilities" — joined with a <code>|</code> (read it as "or"):</p>
+    <CodeBlock code={unionBasicCode} lang="ts" />
+
+    <p>Unions get far more useful once the possibilities are whole object shapes, not just strings. This is exactly how you'd model "a loader either succeeded or it didn't":</p>
+    <CodeBlock code={narrowCode} lang="ts" />
+
+    <p>The <code>if (result.ok)</code> check is doing more than you might expect. TypeScript is watching that condition, and inside the <code>if</code> block it knows <code>result</code> must be the <code>{'{'} ok: true {'}'}</code> half of the union — so <code>.note</code> is available. Outside that block, it knows the opposite. This is called <strong>narrowing</strong>: proving to the compiler which branch of a union you're actually holding.</p>
+
+    <h3>The most common union you'll fight: "possibly missing"</h3>
+    <p><code>undefined</code> shows up constantly — an array search that finds nothing, an optional field, a value that hasn't loaded yet. TypeScript treats "might be undefined" as its own union, and forces you to check:</p>
+    <CodeBlock code={nullableCode} lang="ts" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>A union type is TypeScript refusing to let you forget about the failure case. "This is a Note, <em>or</em> it's undefined" means every place you use the value, you have to prove which one you've actually got — the same way you'd naturally write "if the note exists, do X" in plain JavaScript, except now the compiler enforces that you actually wrote the check.</p>
+    </div>
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Silencing the error instead of narrowing.</b> Writing <code>note!.body</code> (the <code>!</code> means "trust me, this isn't undefined") makes the error go away without actually checking — if you're wrong, it crashes at runtime, which is the exact failure TypeScript was trying to prevent. Prefer a real <code>if</code> check.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="functions">
+    <div class="chapter-num">Chapter 06</div>
+    <h2>Typing functions</h2>
+    <p>A function's type annotations are mostly about its parameters and its return value — you saw this already in Chapter 1. The same optional-field idea from interfaces applies to parameters too, and default values work exactly like plain JavaScript:</p>
+    <CodeBlock code={funcParamsCode} lang="ts" />
+
+    <p>Arrow functions — the <code>(x) =&gt; x * 2</code> style — are typed the same way, just with the types placed around the arrow instead of after <code>function</code>:</p>
+    <CodeBlock code={arrowFuncCode} lang="ts" />
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself</div>
+      <p>You'll see typed arrow functions constantly inside <code>.map()</code>, <code>.filter()</code>, and event handlers throughout the app template and the <a href="/crash-courses/react">React course</a>. Get comfortable reading <code>(note: Note): string =&gt;</code> as "a function that takes a Note and returns a string" — that's all it says.</p>
+    </div>
+  </section>
+
+  <section class="chapter" id="any-unknown-never">
+    <div class="chapter-num">Chapter 07</div>
+    <h2>"any" vs "unknown" vs "never"</h2>
+    <p>Three special types come up constantly once you start reading real code, and they mean very different things.</p>
+
+    <h3><code>any</code>: the escape hatch (avoid it)</h3>
+    <p><code>any</code> tells TypeScript to stop checking a value entirely — it's compatible with everything, in both directions:</p>
+    <CodeBlock code={anyCode} lang="ts" />
+    <p>This compiles cleanly and defeats the entire point of using TypeScript. <code>any</code> exists mainly as an escape hatch for gradually converting old JavaScript, or for genuinely untyped third-party data — reach for it rarely, and treat it as a smell in code you're writing fresh.</p>
+
+    <h3><code>unknown</code>: the safe version of "I don't know yet"</h3>
+    <p>When you truly don't know a value's shape — the classic case is <code>JSON.parse()</code> or a <code>fetch</code> response — <code>unknown</code> is the type to reach for instead:</p>
+    <CodeBlock code={unknownCode} lang="ts" />
+
+    <div class="compare">
+      <div class="bad">
+        <h4>any</h4>
+        <p>Turns off checking. You can call any method, access any property, pass it anywhere — and find out at runtime if you were wrong.</p>
+      </div>
+      <div class="good">
+        <h4>unknown</h4>
+        <p>Turns off <em>assumptions</em>, not checking. You must prove the shape (with an <code>if</code>, like above) before TypeScript lets you use it.</p>
+      </div>
+    </div>
+
+    <h3><code>never</code>: "this can't happen"</h3>
+    <p><code>never</code> is rarer, but powerful for catching a specific kind of bug: forgetting to handle a new case you added later.</p>
+    <CodeBlock code={neverCode} lang="ts" />
+    <p>You won't write this pattern often as a beginner, but recognizing it is useful — it's how experienced TypeScript codebases make sure a union never grows a new possibility without every <code>if</code>/<code>switch</code> handling it being updated too.</p>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li><code>any</code> — checking is off. Avoid it in code you write.</li>
+        <li><code>unknown</code> — checking is on, but you must narrow before using the value.</li>
+        <li><code>never</code> — a value that should be impossible to reach; useful for exhaustiveness checks.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="in-the-app">
+    <div class="chapter-num">Chapter 08</div>
+    <h2>TypeScript in the Shopify app template</h2>
+    <p>Everything above is enough to read almost any file the <code>shopify app init</code> template generates. Here's a real loader from that template — the kind of function covered in depth in <a href="/crash-courses/react-router-7">React Router 7</a>:</p>
+    <CodeBlock code={loaderCode} lang="tsx" title="app/routes/app._index.tsx" />
+
+    <p>Nothing here is new: <code>LoaderFunctionArgs</code> is an interface (imported, not written by you) describing what the function receives; <code>as string</code> is a narrowing shortcut telling TypeScript "trust me, I know this is a string" — use it sparingly, the same way you'd use <code>!</code>; and the return value's shape is inferred from the object literal, the same inference from Chapter 3.</p>
+
+    <p>Prisma (covered in its own <a href="/crash-courses/prisma">crash course</a>) leans on this even harder — it reads your database schema and <em>generates</em> an interface for every table, so your queries are checked against the real database shape automatically:</p>
+    <CodeBlock code={prismaTypeCode} lang="ts" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>You will rarely write an interface completely from scratch in this stack. Most of the shapes you'll type against — GraphQL responses, Prisma models, React Router's loader arguments — are generated for you. Your job is mostly reading them, which is exactly what this chapter practiced.</p>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Where to go next</div>
+      <p>Move on to <a href="/crash-courses/react">React</a> — it uses typed props and typed state constantly, and everything in this course carries over directly. If you'd rather see TypeScript in a full running app first, the <a href="/getting-started">Getting Started</a> build walks through a real feature end to end.</p>
+    </div>
+  </section>
+</CourseLayout>

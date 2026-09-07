@@ -1,0 +1,1940 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="Learning Roadmap for Shopify App Development — Shopify Dev Handbook"
+  description="Everything free, step by step: three tracks — building real embedded Shopify apps on the React Router 7 stack, a general backend foundation underneath it, and a dedicated track for reading the config files, JSDoc, and build tooling that most tutorials skip and most developers get stuck on."
+  accent="gold"
+>
+  <header>
+    <h1 class="page-title">Learning Roadmap for Shopify App Development</h1>
+    <p class="lede">Everything free, step by step: three tracks — building real embedded Shopify apps on the React Router 7 stack, a general backend foundation underneath it, and a dedicated track for reading the config files, JSDoc, and build tooling that most tutorials skip and most developers get stuck on.</p>
+  </header>
+
+  <details class="setup" open>
+    <summary>Before you start — accounts &amp; tools (all free, no card needed unless noted)</summary>
+    <div class="setup-grid">
+      <div>
+        <h4>Local machine</h4>
+        <ul>
+          <li><a href="https://nodejs.org/en/download" target="_blank" rel="noopener">Node.js LTS</a> — install via <a href="https://github.com/nvm-sh/nvm" target="_blank" rel="noopener">nvm</a> (or <a href="https://github.com/coreybutler/nvm-windows" target="_blank" rel="noopener">nvm-windows</a>) so you can switch versions</li>
+          <li><a href="https://code.visualstudio.com/" target="_blank" rel="noopener">VS Code</a> + extensions: ESLint, Prisma, GraphQL: Language Feature Support</li>
+          <li><a href="https://git-scm.com/downloads" target="_blank" rel="noopener">Git</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Shopify side</h4>
+        <ul>
+          <li><a href="https://www.shopify.com/partners" target="_blank" rel="noopener">Shopify Partner account</a> — free, no store purchase needed</li>
+          <li>A free <a href="https://shopify.dev/docs/apps/tools/development-stores" target="_blank" rel="noopener">development store</a>, created from the Partner dashboard</li>
+          <li><a href="https://shopify.dev/docs/apps/build/scaffold-app" target="_blank" rel="noopener">Shopify CLI</a> — installed per-project via <code>npm</code>, not globally</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Free hosted database (pick one)</h4>
+        <ul>
+          <li><a href="https://neon.com/" target="_blank" rel="noopener">Neon</a> — free Postgres, permanent plan, no card</li>
+          <li><a href="https://supabase.com/" target="_blank" rel="noopener">Supabase</a> — free Postgres + extras, no card</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Free hosting (pick one, for later)</h4>
+        <ul>
+          <li><a href="https://vercel.com/" target="_blank" rel="noopener">Vercel</a> — Hobby plan, free forever for personal projects</li>
+          <li><a href="https://render.com/docs/free" target="_blank" rel="noopener">Render</a> — free web service (spins down when idle)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="setup-note">
+      Heads up on hosting churn: Railway and Fly.io used to have real free tiers — both now only give you a one-time trial credit and require a card for anything beyond that, so they're left off this roadmap's "free" recommendations. Render's own free Postgres database expires 30 days after creation, which is why Neon/Supabase (permanent free tier) are listed separately as the database, with Render/Vercel just running the app. This changes over time, so re-check pricing pages before committing.
+    </div>
+  </details>
+
+  <p class="howto">Every module below expands the same way: <b>bold bullets</b> are the concepts to actually understand, and the collapsible sections underneath break down <b>Tools you'll use</b>, a <b>Step-by-step path</b> to learn it, <b>Free resources</b>, <b>Where people get lost</b> (the specific confusions this roadmap exists to prevent), and a <b>Checkpoint project</b> to prove it stuck. Do modules in order within a track — each one assumes the last.</p>
+
+  <div class="tabs">
+    <input type="radio" name="track-tab" id="tab-shopify" checked>
+    <input type="radio" name="track-tab" id="tab-backend">
+    <input type="radio" name="track-tab" id="tab-tools">
+
+    <div class="tab-labels">
+      <label for="tab-shopify">Shopify App Development</label>
+      <label for="tab-backend">Backend Development</label>
+      <label for="tab-tools">Toolchain &amp; Code Literacy</label>
+    </div>
+
+    <div class="panels">
+
+      <!-- ============================================================ -->
+      <!-- SHOPIFY TRACK -->
+      <!-- ============================================================ -->
+      <section id="panel-shopify" class="track shopify">
+        <p class="track-intro">From React fundamentals to a real, installable embedded app: React → TypeScript → GraphQL → the React Router 7 app template → auth → Prisma → webhooks/billing → extensions → testing → shipping.</p>
+
+        <nav class="quicknav">
+          <a href="#s-react">React</a>
+          <a href="#s-ts">TypeScript</a>
+          <a href="#s-graphql">GraphQL + Admin API</a>
+          <a href="#s-rr7">Node + React Router 7</a>
+          <a href="#s-auth">OAuth &amp; Sessions</a>
+          <a href="#s-prisma">Prisma + DB</a>
+          <a href="#s-webhooks">Webhooks, Billing, Jobs</a>
+          <a href="#s-ext">Extensions</a>
+          <a href="#s-test">Testing</a>
+          <a href="#s-deploy">Shipping</a>
+        </nav>
+
+        <div class="rail">
+
+          <div class="node" id="s-react">
+            <div class="card">
+              <h3>React Fundamentals</h3>
+              <p class="tagline">Foundation for Polaris, App Bridge, and every extension surface.</p>
+              <ul>
+                <li>Components, JSX, props, composition and children</li>
+                <li>The render cycle: what triggers a re-render, why it matters for performance</li>
+                <li>Side effects with <code>useEffect</code> — and the discipline of avoiding it when you don't need it</li>
+                <li>Context, custom hooks, controlled forms and lists with keys</li>
+              </ul>
+
+              <details>
+                <summary>Concepts to master: State Management (worked example)</summary>
+                <div class="path">
+                  <p><b>Fundamentals to understand first:</b> a component re-renders when its state or props change; state is just "data that changes over time and the UI needs to react to." Get comfortable with <code>useState</code> updater functions, why objects/arrays need to be replaced not mutated, and why two renders with the same array contents can still be "different" (referential equality) — this single idea explains half of React's confusing bugs.</p>
+                  <p><b>The layers of state, cheapest first:</b></p>
+                  <ol class="path">
+                    <li><b>Local component state</b> — <code>useState</code>. Use for anything only one component (and its direct children) cares about: an input value, a toggle, a modal's open/closed flag.</li>
+                    <li><b>Lifted state</b> — move state up to the nearest common parent when two sibling components need to share it. This is the default fix before reaching for anything fancier.</li>
+                    <li><b>Server state</b> — in a Shopify app on React Router 7, most of your "state" is actually data fetched from Shopify or your database via <code>loader</code>/<code>action</code> functions, not client state at all. This is the biggest mental shift from generic React tutorials.</li>
+                    <li><b>URL state</b> — filters, pagination, selected tab: put it in the URL (search params) so it survives refresh and is shareable, instead of a <code>useState</code>.</li>
+                    <li><b>Complex local state</b> — <code>useReducer</code> when a component has several state values that change together (e.g. a multi-step form).</li>
+                    <li><b>Global/shared client state</b> — Context for rarely-changing app-wide values (theme, locale). For anything that changes often, prefer server state or a small library — Context re-renders every consumer on every change, which is a common performance trap.</li>
+                  </ol>
+                  <p><b>Tools mostly used in real Shopify app dev:</b> <code>useState</code>/<code>useReducer</code> (built in), React Router's own loaders/actions/<code>useFetcher</code> as the primary "data layer" (built in — no extra library needed), and <a href="https://tanstack.com/query/latest" target="_blank" rel="noopener">TanStack Query</a> only if you go further client-driven than the template defaults. Redux/Zustand/Jotai are common in general React jobs but rarely needed for embedded Shopify apps — the app template's loader/action model already replaces most of what a global store would do.</p>
+                </div>
+              </details>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li>React 18/19 — hooks API, no class components in new code</li>
+                  <li>React DevTools browser extension — inspect props/state/re-renders live</li>
+                  <li>Vite (dev server, see the Toolchain track) rather than Create React App, which is discontinued</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Work through the official interactive tutorial end to end, typing every example yourself rather than reading.</li>
+                  <li>Build a tic-tac-toe or todo app with only <code>useState</code> — no libraries.</li>
+                  <li>Add <code>fetch</code> against a public JSON API (e.g. a fake products endpoint) and practice loading/error states by hand.</li>
+                  <li>Refactor a shared toggle/filter between two sibling components by lifting state up.</li>
+                  <li>Rebuild the same filter using URL search params instead of <code>useState</code>, so it survives a page refresh.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://react.dev/learn" target="_blank" rel="noopener">react.dev — Learn React</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://epicreact.dev/" target="_blank" rel="noopener">Epic React by Kent C. Dodds</a> <span class="free-tag">some free content</span></li>
+                  <li><a href="https://www.freecodecamp.org/news/tag/react/" target="_blank" rel="noopener">freeCodeCamp — React articles &amp; course</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Mutating state directly</b> (<code>state.push(...)</code> then calling <code>setState(state)</code>) looks like it works, then silently breaks re-renders elsewhere. Always create a new array/object.</li>
+                  <li><b>useEffect overuse</b> — reaching for an effect to "sync" derived data that could just be calculated during render. If you can compute it from existing props/state without a side effect, don't use <code>useEffect</code>.</li>
+                  <li><b>Confusing props with state</b> — props flow down and are read-only to the child; if you find yourself wanting to "set a prop," you actually want lifted state and a callback prop instead.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">Build a standalone React app (e.g. a product filter/search UI on dummy JSON) with no backend yet — filters live in the URL, list state is local, and nothing mutates state directly.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="s-ts">
+            <div class="card">
+              <h3>TypeScript</h3>
+              <p class="tagline">The app template is TypeScript-first throughout — loaders, actions, GraphQL responses, Prisma models, all typed.</p>
+              <ul>
+                <li>Basic types, interfaces vs. <code>type</code>, unions and narrowing</li>
+                <li>Typing component props, function signatures, and event handlers</li>
+                <li>Generics — enough to <i>read</i> library types, not necessarily author complex ones</li>
+                <li>Typing async functions, <code>fetch</code>/GraphQL responses, and error handling with <code>unknown</code></li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li><code>tsc</code> — the compiler/type-checker itself (see the Toolchain track for <code>tsconfig.json</code>)</li>
+                  <li>VS Code's built-in TypeScript language server — inline errors and autocomplete, no extension needed</li>
+                  <li>Generated types from Shopify's GraphQL schema (via the CLI's codegen) and from Prisma's schema — you'll read far more generated types than you write by hand</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Go through the Handbook sections on basic types, narrowing, and interfaces vs. types.</li>
+                  <li>Convert the Module 1 React app to TypeScript — type props, state, and fetch responses.</li>
+                  <li>Deliberately break a type (wrong prop type, wrong return type) and read the compiler error until you understand exactly what it's telling you — the errors are the whole point.</li>
+                  <li>Learn just enough generics to read <code>Array&lt;T&gt;</code>, <code>Promise&lt;T&gt;</code>, and one library's generic hook signature (e.g. <code>useState&lt;T&gt;</code>).</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://www.typescriptlang.org/docs/handbook/intro.html" target="_blank" rel="noopener">TypeScript Handbook</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://www.totaltypescript.com/tutorials/beginners-typescript" target="_blank" rel="noopener">Total TypeScript — Beginner's Tutorial</a> <span class="free-tag">free tier</span></li>
+                  <li><a href="https://www.typescriptlang.org/play" target="_blank" rel="noopener">TypeScript Playground</a> — test snippets instantly <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Reaching for <code>any</code> to make an error go away</b> — it silences the checker instead of fixing the mismatch, and the error usually comes back worse two files later. Use <code>unknown</code> plus a narrowing check when you genuinely don't know the shape yet.</li>
+                  <li><b>Type vs. value confusion</b> — an <code>interface</code>/<code>type</code> disappears at runtime (it's compiled away); it can't be used where a real value is expected (e.g. in a condition or as an object you pass around).</li>
+                  <li><b>Red squiggles that aren't actually your bug</b> — a type error three files upstream (a wrong return type in a Prisma query, say) shows up as an error where you're using the result. Read the error's file/line, not just where VS Code is scrolled to.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">The converted Module 1 app compiles with zero <code>any</code> and zero <code>@ts-ignore</code>, and every fetch response has an explicit type.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="s-graphql">
+            <div class="card">
+              <h3>GraphQL + Shopify Admin API</h3>
+              <p class="tagline">Shopify's Admin API is GraphQL-only going forward — the REST Admin API is legacy.</p>
+              <ul>
+                <li>Queries, mutations, variables, fragments, aliases</li>
+                <li>Reading a schema in GraphiQL: required vs. optional fields, connection/edge/node pagination shape</li>
+                <li>Cursor-based pagination (<code>first</code>/<code>after</code>, <code>pageInfo.hasNextPage</code>)</li>
+                <li>Cost-based rate limiting and when to reach for Bulk Operations instead of paginating by hand</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li>Shopify GraphiQL app (in-browser explorer against your own dev store) — the fastest way to test a query before writing code</li>
+                  <li><code>@shopify/graphql-client</code> / the authenticated <code>admin.graphql()</code> helper the app template gives you inside loaders and actions</li>
+                  <li>GraphQL codegen (via Shopify CLI) — generates TypeScript types straight from the schema and your <code>.graphql</code> queries, so you're not hand-typing API responses</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Work through a general GraphQL primer (queries/mutations/variables) with any public GraphQL playground.</li>
+                  <li>Open GraphiQL against your dev store and query <code>products</code>, then add fields, then paginate with <code>first</code>/<code>after</code>.</li>
+                  <li>Write a mutation (e.g. <code>productUpdate</code>) in GraphiQL and confirm the change lands in the store admin.</li>
+                  <li>Move that same query/mutation into the app template's <code>loader</code>/<code>action</code> using the authenticated <code>admin.graphql()</code> client.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://www.howtographql.com/" target="_blank" rel="noopener">How to GraphQL</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://shopify.dev/docs/api/admin-graphql" target="_blank" rel="noopener">Shopify Admin API (GraphQL) docs</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://shopify.dev/docs/api/usage/bulk-operations/queries" target="_blank" rel="noopener">Bulk Operations guide</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>The connection/edge/node shape</b> — a list of products isn't just an array, it's <code>products.edges[].node</code> plus a separate <code>pageInfo</code>. This trips up almost everyone the first time.</li>
+                  <li><b>Cost errors under load</b> — a query that works fine once can hit <code>THROTTLED</code> under real usage; you have to read the <code>extensions.cost</code> data in the response, not just the error message.</li>
+                  <li><b>REST muscle memory</b> — there's no separate "endpoint per resource"; everything goes through one GraphQL endpoint, and the query itself decides what comes back.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">In GraphiQL against a dev store, query products with pagination, then write a mutation to update a product field, then reproduce both from inside the app template's loader/action.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="s-rr7">
+            <div class="card">
+              <h3>Node.js + React Router 7 (the app template)</h3>
+              <p class="tagline">This is the actual Shopify app template — where everything above converges into one real app.</p>
+              <ul>
+                <li>Node basics: modules (ESM), <code>async</code>/<code>await</code>, environment variables, the request/response model</li>
+                <li>React Router 7's file-based routes, <code>loader</code> (reads, runs on the server) and <code>action</code> (writes, runs on the server) functions</li>
+                <li>App Bridge React — how your app gets embedded inside Shopify Admin, session-token auth, navigation</li>
+                <li>Polaris Web Components — Shopify's UI kit, so your app visually matches Admin</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li><code>@shopify/shopify-app-react-router</code> — the package that wires auth, sessions, and webhooks into the template</li>
+                  <li><code>@shopify/polaris</code> and <code>@shopify/app-bridge-react</code> — UI and embedding</li>
+                  <li>Shopify CLI's <code>dev</code> command — starts your app, tunnels it to a public URL, and updates your app's config on Shopify automatically</li>
+                  <li>React Router's <code>useLoaderData</code>, <code>useActionData</code>, <code>useFetcher</code>, <code>Form</code> — the actual "data layer" you'll use constantly</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Scaffold the template with the Shopify CLI and run it against your dev store — get "app installed and loads a blank page" before writing anything.</li>
+                  <li>Add one route that loads real product data via a <code>loader</code> and renders it in Polaris components.</li>
+                  <li>Add a form that submits to an <code>action</code> and mutates something (e.g. a product title) — confirm optimistic UI and error states.</li>
+                  <li>Read the generated <code>app/shopify.server.ts</code> (or equivalent) end to end so the "magic" auth setup isn't a black box.</li>
+                  <li>Add a second, nested route and understand how layouts and loaders compose down the route tree.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://github.com/Shopify/shopify-app-template-react-router" target="_blank" rel="noopener">Shopify App Template (React Router)</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://shopify.dev/docs/apps/build/build?framework=reactRouter" target="_blank" rel="noopener">shopify.dev — Build a Shopify app (React Router)</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://shopify.dev/docs/api/shopify-app-react-router/latest" target="_blank" rel="noopener">Shopify App package for React Router — API reference</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://reactrouter.com/en/main/route/loader" target="_blank" rel="noopener">React Router — Data loading docs</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://polaris.shopify.com/" target="_blank" rel="noopener">Polaris component library</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Loaders/actions run on the server, not the browser</b> — you can safely use secrets and direct database calls inside them, but any <code>console.log</code> there shows up in your terminal, not the browser console. This single fact confuses almost everyone coming from plain React.</li>
+                  <li><b>The generated boilerplate looks scary before it looks obvious</b> — <code>shopify.server.ts</code>, <code>entry.server.tsx</code>, and route config files are all doing real, specific jobs (see the Toolchain track for reading unfamiliar files systematically instead of skimming and panicking).</li>
+                  <li><b>Embedded vs. standalone confusion</b> — the app runs inside an iframe in Shopify Admin using session tokens, not cookies, for auth; treating it like a normal standalone web app breaks the embedding.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">Scaffold the app template, run it on a dev store, and build a page that loads products via a loader into Polaris components, with an action that edits one field.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="s-auth">
+            <div class="card">
+              <h3>Authentication: OAuth &amp; Session Tokens</h3>
+              <p class="tagline">The part everyone hand-waves — worth understanding directly since the template does it for you.</p>
+              <ul>
+                <li>Why apps need OAuth: your app never sees the merchant's password, only a scoped access token</li>
+                <li>The install flow: redirect → merchant approves scopes → callback → access token stored per shop</li>
+                <li>Session tokens (JWT) for embedded requests vs. the OAuth access token used to call the Admin API</li>
+                <li>Scopes — requesting the minimum your app needs, and what happens when a merchant revokes access</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li>The template's built-in <code>authenticate.admin(request)</code> helper — handles session-token verification for you on every loader/action</li>
+                  <li>Prisma-backed session storage (see the Prisma module below) — where access tokens actually live</li>
+                  <li>jwt.io (just to <i>look at</i> a decoded session token while learning — never paste real production tokens into third-party sites)</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Read Shopify's OAuth overview once, fully, before touching code — the flow diagram is the whole mental model.</li>
+                  <li>Install your dev app on the dev store and watch the network tab during install to see the redirect/callback happen.</li>
+                  <li>Open a loader in the template and trace exactly what <code>authenticate.admin(request)</code> returns and where the access token comes from.</li>
+                  <li>Uninstall and reinstall the app, and confirm you understand what gets cleaned up (the session row) vs. what doesn't.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://shopify.dev/docs/apps/build/authentication-authorization" target="_blank" rel="noopener">shopify.dev — Authentication and authorization</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://shopify.dev/docs/apps/build/authentication-authorization/session-tokens" target="_blank" rel="noopener">Session tokens explained</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://jwt.io/introduction" target="_blank" rel="noopener">jwt.io — Introduction to JWTs</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Session tokens and access tokens are not the same thing</b> — the session token proves the embedded request came from a logged-in merchant right now; the access token is what your server uses to call the Admin API on their behalf. Confusing the two is the single most common auth bug.</li>
+                  <li><b>"It works locally, breaks after redeploy"</b> — usually a wrong <code>SHOPIFY_APP_URL</code>/redirect URL mismatch between your hosting and your app's config in the Partner dashboard.</li>
+                  <li><b>Treating scopes as a formality</b> — requesting broad scopes "just in case" both slows app review and increases what a compromised token can do.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">Explain out loud (or in a written note to yourself) the full request path from "merchant clicks a button in your embedded app" to "your server calls the Admin API" — naming every token involved and where it's verified.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="s-prisma">
+            <div class="card">
+              <h3>Prisma + Database</h3>
+              <p class="tagline">For persisting anything beyond the current request — sessions, settings, custom data.</p>
+              <ul>
+                <li>Prisma schema syntax and migrations (<code>prisma migrate dev</code>)</li>
+                <li>Prisma Client calls from inside loaders/actions</li>
+                <li>SQLite (what the template ships with for local dev) vs. hosted Postgres (Neon/Supabase) for anything real</li>
+                <li>How the template already uses Prisma for session storage — read that model before adding your own</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li>Prisma CLI (<code>prisma migrate dev</code>, <code>prisma studio</code>, <code>prisma generate</code>)</li>
+                  <li>Prisma Studio — a free local GUI to browse/edit your database's rows without writing SQL</li>
+                  <li>Neon or Supabase as the production Postgres, swapped in via the <code>DATABASE_URL</code> env var</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Read the template's existing <code>schema.prisma</code> — specifically the <code>Session</code> model — before writing your own.</li>
+                  <li>Add a new model (e.g. merchant preferences), run <code>prisma migrate dev</code>, and inspect the generated migration SQL.</li>
+                  <li>Read and write that model from a loader and an action.</li>
+                  <li>Swap the local SQLite connection string for a free Neon/Supabase Postgres URL and re-run migrations against it.</li>
+                  <li>Open Prisma Studio against both databases to confirm the data actually landed.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://www.prisma.io/docs/getting-started" target="_blank" rel="noopener">Prisma — Getting Started</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://www.prisma.io/docs/orm/prisma-schema" target="_blank" rel="noopener">Prisma schema reference</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://neon.com/docs/guides/prisma" target="_blank" rel="noopener">Neon + Prisma guide</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Forgetting to run <code>prisma generate</code></b> after editing the schema — the TypeScript types for Prisma Client are generated code, so edits to <code>schema.prisma</code> don't type-check anywhere until you regenerate.</li>
+                  <li><b>SQLite locally, Postgres in production, and forgetting they diverge</b> — some field types and migrations behave slightly differently; test against Postgres before you ship.</li>
+                  <li><b>Losing local data on every schema reset</b> — <code>migrate reset</code> wipes your local dev database; that's expected, not a bug.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">Add a model, migrate it locally and against a free hosted Postgres, and read/write it from a loader and action — verified by looking at the rows in Prisma Studio.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="s-webhooks">
+            <div class="card">
+              <h3>Webhooks, Billing API &amp; Background Jobs</h3>
+              <p class="tagline">How your app reacts to store events, and how it charges money.</p>
+              <ul>
+                <li>Shopify-managed webhooks: registering topics, verifying the HMAC signature, handling retries/duplicates</li>
+                <li>Mandatory compliance webhooks (customer data request/redact, shop redact) — required for App Store approval</li>
+                <li>The Billing API — recurring charges, usage-based charges, and the required test/dev-store billing mode</li>
+                <li>Why long-running work (bulk data sync, emails) belongs in a background job, not inside the webhook handler itself</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li>The template's <code>shopify.registerWebhooks</code>/webhook route helpers — signature verification is handled for you, but you should know what it's checking</li>
+                  <li><a href="https://www.npmjs.com/package/bullmq" target="_blank" rel="noopener">BullMQ</a> (needs Redis) or a simple Postgres-backed job table for anything that shouldn't block the webhook response</li>
+                  <li>Shopify CLI's webhook trigger command, for firing test events locally without waiting on a real store action</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Register a simple webhook topic (e.g. <code>products/update</code>) and log the payload to confirm delivery end to end.</li>
+                  <li>Read the HMAC verification code the template generates so "why is this request rejected" is never a mystery.</li>
+                  <li>Implement the three mandatory compliance webhooks, even on a hobby app — they're required to be handled, and it's good practice to see them.</li>
+                  <li>Add a one-time recurring charge in test/dev-store billing mode and confirm the approval flow in the Admin.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://shopify.dev/docs/apps/build/webhooks" target="_blank" rel="noopener">shopify.dev — Webhooks</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://shopify.dev/docs/apps/build/privacy-law-compliance" target="_blank" rel="noopener">Privacy/compliance webhooks</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://shopify.dev/docs/apps/launch/billing" target="_blank" rel="noopener">Billing API docs</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Webhooks can arrive more than once</b> — handlers must be idempotent (safe to run twice on the same event), not assume exactly-once delivery.</li>
+                  <li><b>Doing slow work inside the handler</b> — Shopify expects a fast response; anything slow should be queued and processed after you've already returned 200.</li>
+                  <li><b>Forgetting test mode for billing</b> — real charges on a dev store during development is an easy, avoidable mistake; always confirm <code>test: true</code> while building.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">Register and verify one real webhook end to end, implement the mandatory compliance webhooks, and create one test-mode recurring charge.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="s-ext">
+            <div class="card">
+              <h3>Extensions <span class="badge">optional / advanced</span></h3>
+              <p class="tagline">How an app reaches into the storefront and checkout, beyond the embedded admin page.</p>
+              <ul>
+                <li>Theme App Extensions — app blocks merchants add to their theme via the theme editor, no theme code edits needed</li>
+                <li>UI Extensions — small React-like components injected into specific Shopify surfaces (checkout, customer account, admin blocks)</li>
+                <li>Each extension type has its own sandboxed runtime and its own limited API surface — don't assume main-app code just drops in</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li>Shopify CLI's extension generators (<code>shopify app generate extension</code>)</li>
+                  <li><code>@shopify/ui-extensions-react</code> for checkout/customer-account UI extensions</li>
+                  <li>A development store with a checkout you can actually test on (test payment gateway, no real charges)</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Generate a Theme App Extension and add it as an app block in the theme editor on your dev store.</li>
+                  <li>Generate a simple checkout UI extension and render static content on the test checkout.</li>
+                  <li>Wire that extension to read data from your app's own backend via a network call.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://shopify.dev/docs/apps/build/online-store/theme-app-extensions" target="_blank" rel="noopener">Theme app extensions</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://shopify.dev/docs/api/checkout-ui-extensions" target="_blank" rel="noopener">Checkout UI Extensions API</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Assuming Polaris/App Bridge code works inside extensions</b> — extensions render in a separate sandboxed context with their own component library, not your admin app's React tree.</li>
+                  <li><b>Underestimating review requirements</b> — checkout extensions go through extra scrutiny (performance budgets, allowed APIs) beyond a normal admin app.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">Ship one Theme App Extension block visible on a dev store's storefront, treated as a stretch goal after the core app works.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="s-test">
+            <div class="card">
+              <h3>Testing a Shopify App</h3>
+              <p class="tagline">Enough to trust a deploy — not full coverage from day one.</p>
+              <ul>
+                <li>Unit tests for pure logic (pricing math, formatting) — fast, no server needed</li>
+                <li>Testing loaders/actions in isolation by calling them directly with a mocked request</li>
+                <li>End-to-end smoke test: app installs, loads, and one core action succeeds, on a real dev store</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://vitest.dev/" target="_blank" rel="noopener">Vitest</a> — fast, works naturally with Vite-based projects like the React Router template</li>
+                  <li><a href="https://testing-library.com/docs/react-testing-library/intro/" target="_blank" rel="noopener">React Testing Library</a> — for component behavior, not implementation details</li>
+                  <li><a href="https://playwright.dev/" target="_blank" rel="noopener">Playwright</a> — for the occasional full end-to-end install/click-through test</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Add Vitest and write one unit test for a pure function you already have.</li>
+                  <li>Write one test that calls a loader directly with a fake request and asserts on its returned data shape.</li>
+                  <li>Write one Playwright test that installs the app on a dev store and asserts the main page renders.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://vitest.dev/guide/" target="_blank" rel="noopener">Vitest — Getting Started</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://playwright.dev/docs/intro" target="_blank" rel="noopener">Playwright — Getting Started</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Trying to test everything through the browser</b> — most loader/action logic is plain functions and is far faster and more reliable to test directly than through a full UI click-through.</li>
+                  <li><b>No tests at all until "later"</b> — even 3–4 tests around your riskiest action (the one that mutates real data) catches most regressions.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">One passing unit test, one passing loader/action test, and one passing Playwright smoke test, wired into a script you can run with one command.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="s-deploy">
+            <div class="card">
+              <h3>DevOps / Deployment</h3>
+              <p class="tagline">Shipping a real, installable app — for free.</p>
+              <ul>
+                <li>Env vars and secrets in production, kept out of source control</li>
+                <li>Free deployment target: Vercel (Hobby, serverless) or Render (free web service, spins down when idle)</li>
+                <li>Production database on Neon or Supabase, swapped in via <code>DATABASE_URL</code></li>
+                <li>Production OAuth callback URLs, webhook reliability, and updating the app's URLs in the Partner dashboard</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li>Vercel CLI or Render's dashboard/GitHub integration for deploys</li>
+                  <li><code>shopify app deploy</code> — pushes your app's configuration (URLs, scopes, extensions) to Shopify, separate from deploying your actual server</li>
+                  <li>A GitHub repo connected to your host, so every push to main redeploys automatically</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Push the app to a GitHub repo.</li>
+                  <li>Connect the repo to Vercel or Render, set env vars (including <code>DATABASE_URL</code> pointing at Neon/Supabase) in the host's dashboard, and deploy.</li>
+                  <li>Update the app's URLs and redirect URLs in the Partner dashboard (or via <code>shopify.app.toml</code> + <code>shopify app deploy</code>) to point at the new production URL.</li>
+                  <li>Run migrations against the production database and reinstall the app on the dev store using the production URL.</li>
+                  <li>Trigger a real webhook and confirm it's received in production, not just locally.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://shopify.dev/docs/apps/launch/deployment" target="_blank" rel="noopener">shopify.dev — Deployment docs</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://vercel.com/docs/frameworks/react-router" target="_blank" rel="noopener">Vercel — Deploying React Router</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://render.com/docs/free" target="_blank" rel="noopener">Render — Free tier docs</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>"Works locally, 500s in production"</b> — almost always a missing env var or a database migration that was never run against the production database.</li>
+                  <li><b>Forgetting the app config also needs deploying</b> — your server can be live while Shopify still points at old URLs/scopes, because those live in a separate config that needs its own <code>shopify app deploy</code>.</li>
+                  <li><b>Free-tier cold starts mistaken for a bug</b> — a spun-down free Render service takes ~a minute to wake up; that first slow request is expected, not broken.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">Deploy to a free host, connect a free production Postgres database, and install the app on a dev store end-to-end using the live URL — with webhooks and one billing charge confirmed working in production.</p>
+              </details>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="pace">
+          <table>
+            <tr><th>Module</th><th>Focus</th><th>Time</th></tr>
+            <tr><td>1. React</td><td>Fundamentals + state management</td><td>2–3 weeks</td></tr>
+            <tr><td>2. TypeScript</td><td>Fundamentals</td><td>1–2 weeks</td></tr>
+            <tr><td>3. GraphQL</td><td>Fundamentals + Shopify Admin API</td><td>1–2 weeks</td></tr>
+            <tr><td>4. Node/React Router 7</td><td>Shopify app template</td><td>3–4 weeks</td></tr>
+            <tr><td>5. Auth</td><td>OAuth + session tokens</td><td>3–5 days</td></tr>
+            <tr><td>6. Prisma/DB</td><td>Persistence</td><td>1–2 weeks</td></tr>
+            <tr><td>7. Webhooks/Billing</td><td>Events, jobs, monetization</td><td>1–2 weeks</td></tr>
+            <tr><td>8. Extensions</td><td>Storefront/checkout reach (optional)</td><td>1 week</td></tr>
+            <tr><td>9. Testing</td><td>Confidence before shipping</td><td>3–5 days</td></tr>
+            <tr><td>10. DevOps</td><td>Shipping, free hosting</td><td>1 week</td></tr>
+          </table>
+          <div class="pace-total">Total: roughly 4–5 months part-time, ending with a real, deployed, installable Shopify app — no paid services required.</div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- BACKEND TRACK -->
+      <!-- ============================================================ -->
+      <section id="panel-backend" class="track backend">
+        <p class="track-intro">A pragmatic, 80/20 backend foundation, independent of Shopify — Node, HTTP/API design, PostgreSQL, Prisma, auth, testing, Docker, CI, caching, and deployment.</p>
+
+        <nav class="quicknav">
+          <a href="#b-node">Node.js</a>
+          <a href="#b-http">HTTP + API design</a>
+          <a href="#b-pg">PostgreSQL</a>
+          <a href="#b-prisma">Prisma</a>
+          <a href="#b-auth">Auth &amp; Security</a>
+          <a href="#b-test">Testing</a>
+          <a href="#b-docker">Docker</a>
+          <a href="#b-ci">CI/CD</a>
+          <a href="#b-cache">Caching</a>
+          <a href="#b-deploy">Deployment</a>
+        </nav>
+
+        <div class="rail">
+
+          <div class="node" id="b-node">
+            <div class="card">
+              <h3>Node.js Fundamentals</h3>
+              <p class="tagline">The runtime underneath everything else in this track.</p>
+              <ul>
+                <li>Event loop, modules (CommonJS vs. ESM), npm</li>
+                <li>Async patterns: callbacks → promises → <code>async</code>/<code>await</code>, and why they're the same mechanism underneath</li>
+                <li>Building a plain <code>http</code> server before reaching for a framework</li>
+                <li>Express or Fastify basics — routing, middleware, error handling</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://expressjs.com/" target="_blank" rel="noopener">Express</a> — most widely used, huge ecosystem, easiest to find help for</li>
+                  <li><a href="https://fastify.dev/" target="_blank" rel="noopener">Fastify</a> — faster, schema-based validation built in, worth knowing once Express feels familiar</li>
+                  <li><a href="https://www.npmjs.com/package/dotenv" target="_blank" rel="noopener">dotenv</a> — loading env vars locally (see the Toolchain track)</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Build a server using only Node's built-in <code>http</code> module — no framework — to see what a framework is actually saving you from.</li>
+                  <li>Rebuild the same server in Express, comparing routing and middleware to the raw version.</li>
+                  <li>Add middleware for logging and centralized error handling.</li>
+                  <li>Build a small REST API (e.g. a task tracker) with a couple of routes and in-memory data — no database yet.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://nodejs.org/en/learn/getting-started/introduction-to-nodejs" target="_blank" rel="noopener">Node.js — Getting Started Guide</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://expressjs.com/en/starter/guide.html" target="_blank" rel="noopener">Express — Getting Started</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://nodejs.dev/en/learn/" target="_blank" rel="noopener">nodejs.dev — Learn</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Forgetting to <code>await</code> a promise</b> — the function silently continues without the data you expected; look for a value that's a <code>Promise</code> object instead of the data itself.</li>
+                  <li><b>Unhandled promise rejections</b> crashing the process in production — always wrap async route handlers so errors reach your error-handling middleware.</li>
+                  <li><b>Blocking the event loop</b> with heavy synchronous work (large JSON parsing, crypto) — Node is single-threaded for your code; one slow synchronous call stalls every other request.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">A small REST API (task tracker) with in-memory data, proper error-handling middleware, and no unhandled rejections under normal use.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="b-http">
+            <div class="card">
+              <h3>HTTP &amp; API Design</h3>
+              <p class="tagline">The contract every client of your backend relies on.</p>
+              <ul>
+                <li>Methods and idempotency — <code>GET</code>/<code>PUT</code>/<code>DELETE</code> should be safely repeatable, <code>POST</code> generally isn't</li>
+                <li>Status codes that actually mean something (400 vs. 401 vs. 403 vs. 404 vs. 422 vs. 500) instead of always returning 200 or always 500</li>
+                <li>Request/response shape consistency, versioning, and pagination conventions</li>
+                <li>REST vs. GraphQL — when a query language earns its complexity vs. when plain REST is simpler to build and debug</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://www.postman.com/" target="_blank" rel="noopener">Postman</a> or <a href="https://insomnia.rest/" target="_blank" rel="noopener">Insomnia</a> — manually poking your own API before a frontend exists</li>
+                  <li><a href="https://github.com/OAI/OpenAPI-Specification" target="_blank" rel="noopener">OpenAPI/Swagger</a> — documenting a REST API in a machine-readable, free, standard format</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Take the task tracker API and audit every route's status codes against what they should actually return.</li>
+                  <li>Add consistent error response shape (e.g. <code>{'{'} error: {'{'} message, code {'}'} {'}'}</code>) across all routes.</li>
+                  <li>Write an OpenAPI spec for it by hand, then generate docs from it.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP" target="_blank" rel="noopener">MDN — HTTP</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://restfulapi.net/" target="_blank" rel="noopener">RESTful API design guide</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Everything returns 200</b> with an <code>{'{'} error: ... {'}'}</code> body — technically works, but breaks every HTTP client/monitoring tool that relies on status codes.</li>
+                  <li><b>Using <code>GET</code> for anything that changes data</b> — breaks caching and can get triggered accidentally by prefetching or crawlers.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">The task tracker API returns correct, consistent status codes and error shapes for every route, documented in a short OpenAPI spec.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="b-pg">
+            <div class="card">
+              <h3>PostgreSQL Fundamentals</h3>
+              <p class="tagline">Relational modeling and SQL, written by hand before adding an ORM.</p>
+              <ul>
+                <li>Tables, relations, primary/foreign keys, normalization basics</li>
+                <li>Core SQL: <code>SELECT</code>, <code>JOIN</code>, <code>GROUP BY</code>, indexes</li>
+                <li>Writing and running migrations manually before letting a tool generate them</li>
+                <li>Query performance basics — <code>EXPLAIN</code>, when an index actually helps</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li><code>psql</code> — the command-line client, worth being comfortable in even if you mostly use a GUI</li>
+                  <li><a href="https://www.pgadmin.org/" target="_blank" rel="noopener">pgAdmin</a> or <a href="https://tableplus.com/" target="_blank" rel="noopener">TablePlus</a> (free tier) — GUI for browsing tables and running queries</li>
+                  <li>Docker (see below) to run Postgres locally without installing it system-wide</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Run Postgres locally via Docker (<code>docker run postgres</code>) rather than a native install.</li>
+                  <li>Design and create the task tracker's schema by hand in raw SQL.</li>
+                  <li>Wire the Node API to it with raw <code>pg</code> queries — no ORM yet — to feel exactly what an ORM later automates.</li>
+                  <li>Run <code>EXPLAIN ANALYZE</code> on a slow query, add an index, and re-run it to see the difference.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://www.postgresql.org/docs/current/tutorial.html" target="_blank" rel="noopener">PostgreSQL — Official Tutorial</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://pgexercises.com/" target="_blank" rel="noopener">PG Exercises</a> — interactive SQL practice <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>N+1 queries</b> — looping over rows and querying again for each one instead of a single <code>JOIN</code>; invisible with 5 rows, catastrophic with 5,000.</li>
+                  <li><b>No indexes on foreign keys</b> — Postgres doesn't auto-index every foreign key; joins and lookups on them can be slow until you add one.</li>
+                  <li><b>Confusing "it ran" with "it's correct"</b> — a <code>JOIN</code> without the right condition silently multiplies rows (a Cartesian product) instead of erroring.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">The task tracker's schema and all queries are hand-written SQL against a Dockerized Postgres, with at least one index added after profiling a slow query.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="b-prisma">
+            <div class="card">
+              <h3>Prisma ORM</h3>
+              <p class="tagline">Replacing hand-written SQL with a typed data layer, now that you know what it's automating.</p>
+              <ul>
+                <li>Prisma schema syntax and relations</li>
+                <li>Migrations with Prisma Migrate</li>
+                <li>Querying with Prisma Client — <code>include</code>/<code>select</code>, transactions</li>
+                <li>When to drop to raw SQL anyway (complex reporting queries, bulk operations)</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li>Prisma CLI and Prisma Studio (same tools as the Shopify track's Prisma module)</li>
+                  <li><code>prisma.$transaction()</code> for multi-step writes that must succeed or fail together</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Rebuild the task tracker's data layer on Prisma, migrating the existing raw-SQL schema over field by field.</li>
+                  <li>Reproduce the earlier <code>JOIN</code>-based query using <code>include</code>, and compare the generated SQL (Prisma can log it) to what you wrote by hand.</li>
+                  <li>Wrap a multi-step write (e.g. create a task and a log entry together) in a transaction.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://www.prisma.io/docs/getting-started" target="_blank" rel="noopener">Prisma — Getting Started</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://www.prisma.io/docs/orm/prisma-client/queries/transactions" target="_blank" rel="noopener">Prisma transactions</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Not knowing what SQL Prisma actually generates</b> — enable query logging early; an ORM that hides its SQL forever makes performance problems invisible until they hurt.</li>
+                  <li><b>Editing the migration files by hand after they're applied</b> — Prisma tracks which migrations already ran; hand-editing an applied one desyncs your history. Create a new migration instead.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">Task tracker fully on Prisma, with one transaction-wrapped multi-step write and query logging turned on at least once to confirm the generated SQL looks sane.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="b-auth">
+            <div class="card">
+              <h3>Authentication &amp; Security</h3>
+              <p class="tagline">Enough to not ship an obviously exploitable API.</p>
+              <ul>
+                <li>Password hashing (never plain text, never fast hashes like MD5/SHA1 for passwords)</li>
+                <li>Session-cookie auth vs. JWT — what each is actually good for, and that JWTs aren't automatically "more secure"</li>
+                <li>Input validation at the boundary — never trust a request body's shape or types</li>
+                <li>The handful of OWASP issues that matter most day to day: SQL/NoSQL injection (mostly solved by using Prisma/parameterized queries), broken access control, and secrets in source control</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://www.npmjs.com/package/bcrypt" target="_blank" rel="noopener">bcrypt</a> (or <a href="https://www.npmjs.com/package/argon2" target="_blank" rel="noopener">argon2</a>) for password hashing</li>
+                  <li><a href="https://zod.dev/" target="_blank" rel="noopener">Zod</a> — runtime schema validation for request bodies, paired naturally with TypeScript</li>
+                  <li><a href="https://www.npmjs.com/package/jsonwebtoken" target="_blank" rel="noopener">jsonwebtoken</a> if you do go the JWT route</li>
+                  <li><a href="https://www.npmjs.com/package/helmet" target="_blank" rel="noopener">helmet</a> — sane default HTTP security headers for Express</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Add signup/login to the task tracker with bcrypt-hashed passwords and cookie-based sessions.</li>
+                  <li>Add Zod schemas validating every request body, and return 400s with useful messages when validation fails.</li>
+                  <li>Read through the OWASP Top 10 once, mapping each item to whether your app is currently exposed.</li>
+                  <li>Scan your own repo for anything that looks like a committed secret, and move it to env vars.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://owasp.org/www-project-top-ten/" target="_blank" rel="noopener">OWASP Top 10</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://cheatsheetseries.owasp.org/" target="_blank" rel="noopener">OWASP Cheat Sheet Series</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://zod.dev/" target="_blank" rel="noopener">Zod documentation</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Storing JWTs in <code>localStorage</code></b> — accessible to any injected script (XSS), unlike an <code>httpOnly</code> cookie. A common but risky default.</li>
+                  <li><b>Trusting client-sent IDs</b> — e.g. a request body containing <code>userId</code> that the server just believes, instead of deriving the user from the authenticated session.</li>
+                  <li><b>Validation only on the frontend</b> — a frontend form's validation is a UX nicety; the API must independently validate every request, since it can be called directly.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">Task tracker has hashed-password signup/login, Zod-validated request bodies on every route, and no secrets committed to the repo.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="b-test">
+            <div class="card">
+              <h3>Testing</h3>
+              <p class="tagline">The habit that makes refactoring safe instead of terrifying.</p>
+              <ul>
+                <li>Unit tests for pure business logic</li>
+                <li>Integration tests hitting real routes against a real (test) database</li>
+                <li>Test data setup/teardown so tests don't pollute each other</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://vitest.dev/" target="_blank" rel="noopener">Vitest</a> or <a href="https://jestjs.io/" target="_blank" rel="noopener">Jest</a></li>
+                  <li><a href="https://www.npmjs.com/package/supertest" target="_blank" rel="noopener">supertest</a> — hitting Express routes directly in tests without a real network call</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Write unit tests for any pure functions (validation, formatting) in the task tracker.</li>
+                  <li>Add supertest integration tests for the main routes against a disposable test database.</li>
+                  <li>Add a script that resets the test database between runs so tests are repeatable.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://vitest.dev/guide/" target="_blank" rel="noopener">Vitest — Getting Started</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://github.com/ladjs/supertest" target="_blank" rel="noopener">supertest — README/examples</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Tests that depend on run order</b> — one test's leftover data silently makes another pass or fail. Reset state between tests, don't rely on execution sequence.</li>
+                  <li><b>Mocking the database entirely</b> — fast, but misses real SQL/constraint bugs; a real (disposable) test database catches issues mocks can't.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">A test suite covering the task tracker's core routes end to end against a disposable test database, runnable with one command and safe to run repeatedly.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="b-docker">
+            <div class="card">
+              <h3>Docker</h3>
+              <p class="tagline">Containerizing the app for local/production parity.</p>
+              <ul>
+                <li>Images, containers, Dockerfile basics</li>
+                <li><code>docker-compose</code> for app + Postgres locally, one command to start everything</li>
+                <li>Volumes for persistent local data</li>
+                <li>Multi-stage builds for smaller production images</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li>Docker Desktop (free for personal use) or the Docker Engine CLI directly on Linux</li>
+                  <li><code>docker-compose.yml</code> — one file describing your app + database + any other services together</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Write a Dockerfile for the task tracker and build/run it standalone.</li>
+                  <li>Add a <code>docker-compose.yml</code> that runs the app and Postgres together, sharing a network.</li>
+                  <li>Add a named volume so Postgres data survives a container restart.</li>
+                  <li>Convert the Dockerfile to a multi-stage build and compare image size before/after.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://docs.docker.com/get-started/" target="_blank" rel="noopener">Docker — Get Started</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://docs.docker.com/build/building/multi-stage/" target="_blank" rel="noopener">Multi-stage builds</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Forgetting a volume</b> — without one, Postgres data disappears every time the container is removed, which reads as "my database keeps getting wiped."</li>
+                  <li><b>Copying <code>node_modules</code> into the image</b> — install dependencies inside the container instead; a <code>.dockerignore</code> should exclude the local <code>node_modules</code> and <code>.env</code>.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">A Dockerfile and docker-compose.yml that run the task tracker and its Postgres database together locally with one command, data persisting across restarts.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="b-ci">
+            <div class="card">
+              <h3>GitHub Actions (CI/CD)</h3>
+              <p class="tagline">Automating tests and builds on every push.</p>
+              <ul>
+                <li>Workflow syntax, triggers, jobs, steps</li>
+                <li>Running lint/tests on every pull request</li>
+                <li>Building and pushing a Docker image</li>
+                <li>Secrets management in workflows</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li>GitHub Actions — free for public repos, and free minutes included for private ones</li>
+                  <li>GitHub Container Registry (or Docker Hub free tier) for pushing built images</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Add a workflow that runs lint + the test suite on every push.</li>
+                  <li>Make it required to pass before a PR can merge (branch protection).</li>
+                  <li>Add a second job that builds and pushes the Docker image on merges to main.</li>
+                  <li>Store the database URL/secrets in GitHub Actions secrets, never in the workflow file.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://docs.github.com/en/actions/writing-workflows/quickstart" target="_blank" rel="noopener">GitHub Actions — Quickstart</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions" target="_blank" rel="noopener">Using secrets in GitHub Actions</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Workflow "passes" locally but not in CI</b> — usually a missing env var or a dependency that only happened to be installed on your machine; CI should start from a clean checkout every time.</li>
+                  <li><b>Secrets printed in logs</b> — never <code>echo</code> a secret directly; GitHub masks known secret values in logs but only if they're referenced through the secrets context correctly.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">A workflow that lints, tests, and builds the Docker image on every push to main, with secrets handled correctly and merges blocked on a failing check.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="b-cache">
+            <div class="card">
+              <h3>Caching &amp; Performance</h3>
+              <p class="tagline">The 20% that solves most real slowness — worth knowing even briefly.</p>
+              <ul>
+                <li>What's worth caching: expensive/repeated reads, not writes</li>
+                <li>In-memory caching vs. Redis (shared across multiple server instances)</li>
+                <li>Cache invalidation — the actually hard part; stale data is a worse bug than a slow request</li>
+                <li>Basic HTTP caching headers (<code>Cache-Control</code>, <code>ETag</code>) for free wins on static/rarely-changing responses</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://redis.io/" target="_blank" rel="noopener">Redis</a> — run locally via Docker; <a href="https://upstash.com/" target="_blank" rel="noopener">Upstash</a> offers a free serverless Redis tier for a deployed project</li>
+                  <li>Node's built-in <code>Map</code> for the simplest possible in-process cache while learning</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Find the slowest route in the task tracker and measure it before changing anything.</li>
+                  <li>Add a simple in-memory cache for it with a short TTL, and measure again.</li>
+                  <li>Swap the in-memory cache for Redis (via Docker locally) so it would survive a server restart/multiple instances.</li>
+                  <li>Deliberately go stale — change the underlying data without invalidating the cache — to feel why invalidation is the hard part.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://redis.io/docs/latest/develop/get-started/" target="_blank" rel="noopener">Redis — Get Started</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching" target="_blank" rel="noopener">MDN — HTTP caching</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Caching before measuring</b> — adds complexity and stale-data bugs to a route that wasn't actually slow. Profile first.</li>
+                  <li><b>No expiry at all</b> — a cache with no TTL and no invalidation path is just a second, hidden source of truth waiting to disagree with the database.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">One measurably slow route, cached with Redis and a sensible TTL, with a before/after timing comparison you can show.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="b-deploy">
+            <div class="card">
+              <h3>Deployment</h3>
+              <p class="tagline">Shipping the containerized app with a managed database — for free.</p>
+              <ul>
+                <li>Provisioning a free managed Postgres (Neon or Supabase)</li>
+                <li>Environment configuration and secrets on the host</li>
+                <li>Deploying the app (Render free web service, or Vercel for a serverless-friendly framework)</li>
+                <li>Logs and basic monitoring/alerting on errors</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://render.com/" target="_blank" rel="noopener">Render</a> — free web service tier, straightforward for a Dockerized Node app</li>
+                  <li><a href="https://neon.com/" target="_blank" rel="noopener">Neon</a> or <a href="https://supabase.com/" target="_blank" rel="noopener">Supabase</a> for the managed database</li>
+                  <li>A free error-tracking tier (e.g. <a href="https://sentry.io/pricing/" target="_blank" rel="noopener">Sentry's free developer tier</a>) so failures don't go unnoticed</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Provision a free Neon/Supabase Postgres instance and point the app's <code>DATABASE_URL</code> at it.</li>
+                  <li>Connect the GitHub repo to Render (or Vercel) and deploy from the Dockerfile/build.</li>
+                  <li>Run migrations against the production database as part of the deploy step, not manually and separately.</li>
+                  <li>Add basic error tracking and confirm an intentionally-thrown error shows up there.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://render.com/docs/free" target="_blank" rel="noopener">Render — Free tier docs</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://neon.com/docs/introduction" target="_blank" rel="noopener">Neon docs</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Manual migrations that get skipped</b> — run migrations as an explicit deploy step so production schema can't silently drift from what the code expects.</li>
+                  <li><b>No monitoring, so failures are only found when a user reports them</b> — even the free tier of a basic error tracker beats finding out from a support email.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">The task tracker deployed to a free host with a managed free Postgres database, live and reachable end-to-end, with migrations running automatically on deploy.</p>
+              </details>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="pace">
+          <table>
+            <tr><th>Module</th><th>Focus</th><th>Time</th></tr>
+            <tr><td>1. Node.js</td><td>Fundamentals</td><td>1–2 weeks</td></tr>
+            <tr><td>2. HTTP/API design</td><td>Contracts, status codes</td><td>3–5 days</td></tr>
+            <tr><td>3. PostgreSQL</td><td>Relational modeling + SQL</td><td>2 weeks</td></tr>
+            <tr><td>4. Prisma</td><td>Typed data layer</td><td>1 week</td></tr>
+            <tr><td>5. Auth &amp; Security</td><td>Sessions, hashing, validation</td><td>1–2 weeks</td></tr>
+            <tr><td>6. Testing</td><td>Unit + integration</td><td>1 week</td></tr>
+            <tr><td>7. Docker</td><td>Containerization</td><td>1 week</td></tr>
+            <tr><td>8. GitHub Actions</td><td>CI/CD</td><td>1 week</td></tr>
+            <tr><td>9. Caching</td><td>Redis, invalidation</td><td>3–5 days</td></tr>
+            <tr><td>10. Deployment</td><td>Free hosting + managed DB</td><td>1 week</td></tr>
+          </table>
+          <div class="pace-total">Total: roughly 3 months part-time, ending with one backend service built, tested, secured, and deployed end-to-end — no paid services required.</div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- TOOLCHAIN TRACK -->
+      <!-- ============================================================ -->
+      <section id="panel-tools" class="track tools">
+        <p class="track-intro">This is the track that makes the other two stop feeling foreign. Not a "concept," a skill: how to open an unfamiliar repo, look at its config files, and know what's actually going on instead of scrolling past them.</p>
+
+        <nav class="quicknav">
+          <a href="#t-pkg">package.json</a>
+          <a href="#t-tsconfig">tsconfig.json</a>
+          <a href="#t-jsdoc">JSDoc</a>
+          <a href="#t-build">Build tools</a>
+          <a href="#t-lint">ESLint/Prettier/Git</a>
+          <a href="#t-prisma">Prisma files</a>
+          <a href="#t-env">Env vars</a>
+          <a href="#t-debug">Debugging</a>
+        </nav>
+
+        <div class="rail">
+
+          <div class="node" id="t-pkg">
+            <div class="card">
+              <h3>package.json &amp; Package Managers</h3>
+              <p class="tagline">The first file to read in any Node project — it tells you how to run it.</p>
+              <ul>
+                <li><code>scripts</code> — the actual commands the project runs (<code>dev</code>, <code>build</code>, <code>start</code>, <code>test</code>); always check these before guessing a command</li>
+                <li><code>dependencies</code> vs. <code>devDependencies</code> — what ships to production vs. what's only needed to build/test</li>
+                <li>Semver ranges (<code>^1.2.3</code> vs. <code>~1.2.3</code> vs. exact) and why the lockfile, not this file, decides the exact installed version</li>
+                <li>Workspaces/monorepos — one repo, multiple <code>package.json</code>s, shared dependencies hoisted to a root <code>node_modules</code></li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li>npm (ships with Node, default everywhere) — or pnpm, faster and stricter about not letting you import undeclared dependencies</li>
+                  <li>Lockfiles: <code>package-lock.json</code> (npm), <code>pnpm-lock.yaml</code>, <code>yarn.lock</code> — always commit these, never hand-edit them</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Open any project you've cloned and read <code>scripts</code> before touching anything else — this is how you find out how to actually run it.</li>
+                  <li>Run <code>npm ls &lt;package&gt;</code> to see exactly which version is installed and why (which dependency pulled it in).</li>
+                  <li>Deliberately bump a dependency's version in <code>package.json</code>, reinstall, and watch the lockfile change.</li>
+                  <li>Try turning a two-app project into an npm workspaces monorepo and see what moves to the root.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://docs.npmjs.com/cli/v10/using-npm/scripts" target="_blank" rel="noopener">npm docs — scripts</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://docs.npmjs.com/about-semantic-versioning" target="_blank" rel="noopener">npm docs — semantic versioning</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://docs.npmjs.com/cli/v10/using-npm/workspaces" target="_blank" rel="noopener">npm docs — workspaces</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Assuming <code>npm start</code> always works</b> — many projects use a different script name (<code>dev</code>, <code>serve</code>); always check <code>scripts</code> first.</li>
+                  <li><b>Deleting the lockfile "to fix" an install error</b> — it can silently upgrade every dependency at once and break something unrelated; try <code>rm -rf node_modules &amp;&amp; npm install</code> first, keeping the lockfile.</li>
+                  <li><b>Mixing package managers in one project</b> (npm install in a pnpm project) — creates two conflicting lockfiles; stick to whichever the repo already uses.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">Given an unfamiliar cloned repo, correctly identify — without running anything — how to install, run in dev mode, and build it, purely by reading <code>package.json</code>.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="t-tsconfig">
+            <div class="card">
+              <h3>tsconfig.json &amp; the TypeScript Compiler</h3>
+              <p class="tagline">Configures how strictly and how the project is type-checked and compiled.</p>
+              <ul>
+                <li><code>strict</code> — turns on the group of checks that catch the most real bugs (null checks especially); most serious projects run with it on</li>
+                <li><code>target</code>/<code>module</code> — what JS syntax/module format the compiler outputs, tied to where the code will run</li>
+                <li><code>paths</code>/<code>baseUrl</code> — import aliases like <code>~/components</code> instead of long relative paths</li>
+                <li><code>include</code>/<code>exclude</code> — which files are even part of the TypeScript project</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li><code>tsc --noEmit</code> — type-check without producing output files, the command CI usually runs</li>
+                  <li>VS Code's TypeScript status bar (bottom right) — shows which <code>tsconfig.json</code> and TS version is actually active</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Open a project's <code>tsconfig.json</code> and identify <code>strict</code>, <code>target</code>, and any <code>paths</code> aliases before reading further code.</li>
+                  <li>Run <code>tsc --noEmit</code> in a project and read every error it reports, even ones you don't plan to fix yet.</li>
+                  <li>Toggle <code>strict</code> off in a small project and see how many previously-caught bugs go silent.</li>
+                  <li>Add a path alias and confirm both the compiler and your bundler (see Build Tools) agree on it — a common source of "works in the editor, fails at build" errors.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://www.typescriptlang.org/tsconfig" target="_blank" rel="noopener">TypeScript — tsconfig reference</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://www.totaltypescript.com/tsconfig-cheat-sheet" target="_blank" rel="noopener">Total TypeScript — tsconfig cheat sheet</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Editor shows no errors, build fails anyway</b> — the editor may be using a different/cached TypeScript version than the one in the project's <code>node_modules</code>; check VS Code's TS version selector.</li>
+                  <li><b>Path aliases work in the editor but not at runtime</b> — <code>tsconfig.json</code> paths are a compile-time hint only; the actual bundler/runtime needs its own matching alias config.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">Explain, for a real project's <code>tsconfig.json</code>, what each top-level option does and what would visibly change if it were removed.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="t-jsdoc">
+            <div class="card">
+              <h3>JSDoc — Types Without TypeScript</h3>
+              <p class="tagline">Some repos (and libraries) use plain JavaScript with JSDoc comments for types instead of <code>.ts</code> files — same benefit, different syntax.</p>
+              <ul>
+                <li><code>@param</code>/<code>@returns</code>/<code>@type</code> — the annotations that give a plain <code>.js</code> file the same editor autocomplete and checking as TypeScript</li>
+                <li><code>@typedef</code> — defining a reusable shape, the JSDoc equivalent of a TS <code>type</code>/<code>interface</code></li>
+                <li>How editors and <code>tsc</code> read these comments to type-check <code>.js</code> files with <code>checkJs</code> turned on, without any build step</li>
+                <li>Why a library ships JSDoc-based types (<code>.d.ts</code> files) even if you never see a line of TypeScript source in it</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li><code>// @ts-check</code> at the top of a <code>.js</code> file, or <code>"checkJs": true</code> in <code>tsconfig.json</code> — turns on type-checking for plain JS</li>
+                  <li>VS Code — reads JSDoc automatically, no config needed, which is why hovering a JS function from a library still shows you its types</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Take one small <code>.ts</code> function you've already written and rewrite it as plain <code>.js</code> with equivalent JSDoc annotations.</li>
+                  <li>Add <code>// @ts-check</code> to that file and confirm you still get the same red squiggles for a wrong argument type.</li>
+                  <li>Open a popular library's compiled output in <code>node_modules</code> and find its <code>.d.ts</code> file, to see the "compiled" form of what JSDoc/TS source produces.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://jsdoc.app/" target="_blank" rel="noopener">jsdoc.app — official tag reference</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://www.typescriptlang.org/docs/handbook/jsdoc-supported-types.html" target="_blank" rel="noopener">TypeScript Handbook — JSDoc-supported types</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Assuming JSDoc comments are "just documentation"</b> and skimming past them — in a <code>checkJs</code> project they're doing the exact same job a <code>.ts</code> file's type annotations would.</li>
+                  <li><b>Not realizing a <code>.js</code> file is type-checked at all</b> — if there's a <code>tsconfig.json</code> with <code>checkJs: true</code>, plain-looking JS files are still subject to type errors; missing this makes an error message feel like it's coming from nowhere.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">Convert one small module between JSDoc-annotated <code>.js</code> and equivalent <code>.ts</code> in both directions, confirming the same errors are caught either way.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="t-build">
+            <div class="card">
+              <h3>Build Tools &amp; Bundlers</h3>
+              <p class="tagline">What actually happens when you run <code>npm run dev</code> or <code>npm run build</code>.</p>
+              <ul>
+                <li>What a bundler does: follows your <code>import</code> graph, combines files, transforms TS/JSX into plain JS, optimizes for the browser</li>
+                <li>Dev server vs. production build — dev prioritizes fast rebuilds (HMR: hot module replacement) over output size; build prioritizes small, cacheable output</li>
+                <li>Vite — the default for new React/React Router projects today; config lives in <code>vite.config.ts</code></li>
+                <li>Why a "build tool config file" is just a plain object telling the tool which plugins to use and where things live — not fundamentally different from any other config file once you know the shape</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://vite.dev/" target="_blank" rel="noopener">Vite</a> — used by the Shopify React Router template and most modern frontend projects</li>
+                  <li><a href="https://esbuild.github.io/" target="_blank" rel="noopener">esbuild</a> — the very fast bundler Vite uses under the hood for dev; worth knowing it's there even if you never configure it directly</li>
+                  <li>Webpack — older, still common in existing large projects; concepts transfer even if the config syntax looks different</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Run <code>npm run build</code> on a Vite project and open the output folder — look at what actually got produced vs. your source files.</li>
+                  <li>Open <code>vite.config.ts</code> in that project and identify every plugin listed, looking each one up if unfamiliar.</li>
+                  <li>Add a path alias in <code>vite.config.ts</code> and confirm it matches the one you set in <code>tsconfig.json</code> — see how the two configs have to agree.</li>
+                  <li>Intentionally break an import and read the bundler's error — it usually names the exact file and line that couldn't be resolved.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://vite.dev/guide/" target="_blank" rel="noopener">Vite — Getting Started</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://vite.dev/config/" target="_blank" rel="noopener">Vite — Config reference</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Treating the config file as unreadable magic</b> — it's a plain JS/TS object; read it top to bottom like any other file, looking up unfamiliar plugin names one at a time instead of all at once.</li>
+                  <li><b>Dev-mode-only behavior mistaken for a bug</b> — some things (certain env var handling, source maps) differ between dev and a production build; always retest a suspected bug against a real build before assuming it's fixed or broken.</li>
+                  <li><b>Import path works locally, fails in CI/build</b> — usually case sensitivity (macOS is case-insensitive by default, Linux CI isn't) or a missing alias in the bundler config.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">Given any unfamiliar <code>vite.config.ts</code>, list every plugin and alias it configures and explain what each one is for.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="t-lint">
+            <div class="card">
+              <h3>ESLint, Prettier &amp; Git Hygiene</h3>
+              <p class="tagline">The quiet infrastructure that keeps a codebase (and its history) consistent.</p>
+              <ul>
+                <li>ESLint — catches likely bugs and enforces code patterns (rules), configured via <code>eslint.config.js</code> (flat config) or the older <code>.eslintrc</code></li>
+                <li>Prettier — pure formatting (whitespace, quotes, line length), deliberately has almost no configurable rules by design</li>
+                <li><code>.gitignore</code> — what never gets committed (<code>node_modules</code>, build output, <code>.env</code>)</li>
+                <li>Pre-commit hooks (Husky + lint-staged) — running lint/format automatically before a commit is even allowed</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://eslint.org/" target="_blank" rel="noopener">ESLint</a> with <code>typescript-eslint</code> for TS-aware rules</li>
+                  <li><a href="https://prettier.io/" target="_blank" rel="noopener">Prettier</a></li>
+                  <li><a href="https://typicode.github.io/husky/" target="_blank" rel="noopener">Husky</a> + <a href="https://github.com/okonet/lint-staged" target="_blank" rel="noopener">lint-staged</a> — only lint/format the files you actually changed, not the whole repo, on every commit</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Add ESLint + Prettier to a project from scratch and reconcile any rules that conflict between them.</li>
+                  <li>Run the linter and fix every warning by hand once, so you've seen what each rule is actually catching.</li>
+                  <li>Add Husky + lint-staged so a bad commit is caught locally instead of in CI.</li>
+                  <li>Write a proper <code>.gitignore</code> and confirm <code>git status</code> is clean after a fresh <code>npm install</code>.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://eslint.org/docs/latest/use/getting-started" target="_blank" rel="noopener">ESLint — Getting Started</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://prettier.io/docs/en/index.html" target="_blank" rel="noopener">Prettier docs</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://github.com/github/gitignore" target="_blank" rel="noopener">github/gitignore — template collection</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>ESLint and Prettier fighting each other</b> — formatting-related ESLint rules conflicting with Prettier's own formatting; use <code>eslint-config-prettier</code> to turn off the overlapping ESLint rules rather than fighting both.</li>
+                  <li><b>Accidentally committing <code>.env</code></b> because <code>.gitignore</code> was added after the first commit — once committed, it stays in history even after deleting it later; needs to be removed from history entirely if it held a real secret.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">A small project with ESLint, Prettier (non-conflicting), and a Husky pre-commit hook that blocks a badly formatted or lint-failing commit.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="t-prisma">
+            <div class="card">
+              <h3>Reading Prisma Files</h3>
+              <p class="tagline">A Prisma project always has the same handful of files — once you know what each does, none of them are mysterious.</p>
+              <ul>
+                <li><code>schema.prisma</code> — the single source of truth: datasource (which database), generator (what to generate, usually the client), and your models</li>
+                <li><code>prisma/migrations/</code> — one timestamped folder per migration, each with the raw SQL that was actually run</li>
+                <li>The generated Prisma Client (<code>node_modules/.prisma/client</code> or a custom output path) — code you never hand-edit, regenerated from the schema</li>
+                <li><code>prisma/seed.ts</code> (if present) — a script to populate a fresh database with starter data, usually wired to run automatically after <code>migrate reset</code></li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li>Prisma CLI — <code>migrate dev</code>, <code>migrate deploy</code> (production), <code>studio</code>, <code>generate</code>, <code>db seed</code></li>
+                  <li>Prisma VS Code extension — schema syntax highlighting, formatting, and jump-to-definition for models</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Open any project's <code>schema.prisma</code> and identify every model, its fields, and its relations before looking at any application code.</li>
+                  <li>Open the most recent folder under <code>prisma/migrations/</code> and read the raw SQL — confirm it matches what you'd expect from the schema.</li>
+                  <li>Run <code>migrate dev</code> after a schema change and watch a new migration folder appear.</li>
+                  <li>Write (or read, if one exists) a <code>seed.ts</code> and run <code>db seed</code> against a freshly reset database.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://www.prisma.io/docs/orm/prisma-schema/data-model/models" target="_blank" rel="noopener">Prisma — data model reference</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://www.prisma.io/docs/orm/prisma-migrate/workflows/seeding" target="_blank" rel="noopener">Prisma — seeding</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>"Property does not exist on type" right after adding a model</b> — almost always a forgotten <code>prisma generate</code>; the client's types are generated, not inferred live.</li>
+                  <li><b>Editing an already-applied migration file</b> — Prisma tracks applied migrations by name/checksum; editing history desyncs it. Create a new migration instead.</li>
+                  <li><b><code>migrate dev</code> in production</b> — it's interactive and can prompt to reset data; production deploys should use <code>migrate deploy</code> instead.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">Given an unfamiliar project, read <code>schema.prisma</code> and correctly diagram the models and their relations on paper before opening any application code.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="t-env">
+            <div class="card">
+              <h3>Environment Variables &amp; Config Across Environments</h3>
+              <p class="tagline">Why the same code behaves differently on your machine, in CI, and in production.</p>
+              <ul>
+                <li><code>.env</code> (local, gitignored, real values) vs. <code>.env.example</code> (committed, documents what's needed with placeholder values)</li>
+                <li>How env vars actually reach the process — loaded by a library like <code>dotenv</code> locally, injected directly by the host (Render/Vercel dashboard) in production</li>
+                <li>Typing/validating <code>process.env</code> so a missing var fails loudly at startup instead of causing a confusing runtime error later</li>
+                <li>Per-environment config (dev/staging/production) — different database URLs, different Shopify app URLs, without changing code</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://www.npmjs.com/package/dotenv" target="_blank" rel="noopener">dotenv</a> — loads <code>.env</code> into <code>process.env</code> locally</li>
+                  <li>Zod (again) for validating <code>process.env</code> against a schema at startup</li>
+                  <li>Your host's dashboard (Render/Vercel/Neon) for setting the real production values — never committed anywhere</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Create a <code>.env.example</code> for a project listing every required variable with a placeholder, and confirm a fresh clone + copy-to-<code>.env</code> is enough to run it.</li>
+                  <li>Write a small Zod schema that validates <code>process.env</code> at startup and throws a clear error naming the missing variable.</li>
+                  <li>Deliberately deploy without setting one required env var on your host and read the resulting error, so you recognize it next time.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://www.npmjs.com/package/dotenv" target="_blank" rel="noopener">dotenv — README</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://12factor.net/config" target="_blank" rel="noopener">The Twelve-Factor App — Config</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>"Works on my machine"</b> is very often just a <code>.env</code> value that exists locally but was never set on the host.</li>
+                  <li><b>Committing a real <code>.env</code></b> by accident — always verify it's in <code>.gitignore</code> before the first commit, not after.</li>
+                  <li><b>Silent fallback values masking a missing var</b> — a default like <code>process.env.API_KEY || ''</code> hides the real problem until something fails much later and further from the cause.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">A project with a complete <code>.env.example</code>, startup-time validation of every required env var, and a documented list of which values differ between local/dev-store and production.</p>
+              </details>
+            </div>
+          </div>
+
+          <div class="node" id="t-debug">
+            <div class="card">
+              <h3>Debugging Like a Pro</h3>
+              <p class="tagline">The actual day-to-day skill — more valuable than knowing any single tool.</p>
+              <ul>
+                <li>Reading a stack trace bottom-to-top vs. top-to-bottom, and finding the first line that's actually your code (not a library's internals)</li>
+                <li>Binary-searching a bug — comment out/isolate half the suspect code, narrow down, repeat</li>
+                <li>Server-side vs. client-side logs — remembering that a loader/action's <code>console.log</code> shows up in your terminal, not the browser</li>
+                <li>Reproducing a bug with the smallest possible example before trying to fix it in the full app</li>
+              </ul>
+
+              <details>
+                <summary>Tools you'll actually use</summary>
+                <div class="res-list"><ul>
+                  <li>Browser DevTools — Console, Network tab (inspect real request/response payloads and headers), and the Sources tab for breakpoints in client code</li>
+                  <li>VS Code's built-in debugger — set real breakpoints in Node code instead of littering it with <code>console.log</code></li>
+                  <li>Prisma Studio and GraphiQL — for confirming what's actually in the database/API before assuming your application code is wrong</li>
+                  <li>Postman/Insomnia — isolate whether a bug is in the API itself or in how the frontend calls it</li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Step-by-step path</summary>
+                <ol class="path">
+                  <li>Set up VS Code's Node debugger for one project and step through a request handler line by line, watching variables change.</li>
+                  <li>Practice reading Network tab request/response pairs for a broken form submission — payload, status code, response body, in that order.</li>
+                  <li>Take a real bug and write down, before touching code, what you'd expect to see if each of your top 2–3 hypotheses were true — then go check.</li>
+                  <li>Reproduce a bug in the smallest file you can (a few lines), separate from the full app, before attempting a fix.</li>
+                </ol>
+              </details>
+
+              <details>
+                <summary>Free resources</summary>
+                <div class="res-list"><ul>
+                  <li><a href="https://developer.chrome.com/docs/devtools/" target="_blank" rel="noopener">Chrome DevTools docs</a> <span class="free-tag">free</span></li>
+                  <li><a href="https://code.visualstudio.com/docs/nodejs/nodejs-debugging" target="_blank" rel="noopener">VS Code — Node.js debugging</a> <span class="free-tag">free</span></li>
+                </ul></div>
+              </details>
+
+              <details>
+                <summary>Where people get lost</summary>
+                <ul class="pitfalls">
+                  <li><b>Changing multiple things at once while debugging</b> — makes it impossible to know which change actually fixed (or caused) the behavior. Change one thing, observe, repeat.</li>
+                  <li><b>Reading only the top line of a stack trace</b> — the actual bug is often several frames down, at the last line that's your own code rather than a library's.</li>
+                  <li><b>Assuming instead of checking</b> — "the API must be returning the wrong data" without actually looking at the Network tab response; check first, theorize second.</li>
+                </ul>
+              </details>
+
+              <details>
+                <summary>Checkpoint project</summary>
+                <p class="checkpoint">Pick a real bug (yours or an open-source issue) and debug it using breakpoints and the Network tab only — no scattered <code>console.log</code> statements — writing down each hypothesis before checking it.</p>
+              </details>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="pace">
+          <table>
+            <tr><th>Module</th><th>Focus</th><th>Time</th></tr>
+            <tr><td>1. package.json</td><td>Package managers, scripts, monorepos</td><td>2–3 days</td></tr>
+            <tr><td>2. tsconfig.json</td><td>Compiler configuration</td><td>2–3 days</td></tr>
+            <tr><td>3. JSDoc</td><td>Types without TypeScript</td><td>2–3 days</td></tr>
+            <tr><td>4. Build tools</td><td>Vite, bundling, dev vs. build</td><td>3–5 days</td></tr>
+            <tr><td>5. Lint/format/Git</td><td>ESLint, Prettier, hooks</td><td>2–3 days</td></tr>
+            <tr><td>6. Prisma files</td><td>Schema, migrations, seed</td><td>2–3 days</td></tr>
+            <tr><td>7. Env vars</td><td>Config across environments</td><td>2 days</td></tr>
+            <tr><td>8. Debugging</td><td>The actual day-to-day skill</td><td>ongoing</td></tr>
+          </table>
+          <div class="pace-total">Total: roughly 3–4 weeks, best done in parallel alongside either track above rather than as a separate phase — each module here should click the moment you next hit that file type in real code.</div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <footer class="sitefooter">
+    Free the whole way through: every tool and resource linked here has a genuine free tier as of September 2026. Hosting free tiers change often (Railway and Fly.io both dropped theirs) — re-check a platform's pricing page before relying on it long-term.
+  </footer>
+
+</BaseLayout>
+
+<style>
+  /* Before-you-start checklist */
+  .setup {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px 26px 26px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow);
+  }
+
+  .setup summary {
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.05rem;
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .setup[open] summary { margin-bottom: 18px; }
+
+  .setup-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 16px;
+  }
+
+  .setup-grid h4 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
+    margin: 0 0 10px;
+  }
+
+  .setup-grid ul { margin: 0; padding-left: 20px; font-size: var(--fs-small); }
+  .setup-grid li { margin-bottom: 8px; }
+  .setup-grid a { color: var(--text); }
+  .setup-note {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: var(--fs-small);
+    color: var(--text-dim);
+  }
+
+  .howto {
+    font-size: var(--fs-small);
+    color: var(--text-dim);
+    margin: 0 0 44px;
+    padding: 6px 20px;
+    border-left: 3px solid var(--line);
+  }
+  .howto b { color: var(--text); font-weight: 600; }
+
+  /* Tabs, radio-driven, no JS */
+  .tabs input { display: none; }
+
+  .tab-labels {
+    display: flex;
+    gap: 6px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+
+  .tab-labels label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 12px 4px;
+    margin-right: 30px;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+
+  #tab-shopify:checked ~ .tab-labels label[for="tab-shopify"],
+  #tab-backend:checked ~ .tab-labels label[for="tab-backend"],
+  #tab-tools:checked ~ .tab-labels label[for="tab-tools"] {
+    color: var(--text);
+  }
+
+  #tab-shopify:checked ~ .tab-labels label[for="tab-shopify"] { border-color: var(--gold); }
+  #tab-backend:checked ~ .tab-labels label[for="tab-backend"] { border-color: var(--teal); }
+  #tab-tools:checked ~ .tab-labels label[for="tab-tools"] { border-color: var(--purple); }
+
+  .track { display: none; }
+  #tab-shopify:checked ~ .panels #panel-shopify { display: block; }
+  #tab-backend:checked ~ .panels #panel-backend { display: block; }
+  #tab-tools:checked ~ .panels #panel-tools { display: block; }
+
+  .track-intro {
+    color: var(--text-dim);
+    font-size: var(--fs-lede);
+    line-height: 1.55;
+    margin-bottom: 26px;
+  }
+
+  /* quick-nav pills */
+  .quicknav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 44px;
+  }
+
+  .quicknav a {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.84rem;
+    color: var(--text-dim);
+    text-decoration: none;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 6px 14px;
+    background: var(--surface);
+  }
+
+  .shopify .quicknav a:hover { color: var(--gold); border-color: var(--gold); }
+  .backend .quicknav a:hover { color: var(--teal); border-color: var(--teal); }
+  .tools .quicknav a:hover { color: var(--purple); border-color: var(--purple); }
+
+  .rail {
+    position: relative;
+    padding-left: 44px;
+    counter-reset: step;
+  }
+
+  .rail::before {
+    content: "";
+    position: absolute;
+    left: 16px;
+    top: 6px;
+    bottom: 6px;
+    width: 1px;
+    background: var(--line);
+  }
+
+  .node {
+    position: relative;
+    margin-bottom: 36px;
+    scroll-margin-top: 24px;
+  }
+
+  .node::before {
+    counter-increment: step;
+    content: counter(step);
+    position: absolute;
+    left: -44px;
+    top: 2px;
+    width: 33px;
+    height: 33px;
+    border-radius: 50%;
+    background: var(--surface-alt);
+    border: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--text-dim);
+  }
+
+  .shopify .node::before { border-color: var(--gold); color: var(--gold); }
+  .backend .node::before { border-color: var(--teal); color: var(--teal); }
+  .tools .node::before { border-color: var(--purple); color: var(--purple); }
+
+  .card h3 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card .tagline {
+    color: var(--text-dim);
+    font-size: var(--fs-small);
+    margin: 0 0 18px;
+  }
+
+  .card > ul {
+    margin: 0 0 18px;
+    padding-left: 20px;
+    font-size: var(--fs-body);
+  }
+
+  .card > ul > li { margin-bottom: 8px; }
+
+  .res-list, .checkpoint, .path { padding-left: 4px; }
+
+  .res-list a { color: inherit; }
+  .shopify .res-list a, .shopify summary:hover { color: var(--gold); }
+  .backend .res-list a, .backend summary:hover { color: var(--teal); }
+  .tools .res-list a, .tools summary:hover { color: var(--purple); }
+
+  .res-list .free-tag {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 2px 7px;
+    margin-left: 5px;
+  }
+
+  .path {
+    padding-left: 22px;
+    margin: 0;
+    font-size: var(--fs-small);
+  }
+  .path li { margin-bottom: 10px; }
+
+  @media (max-width: 560px) {
+    .setup-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 480px) {
+    .tab-labels label { margin-right: 18px; font-size: 0.9rem; }
+  }
+</style>

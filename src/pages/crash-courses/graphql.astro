@@ -1,0 +1,356 @@
+---
+import CourseLayout from '../../layouts/CourseLayout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const chapters = [
+  { id: 'why-graphql', title: 'Why GraphQL exists' },
+  { id: 'anatomy', title: 'Anatomy of a query' },
+  { id: 'variables', title: 'Variables' },
+  { id: 'mutations', title: 'Mutations: writing data' },
+  { id: 'connections', title: 'The edges/node/pageInfo shape' },
+  { id: 'reading-docs', title: 'Reading a schema' },
+];
+
+const restOverfetchCode = `// A typical REST response for "give me a product" — you get
+// whatever shape the API author decided on, whether you need
+// all of it or not:
+GET /products/123
+
+{
+  "id": 123,
+  "title": "Wireless Mouse",
+  "body_html": "<p>...</p>",
+  "vendor": "Acme",
+  "product_type": "Electronics",
+  "created_at": "2024-01-01T00:00:00Z",
+  "updated_at": "2024-06-01T00:00:00Z",
+  "published_at": "2024-01-02T00:00:00Z",
+  "variants": [ /* ...large nested objects... */ ],
+  "options": [ /* ... */ ],
+  "images": [ /* ... */ ]
+  // ...you wanted the title. You got all of this.
+}`;
+
+const restUnderfetchCode = `// Need the product's title AND its collection's title? With
+// REST, that's often two separate round trips, because the
+// first endpoint's fixed shape doesn't include the second:
+GET /products/123          // has product.title
+GET /collections/456       // has collection.title
+// Two requests, two round trips, for one screen.`;
+
+const graphqlPitchCode = `# One request, exactly the fields you asked for, nested however
+# you needed them — no more, no less, in a single round trip:
+query {
+  product(id: "gid://shopify/Product/123") {
+    title
+    collections(first: 1) {
+      nodes { title }
+    }
+  }
+}`;
+
+const queryAnatomyCode = `query {
+  products(first: 5) {
+    edges {
+      node {
+        id
+        title
+      }
+    }
+  }
+}
+// "query" says: this is a read.
+// "products(first: 5)" is a FIELD, with an ARGUMENT (first: 5)
+//   limiting how many results come back.
+// Everything inside { } after a field is which of ITS fields
+//   you want back — nesting mirrors the shape of the data.`;
+
+const scalarVsObjectCode = `query {
+  product(id: "gid://shopify/Product/123") {
+    title       # a scalar — a plain string, nothing more to ask for
+    vendor      # also a scalar
+    collections(first: 3) {   # an object — you must specify which
+      nodes {                  # of ITS fields you want, same as above
+        title
+      }
+    }
+  }
+}
+// Rule of thumb: if a field is a plain value (string, number,
+// boolean), you just list it. If it's an object or a list of
+// objects, you open another { } and ask for its fields too.`;
+
+const runningQueryCode = `// Inside a loader (see the React Router 7 course):
+const response = await admin.graphql(\`#graphql
+  query {
+    shop { name }
+  }
+\`);
+
+const data = await response.json();
+console.log(data.data.shop.name);
+// Note the double ".data" — admin.graphql()'s own response
+// wrapper, containing GraphQL's own top-level "data" key.`;
+
+const variablesBadCode = `// DON'T do this — building the query string by hand:
+const id = productId; // comes from user input / the URL
+const query = \`query { product(id: "\${id}") { title } }\`;
+// Fragile, and the same category of bug as building raw SQL
+// with string concatenation instead of a parameterized query.`;
+
+const variablesGoodCode = `// DO this instead — declare a typed variable in the query,
+// and pass its real value separately:
+const response = await admin.graphql(
+  \`#graphql
+  query GetProduct($id: ID!) {
+    product(id: $id) {
+      id
+      title
+    }
+  }\`,
+  { variables: { id: productId } }
+);
+// "$id: ID!" declares a variable named id, of type ID, and the
+// "!" means required — GraphQL rejects the request up front if
+// it's missing, before your resolver code even runs.`;
+
+const mutationCode = `mutation UpdateProductTitle($id: ID!, $title: String!) {
+  productUpdate(input: { id: $id, title: $title }) {
+    product {
+      id
+      title
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}
+// Same shape as a query — a name, variables, nested field
+// selection — but "mutation" instead of "query", because this
+// one changes data instead of just reading it.`;
+
+const mutationCallCode = `const response = await admin.graphql(
+  \`#graphql
+  mutation UpdateProductTitle($id: ID!, $title: String!) {
+    productUpdate(input: { id: $id, title: $title }) {
+      product { id title }
+      userErrors { field message }
+    }
+  }\`,
+  { variables: { id: productId, title: "New name" } }
+);
+
+const { data } = await response.json();
+if (data.productUpdate.userErrors.length > 0) {
+  // GraphQL still returned 200 OK — validation failures come
+  // back as data, in userErrors, not as an HTTP error status.
+  console.error(data.productUpdate.userErrors);
+}`;
+
+const connectionShapeCode = `// A list in Shopify's Admin API is never a plain array — it's a
+// "connection": edges wrapping nodes, plus pageInfo for paging.
+query {
+  products(first: 5) {
+    edges {
+      cursor          # this item's position, for pagination
+      node {           # the actual product data lives here
+        id
+        title
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}`;
+
+const connectionUnwrapCode = `const { data } = await response.json();
+
+// The extra layer everyone forgets on their first try:
+const products = data.products.edges.map((edge) => edge.node);
+
+const hasMore = data.products.pageInfo.hasNextPage;
+const nextCursor = data.products.pageInfo.endCursor;`;
+
+const paginationCode = `// Fetching the next page means passing the previous page's
+// endCursor back in as "after":
+query {
+  products(first: 5, after: "eyJsYXN0X2lkIjo1fQ==") {
+    edges { node { id title } }
+    pageInfo { hasNextPage endCursor }
+  }
+}
+// "first: 5, after: cursor" together are how every paginated
+// list in the Admin API works — orders, customers, collections,
+// all the same two arguments.`;
+
+const nodesShortcutCode = `// Most of the time you only want the data, not each cursor —
+// "nodes" is a shortcut that skips straight past "edges":
+query {
+  products(first: 5) {
+    nodes {
+      id
+      title
+    }
+    pageInfo { hasNextPage endCursor }
+  }
+}
+// Same data as edges->node, one less layer to unwrap. Reach for
+// "edges" specifically when you need each item's own cursor.`;
+---
+<CourseLayout
+  title="GraphQL Crash Course — Shopify Dev Handbook"
+  description="GraphQL from first principles: why it exists, how to write and run a query, mutations, and the connection/edges/node pagination shape used throughout Shopify's Admin API."
+  accent="orange"
+  courseTitle="GraphQL"
+  courseTagline="The query language you'll use for every single read and write against Shopify's Admin API — the only supported way for a new app to touch store data."
+  readTime="35–45 min"
+  chapters={chapters}
+  prev={{ href: '/crash-courses/node', title: 'Node.js' }}
+  next={{ href: '/crash-courses/prisma', title: 'Prisma' }}
+>
+  <section class="chapter" id="why-graphql">
+    <div class="chapter-num">Chapter 01</div>
+    <h2>Why GraphQL exists</h2>
+    <p>Before GraphQL, most APIs worked like this (the style is called <strong>REST</strong>): each URL returns a fixed shape of data, decided by whoever built the API — not by whoever's asking. Ask for one product, and you get every field that endpoint was built to return, whether you need it or not:</p>
+    <CodeBlock code={restOverfetchCode} lang="json" title="a typical REST response" />
+    <p>This is called <strong>over-fetching</strong> — paying (in response size, in parsing time) for data you never asked for. The opposite problem, <strong>under-fetching</strong>, happens when one screen needs data that's split across several fixed endpoints:</p>
+    <CodeBlock code={restUnderfetchCode} lang="text" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>REST is like a restaurant with only fixed combo meals — you can't get just the fries. GraphQL is à la carte: you list exactly what you want, nested however you want it, and get exactly that back, in one order.</p>
+    </div>
+
+    <CodeBlock code={graphqlPitchCode} lang="graphql" />
+    <p>One endpoint, one request, exactly the fields you asked for — nested to match how you actually needed them. That's the entire pitch, and it's why Shopify's newer Admin API is GraphQL-only: it's a better fit for apps that only need a slice of a very large, deeply nested store.</p>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>REST returns a fixed shape per URL — often too much data, or spread across too many requests.</li>
+        <li>GraphQL has one endpoint; the query itself specifies exactly which fields come back.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="anatomy">
+    <div class="chapter-num">Chapter 02</div>
+    <h2>Anatomy of a query</h2>
+    <p>Here's the query from the previous chapter, labeled piece by piece:</p>
+    <CodeBlock code={queryAnatomyCode} lang="graphql" />
+
+    <p>Every field falls into one of two categories, and knowing which one you're looking at tells you whether you need another <code>{'{ }'}</code> or not:</p>
+    <CodeBlock code={scalarVsObjectCode} lang="graphql" />
+
+    <h3>Actually running a query</h3>
+    <p>Inside a Shopify app, you don't hit a URL by hand — the <code>admin.graphql()</code> helper (available inside any authenticated loader or action) sends the query for you:</p>
+    <CodeBlock code={runningQueryCode} lang="ts" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Forgetting a field is an object, not a scalar.</b> The error message ("Field 'collections' of type 'ProductCollectionConnection' must have a selection of subfields") is GraphQL telling you exactly this — open a <code>{'{ }'}</code> and say which of its fields you want.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="variables">
+    <div class="chapter-num">Chapter 03</div>
+    <h2>Variables</h2>
+    <p>Real queries need real, changing input — a specific product ID, say. It's tempting to build the query string by hand:</p>
+    <CodeBlock code={variablesBadCode} lang="ts" />
+    <p>Don't. GraphQL has a built-in, safer mechanism for this — declare a named variable in the query itself, and pass its actual value in a separate object:</p>
+    <CodeBlock code={variablesGoodCode} lang="ts" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>This is the same reasoning behind a parameterized SQL query instead of pasting raw text into a database command — separating "the shape of the request" from "the actual value" avoids an entire category of bugs and injection risks, and it's also just less error-prone string-juggling for you.</p>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself</div>
+      <p>Read <code>$id: ID!</code> out loud as a sentence: "a variable named <code>id</code>, of type <code>ID</code>, which is required." The <code>!</code> always means required — spot it in any query and you'll immediately know which variables are optional and which aren't.</p>
+    </div>
+  </section>
+
+  <section class="chapter" id="mutations">
+    <div class="chapter-num">Chapter 04</div>
+    <h2>Mutations: writing data</h2>
+    <p>Everything so far has been reading. Writing — creating, updating, deleting — uses the exact same query syntax, just introduced with <code>mutation</code> instead of <code>query</code>:</p>
+    <CodeBlock code={mutationCode} lang="graphql" />
+
+    <p>Called from a loader or action exactly like a query, but watch closely for <code>userErrors</code>:</p>
+    <CodeBlock code={mutationCallCode} lang="ts" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>A GraphQL mutation almost always responds with HTTP 200 OK — even when the write itself failed for a business reason ("that title's too long," "that SKU already exists"). Those failures come back as ordinary data, inside <code>userErrors</code>, not as an HTTP error. Always check that array — a successful HTTP response is not the same thing as a successful mutation.</p>
+    </div>
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Only checking <code>response.ok</code> and assuming the write succeeded.</b> The HTTP request can succeed while the mutation itself reports validation errors in <code>userErrors</code> — always inspect that array before telling the user their change was saved.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="connections">
+    <div class="chapter-num">Chapter 05</div>
+    <h2>The edges/node/pageInfo shape</h2>
+    <p>This is the single thing that trips up nearly everyone the first time they query a list in the Admin API. A list of products isn't a plain array — it's a structure called a <strong>connection</strong>:</p>
+    <CodeBlock code={connectionShapeCode} lang="graphql" />
+
+    <p>Three parts, each with a job: <code>edges</code> is the list itself; each <strong>edge</strong> wraps one item's actual data in <code>node</code>, plus a <code>cursor</code> marking its position; and <code>pageInfo</code> — a sibling of <code>edges</code>, not inside it — tells you whether more pages exist.</p>
+
+    <p>Reading the response means unwrapping that extra layer:</p>
+    <CodeBlock code={connectionUnwrapCode} lang="ts" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Think of a connection like a numbered coat check: <code>edges</code> is the rack of tickets, each <code>node</code> is the actual coat behind one ticket, and the <code>cursor</code> is that ticket's number — used to ask for "everything after ticket #47" on the next page.</p>
+    </div>
+
+    <h3>Asking for the next page</h3>
+    <CodeBlock code={paginationCode} lang="graphql" />
+    <p>This <code>first</code> + <code>after</code> pair (called <strong>cursor-based pagination</strong>) is used identically across every paginated list in the Admin API — orders, customers, collections, products, all of it.</p>
+
+    <h3>The shortcut: <code>nodes</code></h3>
+    <p>When you don't need each item's individual cursor, <code>nodes</code> skips straight past the edge wrapper:</p>
+    <CodeBlock code={nodesShortcutCode} lang="graphql" />
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Lists come back as connections: <code>edges</code> (each holding a <code>node</code> and a <code>cursor</code>) plus a sibling <code>pageInfo</code>.</li>
+        <li><code>first</code> + <code>after</code> page through any connection the same way, everywhere in the API.</li>
+        <li><code>nodes</code> is a shortcut for when you don't need individual cursors.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="reading-docs">
+    <div class="chapter-num">Chapter 06</div>
+    <h2>Reading a schema</h2>
+    <p>Every GraphQL API publishes a complete <strong>schema</strong> — a machine-readable list of every field that exists, its type, and what arguments it accepts. You don't have to memorize the Admin API; you look it up.</p>
+
+    <p>Two ways to explore it in practice:</p>
+    <ul>
+      <li>The <a href="https://shopify.dev/docs/api/admin-graphql" target="_blank" rel="noopener">Admin API GraphQL reference</a> on shopify.dev — searchable docs for every type and field.</li>
+      <li><strong>GraphiQL</strong> — an interactive query editor with autocomplete, bundled directly into your app's local dev tools when running <code>shopify app dev</code>. Start typing a field name and it shows you what's valid at that exact position, live.</li>
+    </ul>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself</div>
+      <p>Next time you run a Shopify app locally, open the GraphiQL explorer it prints a link to, and type <code>query {'{'} products(first: 5) {'{'}</code> — then let autocomplete show you every field you could ask for next. This is genuinely how experienced Shopify developers write most queries — explored live, not recalled from memory.</p>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Where to go next</div>
+      <p>Move on to <a href="/crash-courses/prisma">Prisma</a> to see the other side of the data layer: storing your <em>own</em> app's data (not Shopify's) in a real database.</p>
+    </div>
+  </section>
+</CourseLayout>

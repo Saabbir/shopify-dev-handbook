@@ -1,0 +1,182 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const books = [
+  {
+    order: 1,
+    title: 'TypeScript',
+    href: '/crash-courses/typescript',
+    chapters: 8,
+    time: '45–55 min',
+    desc: 'JavaScript with a spell-checker for your data. Start here — every other course assumes you can read a type.',
+  },
+  {
+    order: 2,
+    title: 'React',
+    href: '/crash-courses/react',
+    chapters: 8,
+    time: '55–65 min',
+    desc: 'Stop hand-editing the DOM. Build UI by describing what it should look like, and let React handle the rest.',
+  },
+  {
+    order: 3,
+    title: 'React Router 7',
+    href: '/crash-courses/react-router-7',
+    chapters: 6,
+    time: '40–50 min',
+    desc: 'The framework the Shopify app template runs on: file routes, loaders, and actions — how a page gets its data.',
+  },
+  {
+    order: 4,
+    title: 'Node.js',
+    href: '/crash-courses/node',
+    chapters: 7,
+    time: '40–50 min',
+    desc: 'JavaScript running on a server instead of a browser. Modules, npm, async/await, and how a request gets a response.',
+  },
+  {
+    order: 5,
+    title: 'GraphQL',
+    href: '/crash-courses/graphql',
+    chapters: 6,
+    time: '35–45 min',
+    desc: "The language you'll use to ask Shopify's Admin API for exactly the data you want — no more, no less.",
+  },
+  {
+    order: 6,
+    title: 'Prisma',
+    href: '/crash-courses/prisma',
+    chapters: 6,
+    time: '35–45 min',
+    desc: 'Talk to a real database using JavaScript objects instead of hand-written SQL, with a safety net built in.',
+  },
+];
+
+const soon = [
+  { group: 'Languages & Frameworks', items: [
+    { title: 'JSX', desc: 'The markup-in-JS syntax React is built on.' },
+    { title: 'Preact', desc: 'A 3KB React alternative — where it fits.' },
+    { title: 'Remix → React Router', desc: 'What happened to Remix.' },
+    { title: 'Web Components', desc: 'The standard behind extension UI.' },
+  ]},
+  { group: 'Data & Backend', items: [
+    { title: 'Databases', desc: 'Tables, keys, and core SQL, fast.' },
+  ]},
+  { group: 'Tooling & Config', items: [
+    { title: 'npm scripts', desc: 'What "npm run dev" actually runs.' },
+    { title: 'npx', desc: 'Running a package without installing it.' },
+    { title: 'ESLint', desc: 'Catching bugs before you run the code.' },
+    { title: 'TOML', desc: 'The config format behind shopify.app.toml.' },
+  ]},
+];
+---
+<BaseLayout
+  title="Crash Courses — Shopify Dev Handbook"
+  description="Beginner-first, book-style crash courses on the individual pieces the Roadmap and Getting Started pages assume you know."
+  accent="violet"
+>
+  <div class="hero">
+    <h1 class="page-title">Crash Courses</h1>
+    <p class="lede">Six short books, each written for one reader: someone who knows HTML, CSS, and plain JavaScript, and nothing else on this list. No prior React, TypeScript, or backend experience assumed anywhere.</p>
+  </div>
+
+  <div class="howread">
+    <div class="howread-label">How these are built</div>
+    <p>Every course opens with a sidebar table of contents on the left — click any chapter to jump straight to it, and it tracks where you are as you scroll. Chapters build on each other in order, so the first read-through goes top to bottom. Come back later and use the sidebar to jump to just the part you forgot.</p>
+  </div>
+
+  <div class="path-label">Suggested reading order</div>
+  <ol class="booklist">
+    {books.map((b) => (
+      <li>
+        <a class="book" href={b.href}>
+          <div class="book-num">{String(b.order).padStart(2, '0')}</div>
+          <div class="book-body">
+            <h2>{b.title}</h2>
+            <p>{b.desc}</p>
+            <div class="book-meta">
+              <span>{b.chapters} chapters</span>
+              <span class="dot">&middot;</span>
+              <span>{b.time}</span>
+            </div>
+          </div>
+          <div class="book-go">Read &rarr;</div>
+        </a>
+      </li>
+    ))}
+  </ol>
+
+  <div class="soon-head">
+    <h2>Planned, not written yet</h2>
+    <p>Shorter references for the remaining pieces the Roadmap mentions. Ask and I'll prioritize one.</p>
+  </div>
+
+  {soon.map((group) => (
+    <div class="catgroup">
+      <h2>{group.group}</h2>
+      <div class="topicgrid">
+        {group.items.map((item) => (
+          <div class="topiccard soon">
+            <h3>{item.title} <span class="soon-tag">soon</span></h3>
+            <p>{item.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  ))}
+
+  <footer class="sitefooter">Have a topic you want prioritized? Just ask — this list grows on request. Deeper coverage of every topic here also lives in the full <a href="/roadmap">Roadmap</a>.</footer>
+</BaseLayout>
+
+<style>
+  .hero { margin-bottom: 36px; }
+  .hero .lede { max-width: 62ch; }
+
+  .howread {
+    background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent);
+    border-radius: 10px; padding: 20px 24px; margin-bottom: 48px; box-shadow: var(--shadow);
+  }
+  .howread-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); margin-bottom: 8px;
+  }
+  .howread p { margin: 0; font-size: var(--fs-small); color: var(--text-dim); line-height: 1.65; }
+
+  .path-label {
+    font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 0.86rem; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-dim); border-bottom: 1px solid var(--line);
+    padding-bottom: 14px; margin: 0 0 20px;
+  }
+
+  .booklist { list-style: none; margin: 0 0 56px; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+  .book {
+    display: flex; align-items: center; gap: 22px; text-decoration: none;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 26px; box-shadow: var(--shadow); transition: border-color .15s ease, transform .15s ease;
+  }
+  .book:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .book-num {
+    font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.6rem;
+    color: var(--accent); opacity: 0.55; flex-shrink: 0; width: 44px;
+  }
+  .book-body { flex: 1; min-width: 0; }
+  .book-body h2 { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.3rem; margin: 0 0 8px; color: var(--text); }
+  .book-body p { font-size: var(--fs-small); color: var(--text-dim); margin: 0 0 10px; line-height: 1.6; }
+  .book-meta { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--text-dim); }
+  .book-meta .dot { margin: 0 8px; opacity: 0.6; }
+  .book-go {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; font-weight: 600; color: var(--accent);
+    flex-shrink: 0; white-space: nowrap;
+  }
+
+  .soon-head { margin-bottom: 24px; }
+  .soon-head h2 {
+    font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.1rem; margin: 0 0 8px; color: var(--text);
+  }
+  .soon-head p { font-size: var(--fs-small); color: var(--text-dim); margin: 0; }
+
+  @media (max-width: 620px) {
+    .book { flex-wrap: wrap; }
+    .book-go { width: 100%; }
+  }
+</style>

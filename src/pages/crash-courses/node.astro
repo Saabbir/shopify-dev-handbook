@@ -1,0 +1,387 @@
+---
+import CourseLayout from '../../layouts/CourseLayout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const chapters = [
+  { id: 'what-is-node', title: 'What Node.js actually is' },
+  { id: 'modules-npm', title: 'Modules & npm' },
+  { id: 'running-scripts', title: 'package.json & running scripts' },
+  { id: 'event-loop', title: 'The event loop, briefly' },
+  { id: 'async-story', title: 'Callbacks → Promises → async/await' },
+  { id: 'env-vars', title: 'Environment variables & config' },
+  { id: 'server-basics', title: 'A minimal server, request to response' },
+];
+
+const browserOnlyCode = `// This works in a browser <script> tag:
+document.querySelector("h1").textContent = "Hi";
+alert("Loaded!");
+
+// Run the exact same code with Node, and both lines crash:
+// ReferenceError: document is not defined
+// ReferenceError: alert is not defined`;
+
+const nodeOnlyCode = `// Node gives you things a browser never would, because a server
+// needs different tools than a page needs:
+const fs = require("fs");
+fs.readFileSync("notes.txt", "utf8"); // read a file straight off disk
+
+process.env.DATABASE_URL; // read a server's own environment/config
+
+// A browser tab can't read your hard drive or your server's
+// secrets, and for very good security reasons never should.
+// Node runs outside that sandbox — on a machine you (or your
+// host) control — so it can.`;
+
+const twoWorldsCode = `// app/routes/app._index.tsx — one file, two runtimes
+export async function loader({ request }) {
+  const { admin, session } = await authenticate.admin(request);
+  console.log(session.shop);   // prints in your TERMINAL — this is Node
+  return { shop: session.shop };
+}
+
+export default function Page() {
+  const { shop } = useLoaderData();
+  return <p>{shop}</p>;         // this renders in the BROWSER
+}
+// Same file. The loader only ever runs in Node, on the server —
+// never shipped to, or executed by, the visitor's browser.`;
+
+const moduleBasicCode = `// math.js — a module: just a file that exports something
+export function double(n) {
+  return n * 2;
+}
+
+// app.js — another file, importing from it
+import { double } from "./math.js";
+console.log(double(5)); // 10`;
+
+const npmPackageCode = `// Instead of writing every utility yourself, npm (Node Package
+// Manager) lets you pull in code someone else already wrote and
+// published — a "package":
+import { PrismaClient } from "@prisma/client";
+import { useState } from "react";
+
+// Both of these came from npm. Under the hood, "npm install"
+// downloaded the actual source code into a node_modules/ folder
+// sitting right next to your project — import just knows to look there.`;
+
+const packageJsonCode = `{
+  "name": "my-shopify-app",
+  "scripts": {
+    "dev": "shopify app dev",
+    "build": "react-router build"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "@prisma/client": "^5.9.0"
+  }
+}
+// "dependencies" is the list of packages your app needs to RUN.
+// npm reads this file to know what to download and what version
+// range is acceptable (the ^ allows compatible updates).`;
+
+const npmCommandsCode = `npm install          # read package.json, download everything listed
+npm install zod       # add a new package, and record it in package.json
+npm run dev           # run the "dev" script defined above
+npx prisma studio     # run a package's command WITHOUT installing it
+                       # permanently — npx fetches it just for this run`;
+
+const syncBlockCode = `console.log("start");
+
+// Imagine this took 3 real seconds — reading a huge file, say.
+const data = readFileSlowly("huge-file.txt"); // BLOCKING
+
+console.log("done");
+// Nothing else — no other request, no other code — can run
+// during those 3 seconds. One slow operation freezes everything.`;
+
+const asyncNonBlockCode = `console.log("start");
+
+readFileAsync("huge-file.txt", (data) => {
+  console.log("file finished loading");
+});
+
+console.log("this prints BEFORE the file finishes");
+
+// Output order:
+//   start
+//   this prints BEFORE the file finishes
+//   file finished loading   (whenever the disk actually responds)`;
+
+const eventLoopPlainCode = `// Node hands slow work (disk, network, timers) off to the
+// system, and keeps running your other code in the meantime.
+// When that slow work finishes, Node comes back and runs the
+// function you gave it. That hand-off-and-come-back loop is
+// the "event loop" — you rarely think about it directly, but
+// it's the reason Node can handle many requests from many
+// different shops at once without waiting in line.`;
+
+const callbackHellCode = `// The original way to handle "do this, then that" — nesting
+// callbacks. Three steps deep is already hard to follow:
+getUser(id, (user) => {
+  getOrders(user.id, (orders) => {
+    getShippingLabel(orders[0].id, (label) => {
+      console.log(label);
+      // and it keeps drifting right with every added step —
+      // this shape earned the nickname "callback hell"
+    });
+  });
+});`;
+
+const promiseCode = `// A Promise represents "a value that will exist eventually" —
+// either it succeeds (resolves) or fails (rejects).
+getUser(id)
+  .then((user) => getOrders(user.id))
+  .then((orders) => getShippingLabel(orders[0].id))
+  .then((label) => console.log(label))
+  .catch((err) => console.error("something failed:", err));
+// Flatter than nested callbacks, and one .catch() handles
+// a failure at any step — but still a specific new syntax to learn.`;
+
+const asyncAwaitCode = `// async/await is the same Promise machinery underneath, written
+// to read top-to-bottom like ordinary, synchronous code:
+async function getShippingLabelForUser(id: string) {
+  try {
+    const user = await getUser(id);
+    const orders = await getOrders(user.id);
+    const label = await getShippingLabel(orders[0].id);
+    return label;
+  } catch (err) {
+    console.error("something failed:", err);
+  }
+}
+// "await" pauses THIS function (not the whole program) until the
+// Promise resolves, then hands you the actual value directly.`;
+
+const forgottenAwaitCode = `async function getNote(productId: string) {
+  const note = db.note.findUnique({ where: { productId } }); // missing "await"
+  return note;
+}
+
+const result = await getNote("123");
+console.log(result.body);
+// TypeError: Cannot read properties of undefined (reading 'body')
+// "result" isn't the note — it's a Promise object that HOLDS the
+// note. Forgetting "await" is the single most common Node bug.`;
+
+const envCode = `// .env (never committed to git)
+DATABASE_URL="postgresql://localhost:5432/mydb"
+SHOPIFY_API_KEY="abc123..."
+
+// Anywhere in your Node code:
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is not set");
+}
+// Failing loudly, immediately, at startup beats a confusing
+// error three requests later when something finally tries
+// to use the missing value.`;
+
+const envWhyCode = `// Why not just hard-code these values in the source file?
+//
+//  - Different values in different places: your laptop uses a
+//    local database URL; production uses a real one. Same code,
+//    different .env.
+//  - Secrets shouldn't live in git history. A .env file is listed
+//    in .gitignore specifically so it's never committed — only
+//    you and your hosting provider's dashboard ever see the real
+//    values.`;
+
+const httpBasicCode = `import http from "http";
+
+const server = http.createServer((req, res) => {
+  console.log(req.method, req.url); // e.g. "GET /app"
+
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("Hello from Node!");
+});
+
+server.listen(3000, () => {
+  console.log("Listening on http://localhost:3000");
+});
+// Every framework you'll use — including React Router's server
+// mode — is ultimately a much friendlier layer built on exactly
+// this: a function that receives a request and produces a response.`;
+
+const requestResponseCode = `// The request/response shape that every layer of this stack —
+// http, React Router's loaders/actions, the Admin API itself —
+// is built on:
+//
+//   browser  --request-->  server
+//                            |
+//                     runs your code
+//                            |
+//   browser  <--response--   server
+//
+// A "loader" is just: "when a GET request arrives for this
+// route, here's the code that builds the response." An "action"
+// is the same idea for POST/PUT/DELETE.`;
+---
+<CourseLayout
+  title="Node.js Crash Course — Shopify Dev Handbook"
+  description="Node.js from first principles for readers who know JavaScript in the browser but have never run it anywhere else. Modules, npm, the event loop, async/await, and request/response basics."
+  accent="green"
+  courseTitle="Node.js"
+  courseTagline="JavaScript running outside a browser — on a server, on your own machine. Every loader, action, and server file in a Shopify app runs here, not in the visitor's browser."
+  readTime="40–50 min"
+  chapters={chapters}
+  prev={{ href: '/crash-courses/react-router-7', title: 'React Router 7' }}
+  next={{ href: '/crash-courses/graphql', title: 'GraphQL' }}
+>
+  <section class="chapter" id="what-is-node">
+    <div class="chapter-num">Chapter 01</div>
+    <h2>What Node.js actually is</h2>
+    <p>Every bit of JavaScript you've written so far probably ran inside a browser tab — triggered by a click, changing something on a page. Browser JavaScript comes with browser-only tools built in, like <code>document</code> and <code>alert</code>:</p>
+    <CodeBlock code={browserOnlyCode} lang="js" />
+
+    <p><strong>Node.js</strong> is the same JavaScript language, running in a completely different environment: directly on a computer (your laptop, or a server), with no browser, no page, and no DOM at all. In exchange, it gets tools a browser deliberately withholds — reading files off disk, reading a server's private configuration:</p>
+    <CodeBlock code={nodeOnlyCode} lang="js" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>JavaScript is the language. A browser and Node.js are two different <em>places</em> that language can run, each handing the code a different toolbox. The syntax you already know — functions, arrays, <code>if</code>, arrow functions — is identical in both. What changes is what's available to call.</p>
+    </div>
+
+    <h3>Where this shows up in a Shopify app</h3>
+    <p>A React Router route file straddles both worlds in a single file — this is the exact split covered in the <a href="/crash-courses/react-router-7">React Router 7</a> course, revisited from the Node side:</p>
+    <CodeBlock code={twoWorldsCode} lang="tsx" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Trying to use a browser API inside a loader/action.</b> <code>window</code>, <code>document</code>, and <code>localStorage</code> don't exist in Node — code inside a <code>loader</code> or <code>action</code> function runs on the server and never touches the DOM.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="modules-npm">
+    <div class="chapter-num">Chapter 02</div>
+    <h2>Modules &amp; npm</h2>
+    <p>A <strong>module</strong> is just a file that exports something for other files to use — you've already been doing this with React components:</p>
+    <CodeBlock code={moduleBasicCode} lang="js" />
+
+    <p>That covers code you write. For code <em>other people</em> wrote and published, Node uses <strong>npm</strong> — the Node Package Manager, and also the name of the public registry it downloads from:</p>
+    <CodeBlock code={npmPackageCode} lang="ts" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Instead of writing your own database client, your own React, and your own date-formatting logic from scratch, npm lets you say "I need this specific piece of code someone else already wrote" and pulls it into your project automatically.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>A module is a file that exports code for other files to <code>import</code>.</li>
+        <li>npm is how you install modules that other people published, instead of writing everything yourself.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="running-scripts">
+    <div class="chapter-num">Chapter 03</div>
+    <h2><code>package.json</code> &amp; running scripts</h2>
+    <p>Every Node project has one file at its root that describes it: <code>package.json</code>. Two parts of it matter immediately:</p>
+    <CodeBlock code={packageJsonCode} lang="json" />
+
+    <p><code>dependencies</code> lists every package your app needs to run — this is what <code>npm install</code> reads to know what to download into a (large, git-ignored) <code>node_modules</code> folder. <code>scripts</code> is a set of named shortcuts for commands you'd otherwise have to remember and retype:</p>
+    <CodeBlock code={npmCommandsCode} lang="bash" />
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself</div>
+      <p>Open the <code>package.json</code> in a Shopify app template project and read every entry under <code>"scripts"</code>. Each one is a real command you could type out in full — the script name is just a shorter alias for it.</p>
+    </div>
+  </section>
+
+  <section class="chapter" id="event-loop">
+    <div class="chapter-num">Chapter 04</div>
+    <h2>The event loop, briefly</h2>
+    <p>Some operations are slow by nature — reading a large file, waiting on a network response, querying a database. If Node simply stopped and waited for each one, a single slow request would freeze every other request the server is handling:</p>
+    <CodeBlock code={syncBlockCode} lang="js" />
+
+    <p>Node avoids this by handing slow work off and continuing to run other code while it waits, then coming back once that work finishes:</p>
+    <CodeBlock code={asyncNonBlockCode} lang="js" />
+    <CodeBlock code={eventLoopPlainCode} lang="text" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Think of a restaurant kitchen with one cook. Instead of standing at the oven staring at a dish for 20 minutes, the cook starts it, moves on to prep the next order, and comes back to the oven the moment it's ready. One cook, many dishes in progress — never idle, never blocked.</p>
+    </div>
+
+    <p>You rarely manage this hand-off yourself directly. What you <em>do</em> need is the vocabulary for working with it — which is exactly the next chapter.</p>
+  </section>
+
+  <section class="chapter" id="async-story">
+    <div class="chapter-num">Chapter 05</div>
+    <h2>Callbacks → Promises → async/await</h2>
+    <p>JavaScript's way of writing "do this slow thing, then do that with the result" has gone through three generations. Seeing all three helps you recognize old code and understand why the modern syntax looks the way it does.</p>
+
+    <h3>Generation 1: callbacks</h3>
+    <p>The original approach: pass a function to run once the slow thing finishes. It works, but nesting several steps quickly gets unreadable:</p>
+    <CodeBlock code={callbackHellCode} lang="js" />
+
+    <h3>Generation 2: Promises</h3>
+    <p>A <strong>Promise</strong> is an object representing a value that doesn't exist yet but will — either successfully (<em>resolved</em>) or with a failure (<em>rejected</em>). Chaining <code>.then()</code> flattens the nesting:</p>
+    <CodeBlock code={promiseCode} lang="js" />
+
+    <h3>Generation 3: async/await (what you'll actually write)</h3>
+    <p><code>async</code>/<code>await</code> is not a third mechanism — it's the exact same Promises underneath, with syntax that reads top-to-bottom like ordinary code:</p>
+    <CodeBlock code={asyncAwaitCode} lang="ts" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Marking a function <code>async</code> means "this function will use <code>await</code> inside it." <code>await</code> means "pause right here until this Promise settles, then give me the real value" — pausing only this one function, never the rest of the program.</p>
+    </div>
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Forgetting <code>await</code>.</b> This is, without close competition, the most common Node bug:</li>
+      </ul>
+      <CodeBlock code={forgottenAwaitCode} lang="ts" />
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>A Promise represents a value that will exist eventually — resolved (success) or rejected (failure).</li>
+        <li><code>async</code>/<code>await</code> is Promise syntax written to look synchronous.</li>
+        <li>Every <code>await</code> needs an <code>async</code> function around it — and every Promise-returning call needs an <code>await</code> in front of it, or you get the Promise object instead of its value.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="env-vars">
+    <div class="chapter-num">Chapter 06</div>
+    <h2>Environment variables &amp; config</h2>
+    <p>Secrets and settings that change between your laptop and a real production server — a database URL, an API key — don't belong hard-coded in your source files. Node reads them from the environment instead, via <code>process.env</code>:</p>
+    <CodeBlock code={envCode} lang="ts" />
+
+    <CodeBlock code={envWhyCode} lang="text" />
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Where this shows up</div>
+      <p><code>app/shopify.server.ts</code> and <code>app/db.server.ts</code> in the <a href="/getting-started">Getting Started</a> build both read from <code>process.env</code> — and the <code>.server.ts</code> suffix itself is a signal: React Router guarantees files named this way never get bundled into code sent to the browser, which matters enormously for a file holding secrets.</p>
+    </div>
+  </section>
+
+  <section class="chapter" id="server-basics">
+    <div class="chapter-num">Chapter 07</div>
+    <h2>A minimal server, request to response</h2>
+    <p>Stripped down to its core, a web server is a function: it receives a request, and produces a response. Node's built-in <code>http</code> module exposes exactly that:</p>
+    <CodeBlock code={httpBasicCode} lang="js" />
+
+    <p>You will never write this by hand in a real Shopify app — React Router's framework mode (covered in the <a href="/crash-courses/react-router-7">previous course</a>) handles it for you. But every layer above this is built on the same shape:</p>
+    <CodeBlock code={requestResponseCode} lang="text" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>A <code>loader</code> is "what response do we send when a GET request hits this URL." An <code>action</code> is the same question for a POST. Once you see the request/response shape underneath, both start to look like thin, friendly wrappers around this one idea — not a new concept each.</p>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Where to go next</div>
+      <p>Move on to <a href="/crash-courses/graphql">GraphQL</a> — the language you'll actually use inside a loader or action to ask Shopify's Admin API for data.</p>
+    </div>
+  </section>
+</CourseLayout>

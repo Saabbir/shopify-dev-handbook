@@ -1,0 +1,118 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  accent?: 'gold' | 'teal' | 'purple' | 'blue' | 'green' | 'orange' | 'violet';
+  wide?: boolean;
+}
+
+const { title, description, accent = 'gold', wide = false } = Astro.props;
+
+const navLinks = [
+  { href: '/', label: 'Home' },
+  { href: '/roadmap', label: 'Roadmap' },
+  { href: '/getting-started', label: 'Getting Started' },
+  { href: '/extensions', label: 'Extensions' },
+  { href: '/crash-courses', label: 'Crash Courses' },
+  { href: '/changelog', label: 'Changelog' },
+];
+
+const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <ClientRouter />
+    <script is:inline>
+      // Set the theme before first paint to avoid a flash of the wrong theme.
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          var theme = stored;
+          if (!theme) {
+            theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'warm' : 'dark';
+          }
+          if (theme === 'warm') {
+            document.documentElement.setAttribute('data-theme', 'warm');
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body data-accent={accent}>
+    <nav class="sitenav" transition:persist>
+      <div class="sitenav-inner">
+        <a class="brand" href="/">shopify dev handbook</a>
+        <div class="sitenav-links">
+          {navLinks.map((link) => {
+            const linkPath = link.href.replace(/\/+$/, '') || '/';
+            const isCurrent = linkPath === path;
+            return (
+              <a href={link.href} aria-current={isCurrent ? 'page' : undefined}>
+                {link.label}
+              </a>
+            );
+          })}
+          <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch between dark and warm reading mode">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <main class:list={['wrap', { 'wrap-wide': wide }]}>
+      <slot />
+    </main>
+
+    <script>
+      // Theme toggle — delegated on document so it keeps working across
+      // ClientRouter (View Transitions) page swaps.
+      function setTheme(theme: string) {
+        if (theme === 'warm') {
+          document.documentElement.setAttribute('data-theme', 'warm');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+        }
+        try {
+          localStorage.setItem('theme', theme);
+        } catch (e) {}
+      }
+
+      document.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const toggle = target.closest('#theme-toggle');
+        if (toggle) {
+          const isWarm = document.documentElement.getAttribute('data-theme') === 'warm';
+          setTheme(isWarm ? 'dark' : 'warm');
+          return;
+        }
+
+        const copyBtn = target.closest('[data-copy]') as HTMLElement | null;
+        if (copyBtn) {
+          const block = copyBtn.closest('.codeblock');
+          const codeEl = block?.querySelector('pre');
+          const text = codeEl?.textContent ?? '';
+          navigator.clipboard.writeText(text).then(() => {
+            const label = copyBtn.querySelector('.copy-label');
+            const prevText = label ? label.textContent : '';
+            if (label) label.textContent = 'Copied';
+            copyBtn.classList.add('copied');
+            window.setTimeout(() => {
+              if (label) label.textContent = prevText;
+              copyBtn.classList.remove('copied');
+            }, 1600);
+          }).catch(() => {});
+        }
+      });
+    </script>
+  </body>
+</html>

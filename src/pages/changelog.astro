@@ -1,0 +1,189 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="Shopify Dev Changelog — Shopify Dev Handbook"
+  description="The high-signal version of Shopify's own changelog — only the changes that actually require you to know something or do something."
+  accent="orange"
+>
+  <header>
+    <h1 class="page-title">Shopify Dev Changelog</h1>
+    <p class="lede">The high-signal version of Shopify's own changelog — only the changes that actually require you to know something or do something. Not a mirror of every line item.</p>
+  </header>
+
+  <div class="last-checked">Last checked: <b>2026-09-04</b> · next automatic check: weekly</div>
+
+  <p class="policy"><b>Curation policy:</b> this page only lists changes that are <b>necessary</b> (something breaks or is required going forward) or <b>huge</b> (a real shift in how apps get built) — not every routine API tweak. A scheduled check runs weekly against <a href="https://shopify.dev/changelog" target="_blank" rel="noopener">shopify.dev/changelog</a> and adds entries here when something clears that bar. For the full, unfiltered feed, that page is always the source of truth.</p>
+
+  <div class="stack">
+    <h2>Recommended stack, right now</h2>
+    <p class="sub">If you're starting a new app today, this is what "current" means. Cross-referenced against the entries below.</p>
+    <dl>
+      <dt>App template</dt>
+      <dd>React Router 7 — the <a href="https://github.com/Shopify/shopify-app-template-react-router" target="_blank" rel="noopener">official template</a>. Shopify's older Remix template is superseded (Remix itself merged into React Router).</dd>
+      <dt>Admin API</dt>
+      <dd>GraphQL Admin API only. The <a href="https://shopify.dev/docs/api/admin-rest" target="_blank" rel="noopener">REST Admin API is legacy</a> as of Oct 1, 2024, and new public apps have been required to use GraphQL exclusively since Apr 1, 2025.</dd>
+      <dt>Embedding</dt>
+      <dd>App Bridge, latest version — now a stated requirement for <a href="https://shopify.dev/changelog/latest-version-of-app-bridge-required-for-built-for-shopify" target="_blank" rel="noopener">Built for Shopify</a> status.</dd>
+      <dt>UI kit</dt>
+      <dd><a href="https://polaris.shopify.com/" target="_blank" rel="noopener">Polaris</a> React components in the admin app; Polaris Web Components in extension surfaces.</dd>
+      <dt>Checkout/storefront</dt>
+      <dd><a href="https://shopify.dev/docs/api/checkout-ui-extensions" target="_blank" rel="noopener">Checkout UI Extensions</a> + <a href="https://shopify.dev/docs/apps/build/functions" target="_blank" rel="noopener">Shopify Functions</a>. <code>checkout.liquid</code> and Shopify Scripts are fully retired — see below.</dd>
+      <dt>CLI</dt>
+      <dd><code>@shopify/cli</code>, Node.js 22.12+ required. Check <code>shopify version</code> locally; don't hardcode a version number here since it moves fast — see the <a href="https://www.npmjs.com/package/@shopify/cli" target="_blank" rel="noopener">npm package page</a>.</dd>
+    </dl>
+  </div>
+
+  <section class="group">
+    <h2>Foundational — still true today</h2>
+
+    <div class="entry">
+      <div class="entry-top">
+        <span class="tag tag-deprecation">Standing mandate</span>
+      </div>
+      <h3>REST Admin API is legacy; GraphQL is mandatory for new public apps</h3>
+      <p>Shopify's own words: <i>"The REST Admin API is a legacy API as of October 1, 2024. Starting April 1, 2025, all new public apps must be built exclusively with the GraphQL Admin API."</i> If you're following any tutorial that uses REST endpoints for a new app, it's teaching a dead end.</p>
+      <p class="why"><b>Why it matters:</b> this is the single most load-bearing fact for anyone starting today — it's why this roadmap's GraphQL module exists and why the app template only ships a GraphQL client.</p>
+      <p class="src">Source: <a href="https://shopify.dev/docs/api/admin-rest" target="_blank" rel="noopener">shopify.dev — REST Admin API</a> · <a href="https://shopify.dev/docs/api/admin-graphql" target="_blank" rel="noopener">GraphQL Admin API</a></p>
+    </div>
+
+    <div class="entry">
+      <div class="entry-top">
+        <span class="tag tag-breaking">Standing mandate</span>
+      </div>
+      <h3>Checkout Extensibility migration is complete — <code>checkout.liquid</code> &amp; Shopify Scripts are gone</h3>
+      <p>The phased sunset finished on schedule: Plus stores lost <code>checkout.liquid</code>/script tags on the Thank you and Order status pages on Aug 28, 2025; non-Plus stores followed on Aug 26, 2026. Shopify Scripts stopped running entirely on Jun 30, 2026. Any store that didn't migrate had its checkout auto-upgraded with legacy customizations dropped, not preserved.</p>
+      <p class="why"><b>Why it matters:</b> if you're building anything that touches checkout — tracking pixels, post-purchase content, custom discount/shipping logic — it goes through Checkout UI Extensions (UI) and Shopify Functions (logic) now, full stop. There's no "just add a script tag" fallback left.</p>
+      <p class="src">Source: <a href="https://shopify.dev/docs/apps/build/checkout" target="_blank" rel="noopener">shopify.dev — Checkout extensibility</a></p>
+    </div>
+  </section>
+
+  <section class="group">
+    <h2>Recent changes (auto-checked weekly)</h2>
+
+    <div class="entry">
+      <div class="entry-top">
+        <span class="entry-date">2026-08-24</span>
+        <span class="tag tag-deprecation">Deprecation</span>
+      </div>
+      <h3>Script tags deprecated app-wide</h3>
+      <p>Script tags (the older <code>ScriptTag</code> API, distinct from Shopify Scripts above) are deprecated and will stop running on Mar 1, 2027.</p>
+      <p class="why"><b>Why it matters:</b> if an existing app or integration you're maintaining still injects behavior via script tags, it has until March 2027 to move to Theme App Extensions or Web Pixels instead.</p>
+      <p class="src">Source: <a href="https://shopify.dev/changelog" target="_blank" rel="noopener">shopify.dev/changelog</a></p>
+    </div>
+
+    <div class="entry">
+      <div class="entry-top">
+        <span class="entry-date">2026-07-15</span>
+        <span class="tag tag-requirement">Requirement</span>
+      </div>
+      <h3>Unique app names now required for the App Store</h3>
+      <p>Shopify now enforces that a public app's name must be unique across the App Store at listing time.</p>
+      <p class="why"><b>Why it matters:</b> only relevant once you're preparing an App Store submission — check name availability early, not the week you plan to submit.</p>
+      <p class="src">Source: <a href="https://shopify.dev/changelog" target="_blank" rel="noopener">shopify.dev/changelog</a></p>
+    </div>
+
+    <div class="entry">
+      <div class="entry-top">
+        <span class="entry-date">2026-07-09</span>
+        <span class="tag tag-requirement">Action required</span>
+      </div>
+      <h3>Identity verification begins for Shopify Partners</h3>
+      <p>Shopify has started requiring identity verification for Partner accounts.</p>
+      <p class="why"><b>Why it matters:</b> if you plan to publish a public app, expect a verification step in the Partner dashboard — worth doing early rather than discovering it blocks a launch.</p>
+      <p class="src">Source: <a href="https://shopify.dev/changelog" target="_blank" rel="noopener">shopify.dev/changelog</a></p>
+    </div>
+
+    <div class="entry">
+      <div class="entry-top">
+        <span class="entry-date">2026-07-02</span>
+        <span class="tag tag-breaking">Breaking</span>
+      </div>
+      <h3><code>useBuyerJourneyIntercept</code> deprecated on checkout UI extensions</h3>
+      <p>The hook used to intercept/block checkout progression in Checkout UI Extensions is deprecated.</p>
+      <p class="why"><b>Why it matters:</b> only affects checkout extensions using that specific API — re-check the <a href="https://shopify.dev/docs/api/checkout-ui-extensions" target="_blank" rel="noopener">Checkout UI Extensions API reference</a> for the current replacement before building new validation/blocking logic.</p>
+      <p class="src">Source: <a href="https://shopify.dev/changelog" target="_blank" rel="noopener">shopify.dev/changelog</a></p>
+    </div>
+
+    <div class="entry">
+      <div class="entry-top">
+        <span class="entry-date">2026-06-17</span>
+        <span class="tag tag-new">New capability</span>
+      </div>
+      <h3>New Collection model &amp; APIs; bulk queries ~4x faster</h3>
+      <p>A new Collection data model and matching GraphQL APIs shipped, alongside a significant performance improvement to Bulk Operations queries.</p>
+      <p class="why"><b>Why it matters:</b> if your app reads/writes collections, check whether the new model changes your existing queries before your next release; the bulk query speedup is a free win if you already use Bulk Operations for large syncs.</p>
+      <p class="src">Source: <a href="https://shopify.dev/changelog" target="_blank" rel="noopener">shopify.dev/changelog</a> · <a href="https://shopify.dev/docs/api/usage/bulk-operations/queries" target="_blank" rel="noopener">Bulk Operations docs</a></p>
+    </div>
+
+    <div class="entry">
+      <div class="entry-top">
+        <span class="entry-date">2026-06-16</span>
+        <span class="tag tag-breaking">Action required</span>
+      </div>
+      <h3>Metafield definitions now required for Customer Account API access</h3>
+      <p>Reading a metafield through the Customer Account API now requires a metafield <i>definition</i> to exist for it — an undefined metafield is no longer readable there.</p>
+      <p class="why"><b>Why it matters:</b> if a customer-account-facing extension reads custom metafields, confirm each one has a definition or the read will silently fail.</p>
+      <p class="src">Source: <a href="https://shopify.dev/changelog" target="_blank" rel="noopener">shopify.dev/changelog</a></p>
+    </div>
+  </section>
+
+  <footer class="sitefooter">
+    This page is maintained by a scheduled check against <a href="https://shopify.dev/changelog" target="_blank" rel="noopener">shopify.dev/changelog</a> — it adds an entry when something clears the "necessary or huge" bar above, dated to when Shopify announced it. It can lag the live changelog by up to a week and, being a curated summary, can miss something relevant to your specific app. Always verify against the primary source before acting on a breaking change.
+  </footer>
+</BaseLayout>
+
+<style>
+  .last-checked {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.88rem; color: var(--text-dim);
+    margin: 0 0 40px; display: inline-block; border: 1px solid var(--line); border-radius: 20px; padding: 6px 15px;
+  }
+  .last-checked b { color: var(--ok); }
+
+  .policy {
+    font-size: var(--fs-small); color: var(--text-dim); margin: 0 0 44px;
+    padding: 6px 20px; border-left: 3px solid var(--line); line-height: 1.6;
+  }
+  .policy b { color: var(--text); font-weight: 600; }
+
+  .stack .sub { color: var(--text-dim); font-size: var(--fs-small); margin: 0 0 20px; }
+  .stack dl { display: grid; grid-template-columns: 160px 1fr; gap: 14px 20px; margin: 0; font-size: var(--fs-small); }
+  .stack dt { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--text-dim); font-size: 0.85rem; padding-top: 2px; }
+  .stack dd { margin: 0; }
+  .stack dd a { color: var(--accent); }
+
+  section.group { margin-bottom: 56px; }
+  section.group > h2 {
+    font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 0.9rem; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-dim); border-bottom: 1px solid var(--line);
+    padding-bottom: 14px; margin: 0 0 24px;
+  }
+
+  .entry {
+    border: 1px solid var(--line); background: var(--surface); border-radius: 12px;
+    padding: 22px 24px; margin-bottom: 18px; box-shadow: var(--shadow);
+  }
+  .entry-top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .entry-date { font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; color: var(--text-dim); }
+  .tag {
+    font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.03em; padding: 3px 9px; border-radius: 10px; border: 1px solid var(--line);
+  }
+  .tag-breaking { color: var(--warn); border-color: var(--warn); }
+  .tag-deprecation { color: var(--warn); border-color: var(--warn); }
+  .tag-requirement { color: var(--purple); border-color: var(--purple); }
+  .tag-new { color: var(--ok); border-color: var(--ok); }
+  .tag-tooling { color: var(--gold); border-color: var(--gold); }
+
+  .entry h3 { font-family: 'IBM Plex Mono', monospace; font-size: 1.15rem; margin: 0 0 12px; font-weight: 700; }
+  .entry p { font-size: var(--fs-body); margin: 0 0 12px; }
+  .entry .why { color: var(--text-dim); font-size: var(--fs-small); margin: 0 0 12px; line-height: 1.6; }
+  .entry .why b { color: var(--text); font-weight: 600; }
+  .entry .src { font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; }
+  .entry .src a { color: var(--accent); text-decoration: none; }
+  .entry .src a:hover { text-decoration: underline; }
+
+  @media (max-width: 480px) {
+    .stack dl { grid-template-columns: 1fr; }
+  }
+</style>

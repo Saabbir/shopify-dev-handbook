@@ -1,0 +1,349 @@
+---
+import CourseLayout from '../../layouts/CourseLayout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const chapters = [
+  { id: 'what-is-orm', title: 'What an ORM is, and why Prisma' },
+  { id: 'schema', title: 'Modeling data: schema.prisma' },
+  { id: 'migrations', title: 'Migrations' },
+  { id: 'client', title: 'The generated Prisma Client' },
+  { id: 'crud-upsert', title: 'CRUD queries & upsert' },
+  { id: 'relations', title: 'Relations & real query patterns' },
+];
+
+const rawSqlCode = `-- Without an ORM, saving a note means writing SQL by hand,
+-- and manually turning the result's raw rows back into an object:
+INSERT INTO "Note" (id, shop, "productId", body)
+VALUES ('abc123', 'my-shop.myshopify.com', 'prod_1', 'Fragile');
+
+SELECT * FROM "Note" WHERE "productId" = 'prod_1';
+-- Comes back as an untyped row. Misspell a column name and you
+-- find out at runtime, from a database error, not from your editor.`;
+
+const prismaEquivalentCode = `// The same two operations through Prisma — plain JavaScript/
+// TypeScript, checked by your editor, no SQL string anywhere:
+await db.note.create({
+  data: { shop: "my-shop.myshopify.com", productId: "prod_1", body: "Fragile" },
+});
+
+const note = await db.note.findFirst({ where: { productId: "prod_1" } });
+// note.body — autocompleted, and red-underlined if you typo it,
+// because Prisma generated a real TypeScript type for "Note".`;
+
+const schemaCode = `// prisma/schema.prisma
+
+datasource db {
+  provider = "sqlite"           // which kind of database
+  url      = env("DATABASE_URL") // where it actually lives
+}
+
+generator client {
+  provider = "prisma-client-js"  // generate a typed JS/TS client
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  shop      String
+  productId String
+  body      String
+  updatedAt DateTime @updatedAt
+
+  @@unique([shop, productId])
+}`;
+
+const schemaFieldsCode = `model Note {
+  id        String   @id @default(cuid())
+  //        ^type    ^^^ attributes — modifiers on this field
+
+  shop      String   // a plain required text column
+  productId String
+  body      String
+  updatedAt DateTime @updatedAt   // Prisma sets this automatically
+}
+// @id            — this field is the primary key
+// @default(cuid()) — auto-generate a unique id if none is given
+// @updatedAt     — auto-set to "now" every time the row is saved
+// @@unique([...]) — a constraint across MULTIPLE fields together
+//                    (below the fields, with a double @@)`;
+
+const migrateCommand = `npx prisma migrate dev --name add-note`;
+
+const migrationOutputCode = `-- prisma/migrations/20240115120000_add_note/migration.sql
+-- (generated for you — this is what "migrate dev" actually wrote)
+
+CREATE TABLE "Note" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "shop" TEXT NOT NULL,
+    "productId" TEXT NOT NULL,
+    "body" TEXT NOT NULL,
+    "updatedAt" DATETIME NOT NULL
+);
+
+CREATE UNIQUE INDEX "Note_shop_productId_key" ON "Note"("shop", "productId");`;
+
+const migrationWorkflowCode = `// The loop you'll repeat constantly while building a feature:
+//
+//  1. Edit prisma/schema.prisma — add or change a model
+//  2. Run:  npx prisma migrate dev --name describe-the-change
+//  3. Prisma writes the .sql file, applies it to your local DB,
+//     AND regenerates the typed client — all three, one command`;
+
+const clientImportCode = `// app/db.server.ts — one shared client for the whole app
+import { PrismaClient } from "@prisma/client";
+
+const db = new PrismaClient();
+export default db;
+
+// Every route imports THIS file rather than creating its own
+// client — one connection pool, shared across the app.`;
+
+const generateCommand = `npx prisma generate`;
+
+const generateExplainCode = `// Prisma Client's types are GENERATED CODE, not live inference —
+// they're written to disk based on your schema, once, whenever
+// you run "generate". Edit schema.prisma directly (without
+// migrating) and your editor still thinks the OLD shape is true
+// until you regenerate:
+
+npx prisma generate
+// "migrate dev" already does this for you automatically — this
+// command matters mainly when you're only reading a schema someone
+// else wrote, or recovering after switching git branches.`;
+
+const findCode = `// Read one row, or null if it doesn't exist:
+const note = await db.note.findUnique({
+  where: { id: "abc123" },
+});
+
+// Read one row matching looser conditions (first match wins):
+const first = await db.note.findFirst({
+  where: { productId: "prod_1" },
+});
+
+// Read every matching row:
+const notes = await db.note.findMany({
+  where: { shop: "my-shop.myshopify.com" },
+});`;
+
+const createUpdateDeleteCode = `await db.note.create({
+  data: { shop, productId, body: "Fragile — pack with care" },
+});
+
+await db.note.update({
+  where: { id: "abc123" },
+  data: { body: "Updated text" },
+});
+
+await db.note.delete({
+  where: { id: "abc123" },
+});`;
+
+const upsertProblemCode = `// The problem upsert solves: "save this note, whether or not
+// one already exists for this product" — without upsert, that's
+// two separate steps and a decision:
+const existing = await db.note.findFirst({ where: { shop, productId } });
+
+if (existing) {
+  await db.note.update({ where: { id: existing.id }, data: { body } });
+} else {
+  await db.note.create({ data: { shop, productId, body } });
+}
+// Works, but it's two round trips, and there's a small race-
+// condition window between the find and the create/update.`;
+
+const upsertCode = `// One call, matched against the @@unique constraint from the
+// schema — Prisma decides update-vs-create for you, atomically:
+await db.note.upsert({
+  where: { shop_productId: { shop, productId } },
+  update: { body },
+  create: { shop, productId, body },
+});
+// "shop_productId" is Prisma's auto-generated name for the
+// compound key from @@unique([shop, productId]) in the schema —
+// the field names joined with an underscore.`;
+
+const relationSchemaCode = `model Shop {
+  id    String @id @default(cuid())
+  domain String @unique
+  notes  Note[]     // "a shop has many notes"
+}
+
+model Note {
+  id      String @id @default(cuid())
+  body    String
+  shop    Shop   @relation(fields: [shopId], references: [id])
+  shopId  String
+}
+// Note.shopId is a real foreign-key column. Shop.notes isn't a
+// column at all — it's a virtual field Prisma computes for you,
+// so you can navigate the relationship from either side.`;
+
+const relationQueryCode = `// "include" pulls a related model's rows into the result:
+const shop = await db.shop.findUnique({
+  where: { domain: "my-shop.myshopify.com" },
+  include: { notes: true },
+});
+
+console.log(shop.notes); // an array of every Note for this shop
+// Without "include", shop.notes wouldn't be fetched at all —
+// Prisma never loads related data you didn't explicitly ask for.`;
+
+const realAppPatternCode = `// The exact pattern from the Getting Started build's action:
+// save-or-update a per-shop, per-product note, in one call.
+import db from "../db.server";
+import { authenticate } from "../shopify.server";
+
+export async function action({ request }) {
+  const { session } = await authenticate.admin(request);
+  const formData = await request.formData();
+  const productId = formData.get("productId") as string;
+  const body = formData.get("body") as string;
+
+  await db.note.upsert({
+    where: { shop_productId: { shop: session.shop, productId } },
+    update: { body },
+    create: { shop: session.shop, productId, body },
+  });
+
+  return { ok: true };
+}`;
+---
+<CourseLayout
+  title="Prisma Crash Course — Shopify Dev Handbook"
+  description="Prisma from first principles: what an ORM is, modeling data in schema.prisma, migrations, the generated typed client, and the CRUD/upsert patterns a Shopify app uses constantly."
+  accent="teal"
+  courseTitle="Prisma"
+  courseTagline="A typed way to talk to a real database using JavaScript objects instead of hand-written SQL. This is where your app's own data lives — everything that isn't Shopify's, like saved notes and settings."
+  readTime="35–45 min"
+  chapters={chapters}
+  prev={{ href: '/crash-courses/graphql', title: 'GraphQL' }}
+>
+  <section class="chapter" id="what-is-orm">
+    <div class="chapter-num">Chapter 01</div>
+    <h2>What an ORM is, and why Prisma</h2>
+    <p>A database like PostgreSQL or SQLite natively speaks SQL — a language of its own, separate from JavaScript. Without help, using one from your app means writing raw SQL strings and manually converting whatever comes back into usable objects:</p>
+    <CodeBlock code={rawSqlCode} lang="sql" />
+
+    <p>An <strong>ORM</strong> ("Object-Relational Mapper") is a library that lets you interact with a database using the language you're already writing your app in — plain objects and function calls — instead of a second language mixed into your code as strings. <strong>Prisma</strong> is the ORM the Shopify app template uses:</p>
+    <CodeBlock code={prismaEquivalentCode} lang="ts" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Prisma reads a schema file you write (next chapter), and generates a custom, fully-typed JavaScript API just for your database's exact tables and columns — so <code>db.note.create({'{ ... }'})</code> is checked by your editor the same way any other typed function call is, and a typo in a field name is a red squiggle instead of a runtime surprise.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>SQL is the database's own language — separate from JavaScript, usually written as raw strings.</li>
+        <li>An ORM lets you query a database using your app's own language instead.</li>
+        <li>Prisma specifically generates a typed client tailored to your exact schema.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="schema">
+    <div class="chapter-num">Chapter 02</div>
+    <h2>Modeling data: <code>schema.prisma</code></h2>
+    <p>Everything starts with one file, <code>prisma/schema.prisma</code>, which describes your database connection and every table ("model") in plain, readable syntax:</p>
+    <CodeBlock code={schemaCode} lang="prisma" title="prisma/schema.prisma" />
+
+    <p>Reading a model definition field by field:</p>
+    <CodeBlock code={schemaFieldsCode} lang="prisma" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>A <code>model</code> block is a table's blueprint, written the way you'd describe it out loud: "a Note has an id, a shop, a productId, a body, and an updatedAt timestamp." Everything after the field's type — starting with <code>@</code> — is an extra rule about that field, not a new field itself.</p>
+    </div>
+  </section>
+
+  <section class="chapter" id="migrations">
+    <div class="chapter-num">Chapter 03</div>
+    <h2>Migrations</h2>
+    <p>Writing a model in <code>schema.prisma</code> only describes the shape you want — it doesn't touch the real database by itself. <strong>Migrating</strong> is the step that turns a schema change into an actual, tracked change against the database:</p>
+    <CodeBlock code={migrateCommand} lang="bash" />
+
+    <p>That single command does three things at once: it writes a plain <code>.sql</code> file recording exactly what changed, applies that SQL to your local database, and regenerates the typed client to match (next chapter). The generated SQL is worth reading — it's not magic, just ordinary <code>CREATE TABLE</code> statements:</p>
+    <CodeBlock code={migrationOutputCode} lang="sql" title="prisma/migrations/20240115120000_add_note/migration.sql" />
+
+    <p>The loop you'll repeat every time you touch your data model:</p>
+    <CodeBlock code={migrationWorkflowCode} lang="text" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Editing <code>schema.prisma</code> and expecting the database to already match.</b> Nothing changes in the real database (or the typed client) until you actually run <code>migrate dev</code> — the schema file alone is just a plan.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="client">
+    <div class="chapter-num">Chapter 04</div>
+    <h2>The generated Prisma Client</h2>
+    <p>The typed object you call — <code>db.note.create(...)</code>, from Chapter 1 — is called the <strong>Prisma Client</strong>, and it's usually set up once and shared across the whole app:</p>
+    <CodeBlock code={clientImportCode} lang="ts" title="app/db.server.ts" />
+
+    <p>If you ever add a field to your schema and your editor still doesn't know about it — even after a migration — the fix is to regenerate the client directly:</p>
+    <CodeBlock code={generateCommand} lang="bash" />
+    <CodeBlock code={generateExplainCode} lang="text" />
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself</div>
+      <p>Open <code>node_modules/@prisma/client</code> in a real Shopify app project (after running a migration at least once) and skim the generated types for one of your models. Seeing that this is genuinely just ordinary, readable TypeScript — not some opaque black box — demystifies a lot of "where do these types even come from" confusion.</p>
+    </div>
+  </section>
+
+  <section class="chapter" id="crud-upsert">
+    <div class="chapter-num">Chapter 05</div>
+    <h2>CRUD queries &amp; <code>upsert</code></h2>
+    <p>Four methods cover the vast majority of what you'll write — Create, Read, Update, Delete (<strong>CRUD</strong>):</p>
+    <CodeBlock code={findCode} lang="ts" />
+    <CodeBlock code={createUpdateDeleteCode} lang="ts" />
+
+    <h3>The one you'll reach for constantly: <code>upsert</code></h3>
+    <p>A huge share of real "save" actions don't actually know in advance whether a row already exists — a merchant might be creating a note for a product for the first time, or editing one they wrote yesterday. Handling that manually takes two steps and a branch:</p>
+    <CodeBlock code={upsertProblemCode} lang="ts" />
+
+    <p><code>upsert</code> collapses that into one atomic call, matched against a unique constraint from your schema:</p>
+    <CodeBlock code={upsertCode} lang="ts" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>"Upsert" is "update" and "insert" mashed together — read it as "save this, whether or not it already exists." The <code>where</code> clause is how Prisma finds a possible existing row; <code>update</code> says what to change if it's found; <code>create</code> says what to insert if it isn't.</p>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself</div>
+      <p>Notice the <code>where</code> key in the upsert example is <code>shop_productId</code>, not two separate keys. That name comes directly from <code>@@unique([shop, productId])</code> in the schema — Prisma joins the field names with an underscore to build a matcher for the whole compound constraint at once.</p>
+    </div>
+  </section>
+
+  <section class="chapter" id="relations">
+    <div class="chapter-num">Chapter 06</div>
+    <h2>Relations &amp; real query patterns</h2>
+    <p>Models can reference each other — a shop that owns many notes, for instance:</p>
+    <CodeBlock code={relationSchemaCode} lang="prisma" />
+    <p><code>shopId</code> is a real column (a foreign key). <code>Shop.notes</code> is not a column at all — it's a computed relationship Prisma tracks so you can navigate from either side.</p>
+
+    <p>Fetching related rows together uses <code>include</code>:</p>
+    <CodeBlock code={relationQueryCode} lang="ts" />
+    <p>Related data is <em>never</em> fetched unless you explicitly ask for it with <code>include</code> — a deliberate design choice that keeps every query's cost predictable, instead of silently pulling in more than you expected.</p>
+
+    <p>Put together, here's the exact real-world pattern from the <a href="/getting-started">Getting Started</a> build — a full action that saves a per-shop, per-product note:</p>
+    <CodeBlock code={realAppPatternCode} lang="tsx" title="app/routes/app.notes.tsx" />
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Relations are declared in the schema; the "many" side gets a real foreign-key column, the "one" side gets a computed virtual field.</li>
+        <li><code>include</code> is required to fetch related rows — nothing loads automatically.</li>
+        <li><code>find*</code>, <code>create</code>, <code>update</code>, <code>delete</code>, and <code>upsert</code> together cover nearly every query you'll write in a real app.</li>
+      </ul>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ You've finished the crash courses</div>
+      <p>That's every course, TypeScript through Prisma — the exact stack behind the <a href="/getting-started">Getting Started</a> build. If you haven't done that walkthrough yet, now's the moment: every piece of it should read as familiar rather than new. Or head to the <a href="/roadmap">Roadmap</a> for the full structured curriculum these courses were distilled from.</p>
+    </div>
+  </section>
+</CourseLayout>

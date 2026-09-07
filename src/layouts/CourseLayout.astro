@@ -1,0 +1,221 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Chapter {
+  id: string;
+  title: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  accent?: 'gold' | 'teal' | 'purple' | 'blue' | 'green' | 'orange' | 'violet';
+  courseTitle: string;
+  courseTagline: string;
+  readTime: string;
+  chapters: Chapter[];
+  prev?: { href: string; title: string };
+  next?: { href: string; title: string };
+}
+
+const {
+  title,
+  description,
+  accent = 'violet',
+  courseTitle,
+  courseTagline,
+  readTime,
+  chapters,
+  prev,
+  next,
+} = Astro.props;
+---
+
+<BaseLayout title={title} description={description} accent={accent} wide>
+  <div class="course">
+    <aside class="course-sidebar">
+      <div class="course-sidebar-inner">
+        <a class="course-back" href="/crash-courses">&larr; All crash courses</a>
+        <div class="course-sidebar-title">{courseTitle}</div>
+        <nav class="course-toc" aria-label="Chapters in this course">
+          <ol>
+            {chapters.map((ch, i) => (
+              <li>
+                <a href={`#${ch.id}`} data-toc-link>
+                  <span class="toc-num">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="toc-title">{ch.title}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <article class="course-content">
+      <div class="course-inner">
+        <p class="course-crumb"><a href="/crash-courses">Crash Courses</a> <span>/</span> {courseTitle}</p>
+        <div class="course-hero">
+          <div class="course-eyebrow">Crash Course &middot; {chapters.length} chapters &middot; {readTime}</div>
+          <h1>{courseTitle}</h1>
+          <p class="lede">{courseTagline}</p>
+        </div>
+
+        <slot />
+
+        <nav class="course-pager">
+          {prev ? (
+            <a class="pager-link pager-prev" href={prev.href}>
+              <span class="pager-label">&larr; Previous course</span>
+              <b>{prev.title}</b>
+            </a>
+          ) : <span class="pager-spacer" />}
+          {next ? (
+            <a class="pager-link pager-next" href={next.href}>
+              <span class="pager-label">Next course &rarr;</span>
+              <b>{next.title}</b>
+            </a>
+          ) : <span class="pager-spacer" />}
+        </nav>
+
+        <footer class="sitefooter course-footer">
+          Everywhere on this site, "read more" points back to <a href="https://shopify.dev" target="_blank" rel="noopener">shopify.dev</a> &mdash; Shopify's own docs are always the tiebreaker when something here and the live docs disagree.
+        </footer>
+      </div>
+    </article>
+  </div>
+</BaseLayout>
+
+<script>
+  function initCourseChrome() {
+    const links = Array.from(document.querySelectorAll('[data-toc-link]')) as HTMLAnchorElement[];
+    if (!links.length) return;
+
+    const sections = links
+      .map((l) => document.querySelector(l.getAttribute('href') || ''))
+      .filter((el): el is HTMLElement => !!el);
+
+    const setActive = (id: string) => {
+      links.forEach((l) => {
+        l.classList.toggle('active', l.getAttribute('href') === `#${id}`);
+      });
+    };
+
+    if (sections.length) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) setActive(entry.target.id);
+          });
+        },
+        { rootMargin: '-10% 0px -75% 0px', threshold: 0 }
+      );
+      sections.forEach((s) => observer.observe(s));
+    }
+  }
+
+  document.addEventListener('astro:page-load', initCourseChrome);
+</script>
+
+<style>
+  .course {
+    display: grid;
+    grid-template-columns: 272px minmax(0, 1fr);
+    align-items: start;
+    max-width: var(--container);
+    margin: 0 auto;
+  }
+
+  /* ---- sidebar ---- */
+  .course-sidebar {
+    position: sticky;
+    top: 75px;
+    height: calc(100vh - 75px);
+    overflow-y: auto;
+    border-right: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .course-sidebar-inner { padding: 36px 26px 40px; }
+  .course-back {
+    display: inline-block; text-decoration: none; color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; margin-bottom: 22px;
+  }
+  .course-back:hover { color: var(--accent); }
+  .course-sidebar-title {
+    font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.15rem;
+    color: var(--text); margin-bottom: 18px;
+  }
+  .course-toc ol { list-style: none; margin: 0; padding: 0; }
+  .course-toc li { margin: 0; }
+  .course-toc a {
+    display: flex; align-items: baseline; gap: 10px; text-decoration: none;
+    color: var(--text-dim); font-size: 0.92rem; padding: 8px 10px; border-radius: 8px;
+    line-height: 1.35;
+  }
+  .course-toc a:hover { color: var(--text); background: var(--surface-alt); }
+  .course-toc a.active {
+    color: var(--accent); background: var(--surface-alt); font-weight: 600;
+  }
+  .toc-num {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; color: var(--text-dim);
+    flex-shrink: 0; opacity: 0.7;
+  }
+  .course-toc a.active .toc-num { color: var(--accent); opacity: 1; }
+
+  /* ---- content column ---- */
+  .course-content { min-width: 0; padding: 0 var(--gutter) 120px; }
+  .course-inner { max-width: 760px; margin: 0; padding-top: 44px; }
+
+  .course-crumb {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; color: var(--text-dim);
+    margin: 0 0 22px;
+  }
+  .course-crumb a { color: var(--text-dim); text-decoration: none; }
+  .course-crumb a:hover { color: var(--accent); }
+  .course-crumb span { margin: 0 6px; opacity: 0.5; }
+
+  .course-hero { margin-bottom: 56px; }
+  .course-eyebrow {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; font-weight: 600;
+    color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 14px;
+  }
+  .course-hero h1 {
+    font-family: 'IBM Plex Mono', monospace; font-weight: 700;
+    font-size: clamp(2rem, 4.5vw, 2.75rem); margin: 0 0 18px; letter-spacing: -0.015em; line-height: 1.15;
+  }
+  .course-hero .lede { max-width: 60ch; }
+
+  .course-pager {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 64px;
+  }
+  .pager-link {
+    display: flex; flex-direction: column; gap: 8px; text-decoration: none;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px 22px; box-shadow: var(--shadow); transition: border-color .15s ease, transform .15s ease;
+  }
+  .pager-link:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .pager-next { text-align: right; align-items: flex-end; }
+  .pager-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; color: var(--text-dim);
+  }
+  .pager-link b { font-size: 1.05rem; color: var(--text); font-weight: 700; }
+  .pager-spacer { display: block; }
+
+  .course-footer { margin-top: 48px; }
+
+  @media (max-width: 980px) {
+    .course { grid-template-columns: 1fr; }
+    .course-sidebar {
+      position: static; height: auto; border-right: none; border-bottom: 1px solid var(--line);
+    }
+    .course-sidebar-inner { padding: 22px var(--gutter); }
+    .course-toc ol { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 6px; padding-bottom: 4px; }
+    .course-toc a { white-space: nowrap; }
+    .course-content { padding: 0 var(--gutter) 90px; }
+  }
+
+  @media (max-width: 480px) {
+    .course-pager { grid-template-columns: 1fr; }
+    .pager-next { text-align: left; align-items: flex-start; }
+  }
+</style>

@@ -1,0 +1,46 @@
+---
+import { Code } from 'astro:components';
+
+interface Props {
+  code: string;
+  lang?: string;
+  title?: string;
+}
+
+const LANG_LABELS: Record<string, string> = {
+  ts: 'TypeScript',
+  typescript: 'TypeScript',
+  tsx: 'TSX',
+  js: 'JavaScript',
+  javascript: 'JavaScript',
+  jsx: 'JSX',
+  bash: 'Shell',
+  shell: 'Shell',
+  sh: 'Shell',
+  graphql: 'GraphQL',
+  gql: 'GraphQL',
+  prisma: 'Prisma',
+  toml: 'TOML',
+  json: 'JSON',
+  liquid: 'Liquid',
+  plaintext: 'Text',
+  txt: 'Text',
+  sql: 'SQL',
+  yaml: 'YAML',
+  css: 'CSS',
+  html: 'HTML',
+};
+
+const { code, lang = 'plaintext', title } = Astro.props;
+const label = title ?? LANG_LABELS[lang] ?? lang.toUpperCase();
+---
+<div class="codeblock">
+  <div class="codeblock-head">
+    <span class="codeblock-lang">{label}</span>
+    <button class="copy-btn" type="button" data-copy aria-label={`Copy ${label} code`}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <span class="copy-label">Copy</span>
+    </button>
+  </div>
+  <Code code={code} lang={lang} theme="github-dark" />
+</div>
