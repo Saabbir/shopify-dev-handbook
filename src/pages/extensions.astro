@@ -1,11 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase } from '../lib/url';
 ---
 <BaseLayout
   title="Shopify App Extensions Guide — Shopify App Handbook"
   description="Everything your embedded admin app can't reach — the storefront, checkout, POS, and Shopify Admin's own surfaces — is reached through extensions instead."
   accent="green"
-  footerNote={`Extension targets, APIs, and size limits change more often than almost anything else in the Shopify ecosystem — always cross-check the <a href="https://shopify.dev/docs/apps/build/app-extensions" target="_blank" rel="noopener">official app extensions overview</a> and the <a href="/changelog">Changelog</a> before shipping.`}
+  footerNote={`Extension targets, APIs, and size limits change more often than almost anything else in the Shopify ecosystem — always cross-check the <a href="https://shopify.dev/docs/apps/build/app-extensions" target="_blank" rel="noopener">official app extensions overview</a> and the <a href="${withBase('/changelog')}">Changelog</a> before shipping.`}
 >
   <header>
     <p class="eyebrow">Reach further</p>
@@ -19,7 +20,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   <div class="concept">
     <h2>The one idea that makes all of this click</h2>
-    <p>Your main app (the one you built in <a href="/getting-started">Getting Started</a>) runs as a page embedded in Shopify Admin, under your control end to end. An <b>extension</b> is different: it's a small piece of code that <i>Shopify itself</i> renders, inside a surface you don't control — a checkout step, a theme section, an Admin sidebar block. That's why extensions feel more restricted than your main app: sandboxed runtime, a narrow API surface, a strict size limit. You're a guest in someone else's UI, not the host.</p>
+    <p>Your main app (the one you built in <a href={withBase("/getting-started")}>Getting Started</a>) runs as a page embedded in Shopify Admin, under your control end to end. An <b>extension</b> is different: it's a small piece of code that <i>Shopify itself</i> renders, inside a surface you don't control — a checkout step, a theme section, an Admin sidebar block. That's why extensions feel more restricted than your main app: sandboxed runtime, a narrow API surface, a strict size limit. You're a guest in someone else's UI, not the host.</p>
     <ul>
       <li>Every extension is generated with <code>shopify app generate extension</code>, which scaffolds a <code>shopify.extension.toml</code> config file describing its type and <b>target</b> (exactly which surface/slot it renders into).</li>
       <li>Extensions ship bundled with your main app's config as one <b>app version</b> — <code>shopify app deploy</code> versions and releases them together, and a bad release can be rolled back.</li>
@@ -129,7 +130,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   <section class="family" id="checkout-ext">
     <div class="fam-head"><h2>Checkout &amp; Customer Account UI Extensions</h2><span class="fam-tag">checkout / accounts</span></div>
-    <p class="fam-tagline">The only supported way to customize checkout since <code>checkout.liquid</code> and Shopify Scripts were fully retired — see the <a href="/changelog">Changelog</a> for the exact sunset dates.</p>
+    <p class="fam-tagline">The only supported way to customize checkout since <code>checkout.liquid</code> and Shopify Scripts were fully retired — see the <a href={withBase("/changelog")}>Changelog</a> for the exact sunset dates.</p>
     <div class="card">
       <ul>
         <li>Multiple targets across checkout steps and the Thank you/Order status pages, plus customer account pages</li>
@@ -232,9 +233,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <div class="next">
     <h2>Where to go from here</h2>
     <div class="next-links">
-      <a href="/getting-started">Build the main app first →</a>
-      <a href="/roadmap">Roadmap →</a>
-      <a href="/changelog">Changelog →</a>
+      <a href={withBase("/getting-started")}>Build the main app first →</a>
+      <a href={withBase("/roadmap")}>Roadmap →</a>
+      <a href={withBase("/changelog")}>Changelog →</a>
     </div>
   </div>
 

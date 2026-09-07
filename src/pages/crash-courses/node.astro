@@ -1,6 +1,7 @@
 ---
 import CourseLayout from '../../layouts/CourseLayout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { withBase } from '../../lib/url';
 
 const chapters = [
   { id: 'what-is-node', title: 'What Node.js actually is' },
@@ -244,7 +245,7 @@ const requestResponseCode = `// The request/response shape that every layer of t
     </div>
 
     <h3>Where this shows up in a Shopify app</h3>
-    <p>A React Router route file straddles both worlds in a single file — this is the exact split covered in the <a href="/crash-courses/react-router-7">React Router 7</a> course, revisited from the Node side:</p>
+    <p>A React Router route file straddles both worlds in a single file — this is the exact split covered in the <a href={withBase("/crash-courses/react-router-7")}>React Router 7</a> course, revisited from the Node side:</p>
     <CodeBlock code={twoWorldsCode} lang="tsx" />
 
     <div class="mistakes">
@@ -287,7 +288,7 @@ const requestResponseCode = `// The request/response shape that every layer of t
     <div class="further">
       <div class="further-label">Go deeper</div>
       <ul>
-        <li><a href="/crash-courses/modern-javascript#modules">This site's Modern JavaScript course — Modules chapter</a> — the full <code>import</code>/<code>export</code> mechanics, browser vs. Node usage</li>
+        <li><a href={withBase("/crash-courses/modern-javascript#modules")}>This site's Modern JavaScript course — Modules chapter</a> — the full <code>import</code>/<code>export</code> mechanics, browser vs. Node usage</li>
       </ul>
     </div>
   </section>
@@ -309,8 +310,8 @@ const requestResponseCode = `// The request/response shape that every layer of t
     <div class="further">
       <div class="further-label">Go deeper</div>
       <ul>
-        <li><a href="/crash-courses/npm-scripts">This site's npm scripts quick reference</a> — the exact lookup-and-run mechanism, composing scripts, and pre/post lifecycle hooks</li>
-        <li><a href="/crash-courses/npx">This site's npx quick reference</a> — running a package's command-line tool without a permanent install</li>
+        <li><a href={withBase("/crash-courses/npm-scripts")}>This site's npm scripts quick reference</a> — the exact lookup-and-run mechanism, composing scripts, and pre/post lifecycle hooks</li>
+        <li><a href={withBase("/crash-courses/npx")}>This site's npx quick reference</a> — running a package's command-line tool without a permanent install</li>
       </ul>
     </div>
   </section>
@@ -382,7 +383,7 @@ const requestResponseCode = `// The request/response shape that every layer of t
     <div class="further">
       <div class="further-label">Go deeper</div>
       <ul>
-        <li><a href="/crash-courses/modern-javascript#promises-async">This site's Modern JavaScript course — Promises &amp; async/await chapter</a></li>
+        <li><a href={withBase("/crash-courses/modern-javascript#promises-async")}>This site's Modern JavaScript course — Promises &amp; async/await chapter</a></li>
         <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Asynchronous/Promises" target="_blank" rel="noopener">MDN — Using Promises</a></li>
       </ul>
     </div>
@@ -398,7 +399,7 @@ const requestResponseCode = `// The request/response shape that every layer of t
 
     <div class="tryit">
       <div class="tryit-label">✳ Where this shows up</div>
-      <p><code>app/shopify.server.ts</code> and <code>app/db.server.ts</code> in the <a href="/getting-started">Getting Started</a> build both read from <code>process.env</code> — and the <code>.server.ts</code> suffix itself is a signal: React Router guarantees files named this way never get bundled into code sent to the browser, which matters enormously for a file holding secrets.</p>
+      <p><code>app/shopify.server.ts</code> and <code>app/db.server.ts</code> in the <a href={withBase("/getting-started")}>Getting Started</a> build both read from <code>process.env</code> — and the <code>.server.ts</code> suffix itself is a signal: React Router guarantees files named this way never get bundled into code sent to the browser, which matters enormously for a file holding secrets.</p>
     </div>
 
     <div class="further">
@@ -415,7 +416,7 @@ const requestResponseCode = `// The request/response shape that every layer of t
     <p>Stripped down to its core, a web server is a function: it receives a request, and produces a response. Node's built-in <code>http</code> module exposes exactly that:</p>
     <CodeBlock code={httpBasicCode} lang="js" />
 
-    <p>You will never write this by hand in a real Shopify app — React Router's framework mode (covered in the <a href="/crash-courses/react-router-7">previous course</a>) handles it for you. But every layer above this is built on the same shape:</p>
+    <p>You will never write this by hand in a real Shopify app — React Router's framework mode (covered in the <a href={withBase("/crash-courses/react-router-7")}>previous course</a>) handles it for you. But every layer above this is built on the same shape:</p>
     <CodeBlock code={requestResponseCode} lang="text" />
 
     <div class="plain">
@@ -432,7 +433,7 @@ const requestResponseCode = `// The request/response shape that every layer of t
 
     <div class="tryit">
       <div class="tryit-label">✳ Where to go next</div>
-      <p>Move on to <a href="/crash-courses/graphql">GraphQL</a> — the language you'll actually use inside a loader or action to ask Shopify's Admin API for data.</p>
+      <p>Move on to <a href={withBase("/crash-courses/graphql")}>GraphQL</a> — the language you'll actually use inside a loader or action to ask Shopify's Admin API for data.</p>
     </div>
   </section>
 </CourseLayout>

@@ -1,6 +1,7 @@
 ---
 import CourseLayout from '../../layouts/CourseLayout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { withBase } from '../../lib/url';
 
 const chapters = [
   { id: 'short-version', title: 'The short version' },
@@ -68,18 +69,18 @@ const packageJsonDiffCode = `// package.json — the actual tell for "is this ol
   <section class="chapter" id="short-version">
     <div class="chapter-num">Reference</div>
     <h2>The short version</h2>
-    <p><strong>Remix</strong> was a React framework, built by a small team, that pioneered the loader/action data-fetching pattern taught in the <a href="/crash-courses/react-router-7">React Router 7 course</a>. In late 2024, Remix's team and React Router's team (React Router already existed separately, as the older, more widely-used routing library) merged their projects — Remix's ideas and APIs were folded directly into <strong>React Router</strong>, starting with its major version 7. Remix as a separate framework name was retired; what it did lives on as React Router's own "framework mode."</p>
+    <p><strong>Remix</strong> was a React framework, built by a small team, that pioneered the loader/action data-fetching pattern taught in the <a href={withBase("/crash-courses/react-router-7")}>React Router 7 course</a>. In late 2024, Remix's team and React Router's team (React Router already existed separately, as the older, more widely-used routing library) merged their projects — Remix's ideas and APIs were folded directly into <strong>React Router</strong>, starting with its major version 7. Remix as a separate framework name was retired; what it did lives on as React Router's own "framework mode."</p>
 
     <div class="plain">
       <div class="plain-label">In plain English</div>
-      <p>This is a rename-and-merge, not a rewrite you need to relearn. If you already know what a loader or an action is from the <a href="/crash-courses/react-router-7">React Router 7 course</a>, you already know what an old Remix tutorial is teaching too — it's describing the exact same mechanism, just before it changed its name.</p>
+      <p>This is a rename-and-merge, not a rewrite you need to relearn. If you already know what a loader or an action is from the <a href={withBase("/crash-courses/react-router-7")}>React Router 7 course</a>, you already know what an old Remix tutorial is teaching too — it's describing the exact same mechanism, just before it changed its name.</p>
     </div>
 
     <div class="recap">
       <div class="recap-label">Recap</div>
       <ul>
         <li>Remix merged into React Router in late 2024 — its features became React Router 7's "framework mode," not a separate product.</li>
-        <li>The Shopify app template you'd scaffold today is built on React Router 7, not Remix — but the concepts an older tutorial calls "Remix" are the same ones this handbook's <a href="/crash-courses/react-router-7">React Router 7 course</a> teaches.</li>
+        <li>The Shopify app template you'd scaffold today is built on React Router 7, not Remix — but the concepts an older tutorial calls "Remix" are the same ones this handbook's <a href={withBase("/crash-courses/react-router-7")}>React Router 7 course</a> teaches.</li>
       </ul>
     </div>
 
@@ -136,7 +137,7 @@ const packageJsonDiffCode = `// package.json — the actual tell for "is this ol
 
     <div class="tryit">
       <div class="tryit-label">✳ Where to go next</div>
-      <p>Continue to <a href="/crash-courses/web-components">Web Components</a> — the browser-native building block that frameworks like React, Preact, and Shopify's own extension surfaces are all, at some layer, built on top of.</p>
+      <p>Continue to <a href={withBase("/crash-courses/web-components")}>Web Components</a> — the browser-native building block that frameworks like React, Preact, and Shopify's own extension surfaces are all, at some layer, built on top of.</p>
     </div>
   </section>
 </CourseLayout>

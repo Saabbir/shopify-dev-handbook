@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase } from '../lib/url';
 ---
 <BaseLayout
   title="Learning Roadmap for Shopify App Development — Shopify App Handbook"
@@ -11,7 +12,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <p class="eyebrow">Full curriculum</p>
     <h1 class="page-title">Learning Roadmap for Shopify App Development</h1>
     <p class="lede">The full reference for going deeper: three tracks — building real embedded Shopify apps on the React Router 7 stack, a general backend foundation underneath it, and a dedicated track for reading the config files, JSDoc, and build tooling that most tutorials skip and most developers get stuck on.</p>
-    <p class="lede-note">New here? The <a href="/">homepage</a> walks the whole site in order. This page is what you come back to once you've built something and want to go deeper on a specific module — read modules in any order you need, not necessarily top to bottom.</p>
+    <p class="lede-note">New here? The <a href={withBase("/")}>homepage</a> walks the whole site in order. This page is what you come back to once you've built something and want to go deeper on a specific module — read modules in any order you need, not necessarily top to bottom.</p>
     <div class="meta-row">
       <span class="meta-chip">3 tracks</span>
       <span class="meta-chip">20 modules</span>

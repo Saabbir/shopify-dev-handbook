@@ -1,5 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import { withBase } from '../lib/url';
 
 interface Chapter {
   id: string;
@@ -37,7 +38,7 @@ const {
   <div class="course">
     <aside class="course-sidebar">
       <div class="course-sidebar-inner">
-        <a class="course-back" href="/crash-courses">&larr; All crash courses</a>
+        <a class="course-back" href={withBase('/crash-courses')}>&larr; All crash courses</a>
         <div class="course-sidebar-title">{courseTitle}</div>
         <nav class="course-toc" aria-label="Chapters in this course">
           <ol>
@@ -56,7 +57,7 @@ const {
 
     <article class="course-content">
       <div class="course-inner">
-        <p class="course-crumb"><a href="/crash-courses">Crash Courses</a> <span>/</span> {courseTitle}</p>
+        <p class="course-crumb"><a href={withBase('/crash-courses')}>Crash Courses</a> <span>/</span> {courseTitle}</p>
         <div class="course-hero">
           <div class="course-eyebrow">{kind} &middot; {chapters.length} chapters &middot; {readTime}</div>
           <h1>{courseTitle}</h1>
@@ -67,13 +68,13 @@ const {
 
         <nav class="course-pager">
           {prev ? (
-            <a class="pager-link pager-prev" href={prev.href}>
+            <a class="pager-link pager-prev" href={withBase(prev.href)}>
               <span class="pager-label">&larr; Previous course</span>
               <b>{prev.title}</b>
             </a>
           ) : <span class="pager-spacer" />}
           {next ? (
-            <a class="pager-link pager-next" href={next.href}>
+            <a class="pager-link pager-next" href={withBase(next.href)}>
               <span class="pager-label">Next course &rarr;</span>
               <b>{next.title}</b>
             </a>

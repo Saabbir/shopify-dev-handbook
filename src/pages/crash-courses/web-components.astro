@@ -1,6 +1,7 @@
 ---
 import CourseLayout from '../../layouts/CourseLayout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { withBase } from '../../lib/url';
 
 const chapters = [
   { id: 'custom-elements', title: 'Custom elements: defining your own HTML tag' },
@@ -168,12 +169,12 @@ function PriceTag({ amount }: { amount: number }) {
   <section class="chapter" id="shopify-usage">
     <div class="chapter-num">Reference</div>
     <h2>Where Shopify actually uses this</h2>
-    <p>The <a href="/extensions">Extensions page</a> mentions that Admin and Checkout UI extensions are "built with Polaris Web Components" — a different component set from the React-based Polaris library used in your main embedded app. This is exactly the technology covered in this reference: Polaris Web Components are genuine custom elements, each one defined and registered with the browser the same way <code>hello-banner</code> was above:</p>
+    <p>The <a href={withBase("/extensions")}>Extensions page</a> mentions that Admin and Checkout UI extensions are "built with Polaris Web Components" — a different component set from the React-based Polaris library used in your main embedded app. This is exactly the technology covered in this reference: Polaris Web Components are genuine custom elements, each one defined and registered with the browser the same way <code>hello-banner</code> was above:</p>
     <CodeBlock code={polarisWcUsageCode} lang="html" />
 
     <div class="plain">
       <div class="plain-label">In plain English</div>
-      <p>Shopify's extension surfaces render inside a sandboxed environment (an iframe, for security and stability reasons covered conceptually in <a href="/crash-courses/how-shopify-apps-work">How Shopify Apps Work</a>) where it can't assume your app's own frontend framework is available. A Web Component doesn't need to assume that either — it's understood by the browser directly, which is precisely why it's the right tool for a component that has to render correctly regardless of what (if anything) built the surrounding page.</p>
+      <p>Shopify's extension surfaces render inside a sandboxed environment (an iframe, for security and stability reasons covered conceptually in <a href={withBase("/crash-courses/how-shopify-apps-work")}>How Shopify Apps Work</a>) where it can't assume your app's own frontend framework is available. A Web Component doesn't need to assume that either — it's understood by the browser directly, which is precisely why it's the right tool for a component that has to render correctly regardless of what (if anything) built the surrounding page.</p>
     </div>
 
     <div class="recap">
@@ -204,7 +205,7 @@ function PriceTag({ amount }: { amount: number }) {
       </div>
       <div class="good">
         <h4>Reach for React (or Preact) when...</h4>
-        <p>You're building an application-shaped UI within a project that already committed to that framework — most state management, routing, and data-fetching patterns (like the loaders/actions from the <a href="/crash-courses/react-router-7">React Router 7 course</a>) are framework features, not something Web Components provide on their own.</p>
+        <p>You're building an application-shaped UI within a project that already committed to that framework — most state management, routing, and data-fetching patterns (like the loaders/actions from the <a href={withBase("/crash-courses/react-router-7")}>React Router 7 course</a>) are framework features, not something Web Components provide on their own.</p>
       </div>
     </div>
 
@@ -226,7 +227,7 @@ function PriceTag({ amount }: { amount: number }) {
 
     <div class="tryit">
       <div class="tryit-label">✳ Where to go next</div>
-      <p>Continue to <a href="/crash-courses/npm-scripts">npm scripts</a> — moving from the frontend to the tooling that actually runs your project day to day.</p>
+      <p>Continue to <a href={withBase("/crash-courses/npm-scripts")}>npm scripts</a> — moving from the frontend to the tooling that actually runs your project day to day.</p>
     </div>
   </section>
 </CourseLayout>

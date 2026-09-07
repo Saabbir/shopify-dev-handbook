@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CodeBlock from '../components/CodeBlock.astro';
+import { withBase } from '../lib/url';
 
 const installCli = `# requires Node.js 22.12 or higher — check with \`node -v\`
 npm install -g @shopify/cli@latest`;
@@ -77,9 +78,9 @@ const deployCommand = `shopify app deploy`;
     <h2>What you'll build</h2>
     <p>A tiny embedded app called <b>Product Notes</b> — a merchant picks a product and saves a private note against it (supplier info, restock reminders, whatever). Small enough to finish in a sitting, but it touches every piece that matters: the Admin GraphQL API, a loader and an action, Prisma persistence, and Polaris UI.</p>
     <ul>
-      <li>Assumes you've done the setup checklist on the <a href="/roadmap">Roadmap</a> page — Node.js, a Shopify Partner account, and a free development store.</li>
-      <li>Assumes you know what happens when a merchant installs an app, what a scope and an access token are, and what OAuth is doing behind the scenes — covered start to finish in the <a href="/crash-courses/how-shopify-apps-work">How Shopify Apps Work</a> course if any of that's new.</li>
-      <li>If you haven't touched React, TypeScript, or GraphQL yet, this will still make sense structurally, but the Roadmap's first three modules (or the matching <a href="/crash-courses">Crash Courses</a>) will make every line of code actually click.</li>
+      <li>Assumes you've done the setup checklist on the <a href={withBase("/roadmap")}>Roadmap</a> page — Node.js, a Shopify Partner account, and a free development store.</li>
+      <li>Assumes you know what happens when a merchant installs an app, what a scope and an access token are, and what OAuth is doing behind the scenes — covered start to finish in the <a href={withBase("/crash-courses/how-shopify-apps-work")}>How Shopify Apps Work</a> course if any of that's new.</li>
+      <li>If you haven't touched React, TypeScript, or GraphQL yet, this will still make sense structurally, but the Roadmap's first three modules (or the matching <a href={withBase("/crash-courses")}>Crash Courses</a>) will make every line of code actually click.</li>
     </ul>
   </div>
 
@@ -145,7 +146,7 @@ const deployCommand = `shopify app deploy`;
           </div>
           <div class="filerow">
             <div class="fname">app/shopify.server.ts <span class="flag flag-read">read this first</span></div>
-            <p>Where auth actually happens — exports the <code>authenticate</code> helper every loader/action calls, sets up session storage, and configures the API version. This is the file behind everything the <a href="/roadmap">Roadmap's OAuth module</a> describes.</p>
+            <p>Where auth actually happens — exports the <code>authenticate</code> helper every loader/action calls, sets up session storage, and configures the API version. This is the file behind everything the <a href={withBase("/roadmap")}>Roadmap's OAuth module</a> describes.</p>
           </div>
           <div class="filerow">
             <div class="fname">app/db.server.ts <span class="flag flag-read">read this</span></div>
@@ -165,11 +166,11 @@ const deployCommand = `shopify app deploy`;
           </div>
           <div class="filerow">
             <div class="fname">vite.config.ts <span class="flag flag-skip">skip for now</span></div>
-            <p>Dev server and build configuration. You won't need to touch this for a first app — worth reading once you're comfortable, covered on the <a href="/roadmap">Roadmap's Toolchain track</a>.</p>
+            <p>Dev server and build configuration. You won't need to touch this for a first app — worth reading once you're comfortable, covered on the <a href={withBase("/roadmap")}>Roadmap's Toolchain track</a>.</p>
           </div>
           <div class="filerow">
             <div class="fname">extensions/ <span class="flag flag-skip">empty for now</span></div>
-            <p>Where generated extensions land — nothing here yet. Covered on the <a href="/extensions">Extensions page</a>.</p>
+            <p>Where generated extensions land — nothing here yet. Covered on the <a href={withBase("/extensions")}>Extensions page</a>.</p>
           </div>
         </div>
       </div>
@@ -259,7 +260,7 @@ const deployCommand = `shopify app deploy`;
           </li>
           <li>Reinstall the app on your dev store using the production URL and repeat the Product Notes test from Step 6, now against the live deployment.</li>
         </ol>
-        <p>For the full picture on free hosting options, env vars, and what commonly breaks between local and production, the Roadmap's <a href="/roadmap">DevOps / Deployment module</a> goes deeper than this page needs to.</p>
+        <p>For the full picture on free hosting options, env vars, and what commonly breaks between local and production, the Roadmap's <a href={withBase("/roadmap")}>DevOps / Deployment module</a> goes deeper than this page needs to.</p>
       </div>
     </div>
 
@@ -268,9 +269,9 @@ const deployCommand = `shopify app deploy`;
   <div class="next">
     <h2>Where to go from here</h2>
     <div class="next-links">
-      <a href="/extensions">Add a checkout or theme extension →</a>
-      <a href="/roadmap">Fill in the fundamentals on the Roadmap →</a>
-      <a href="/changelog">Check what's changed recently →</a>
+      <a href={withBase("/extensions")}>Add a checkout or theme extension →</a>
+      <a href={withBase("/roadmap")}>Fill in the fundamentals on the Roadmap →</a>
+      <a href={withBase("/changelog")}>Check what's changed recently →</a>
     </div>
   </div>
 

@@ -1,6 +1,7 @@
 ---
 import CourseLayout from '../../layouts/CourseLayout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { withBase } from '../../lib/url';
 
 const chapters = [
   { id: 'why-routing', title: 'Why apps need routing' },
@@ -215,7 +216,7 @@ export default function NotesPage() {
   <section class="chapter" id="why-routing">
     <div class="chapter-num">Chapter 01</div>
     <h2>Why apps need routing</h2>
-    <p>The <a href="/crash-courses/react">React course</a> built components and swapped what's on screen using state — but state-based swapping has a real limitation:</p>
+    <p>The <a href={withBase("/crash-courses/react")}>React course</a> built components and swapped what's on screen using state — but state-based swapping has a real limitation:</p>
     <CodeBlock code={spaRoutingCode} lang="tsx" />
     <p>Real apps need actual, sharable, refreshable URLs: <code>/app/settings</code> should always show settings, whether you clicked to get there or pasted the link directly. That's <strong>routing</strong> — mapping URLs to what should render — and React Router is the library that does it.</p>
 
@@ -280,12 +281,12 @@ export default function NotesPage() {
     <p><code>useLoaderData()</code> reads whatever the loader returned — no fetching inside the component, no loading state to manage for the initial view, because the data already exists by the time the component ever runs:</p>
     <CodeBlock code={loaderTimingCode} lang="text" />
 
-    <p>Compare that to fetching from inside the component with <code>useEffect</code> — the pattern from the end of the <a href="/crash-courses/react">React course</a>:</p>
+    <p>Compare that to fetching from inside the component with <code>useEffect</code> — the pattern from the end of the <a href={withBase("/crash-courses/react")}>React course</a>:</p>
     <CodeBlock code={oldWayFetchCode} lang="tsx" />
 
     <div class="plain">
       <div class="plain-label">In plain English</div>
-      <p><code>authenticate.admin(request)</code>, seen in the loader above, is boilerplate every Shopify app route starts with — it confirms this request really is coming from an installed, logged-in merchant session (not a stranger), and hands back an <code>admin</code> object wired up to make GraphQL calls on that merchant's behalf. The OAuth handshake and access tokens this function relies on are covered conceptually in <a href="/crash-courses/how-shopify-apps-work">How Shopify Apps Work</a>; the GraphQL calls it enables are covered in the <a href="/crash-courses/graphql">GraphQL course</a>.</p>
+      <p><code>authenticate.admin(request)</code>, seen in the loader above, is boilerplate every Shopify app route starts with — it confirms this request really is coming from an installed, logged-in merchant session (not a stranger), and hands back an <code>admin</code> object wired up to make GraphQL calls on that merchant's behalf. The OAuth handshake and access tokens this function relies on are covered conceptually in <a href={withBase("/crash-courses/how-shopify-apps-work")}>How Shopify Apps Work</a>; the GraphQL calls it enables are covered in the <a href={withBase("/crash-courses/graphql")}>GraphQL course</a>.</p>
     </div>
 
     <div class="plain">
@@ -372,7 +373,7 @@ export default function NotesPage() {
 
     <div class="tryit">
       <div class="tryit-label">✳ Where this shows up</div>
-      <p>This is precisely the pattern built by hand, one export at a time, in <a href="/getting-started">Getting Started</a>. If you haven't done that walkthrough yet, this course is exactly the background it assumes.</p>
+      <p>This is precisely the pattern built by hand, one export at a time, in <a href={withBase("/getting-started")}>Getting Started</a>. If you haven't done that walkthrough yet, this course is exactly the background it assumes.</p>
     </div>
 
     <div class="further">
@@ -384,7 +385,7 @@ export default function NotesPage() {
 
     <div class="tryit">
       <div class="tryit-label">✳ Where to go next</div>
-      <p>Move on to <a href="/crash-courses/node">Node.js</a> — loaders and actions both run in Node on the server, and the next course covers what that actually means: modules, npm, and <code>async</code>/<code>await</code> from first principles.</p>
+      <p>Move on to <a href={withBase("/crash-courses/node")}>Node.js</a> — loaders and actions both run in Node on the server, and the next course covers what that actually means: modules, npm, and <code>async</code>/<code>await</code> from first principles.</p>
     </div>
   </section>
 </CourseLayout>

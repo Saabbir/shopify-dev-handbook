@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase } from '../lib/url';
 
 const steps = [
   {
@@ -86,7 +87,7 @@ const quickLinks = [
     <span class="chip">UI: <b>Polaris</b></span>
     <span class="chip">DB: <b>Prisma</b></span>
     <span class="chip">Checkout: <b>UI Extensions + Functions</b></span>
-    <span class="chip">See full details on the <a href="/changelog" class="changelog-link">Changelog →</a></span>
+    <span class="chip">See full details on the <a href={withBase('/changelog')} class="changelog-link">Changelog →</a></span>
   </div>
 
   <div class="path-head">
@@ -101,7 +102,7 @@ const quickLinks = [
           <h3>{s.title}</h3>
           <p>{s.body}</p>
           {s.skip && <p class="skip">{s.skip}</p>}
-          <a class="cta" href={s.cta.href}>{s.cta.label}</a>
+          <a class="cta" href={withBase(s.cta.href)}>{s.cta.label}</a>
         </div>
       </div>
     ))}
@@ -110,7 +111,7 @@ const quickLinks = [
   <div class="jump">
     <div class="jump-label">Already partway through? Jump straight to a section</div>
     <div class="jump-links">
-      {quickLinks.map((l) => <a href={l.href}>{l.label}</a>)}
+      {quickLinks.map((l) => <a href={withBase(l.href)}>{l.label}</a>)}
     </div>
   </div>
 

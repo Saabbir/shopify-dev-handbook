@@ -1,6 +1,7 @@
 ---
 import CourseLayout from '../../layouts/CourseLayout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { withBase } from '../../lib/url';
 
 const chapters = [
   { id: 'what-jsx-is', title: 'What JSX actually is' },
@@ -202,7 +203,7 @@ const styleObjectCode = `// HTML: a style attribute is one semicolon-separated s
 
     <div class="plain">
       <div class="plain-label">In plain English</div>
-      <p>JSX is a translator's shorthand, not a new language a browser learns. Every <code>&lt;div&gt;...&lt;/div&gt;</code> you write in a component gets converted into a plain function call before your code ever runs — you're just not the one typing out the function call by hand. This is exactly what the Vite build step (already set up in the Shopify app template, and covered from the tooling side in the <a href="/crash-courses/react">React course</a>) is doing every time you save a file.</p>
+      <p>JSX is a translator's shorthand, not a new language a browser learns. Every <code>&lt;div&gt;...&lt;/div&gt;</code> you write in a component gets converted into a plain function call before your code ever runs — you're just not the one typing out the function call by hand. This is exactly what the Vite build step (already set up in the Shopify app template, and covered from the tooling side in the <a href={withBase("/crash-courses/react")}>React course</a>) is doing every time you save a file.</p>
     </div>
 
     <div class="recap">
@@ -329,7 +330,7 @@ const styleObjectCode = `// HTML: a style attribute is one semicolon-separated s
 
     <div class="tryit">
       <div class="tryit-label">✳ Where to go next</div>
-      <p>Continue to <a href="/crash-courses/preact">Preact</a> — a much smaller runtime built to run this exact same JSX syntax, useful to know about even if the Shopify app template itself uses React.</p>
+      <p>Continue to <a href={withBase("/crash-courses/preact")}>Preact</a> — a much smaller runtime built to run this exact same JSX syntax, useful to know about even if the Shopify app template itself uses React.</p>
     </div>
   </section>
 </CourseLayout>

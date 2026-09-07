@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { withBase } from '../../lib/url';
 
 const platformBooks = [
   {
@@ -98,7 +99,7 @@ const references = [
   title="Crash Courses — Shopify App Handbook"
   description="Beginner-first, book-style crash courses on the individual pieces the Roadmap and Getting Started pages assume you know."
   accent="violet"
-  footerNote={`Have a topic you want prioritized? Just ask — this list grows on request. Deeper coverage of every topic here also lives in the full <a href="/roadmap">Roadmap</a>.`}
+  footerNote={`Have a topic you want prioritized? Just ask — this list grows on request. Deeper coverage of every topic here also lives in the full <a href="${withBase('/roadmap')}">Roadmap</a>.`}
 >
   <div class="hero">
     <p class="eyebrow">Fill in the toolkit</p>
@@ -120,7 +121,7 @@ const references = [
   <ol class="booklist">
     {platformBooks.map((b) => (
       <li>
-        <a class="book" href={b.href}>
+        <a class="book" href={withBase(b.href)}>
           <div class="book-num">{String(b.order).padStart(2, '0')}</div>
           <div class="book-body">
             <h2>{b.title}</h2>
@@ -141,7 +142,7 @@ const references = [
   <ol class="booklist">
     {toolkitBooks.map((b) => (
       <li>
-        <a class="book" href={b.href}>
+        <a class="book" href={withBase(b.href)}>
           <div class="book-num">{String(b.order).padStart(2, '0')}</div>
           <div class="book-body">
             <h2>{b.title}</h2>
@@ -168,7 +169,7 @@ const references = [
       <h2>{group.group}</h2>
       <div class="topicgrid">
         {group.items.map((item) => (
-          <a class="topiccard" href={item.href}>
+          <a class="topiccard" href={withBase(item.href)}>
             <h3>{item.title}</h3>
             <p>{item.desc}</p>
             <div class="topiccard-meta">

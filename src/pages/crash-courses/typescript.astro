@@ -1,6 +1,7 @@
 ---
 import CourseLayout from '../../layouts/CourseLayout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { withBase } from '../../lib/url';
 
 const chapters = [
   { id: 'why-typescript', title: 'Why TypeScript exists' },
@@ -406,7 +407,7 @@ async function pinNote(note: Note) {
 
     <div class="tryit">
       <div class="tryit-label">✳ Try it yourself</div>
-      <p>You'll see typed arrow functions constantly inside <code>.map()</code>, <code>.filter()</code>, and event handlers throughout the app template and the <a href="/crash-courses/react">React course</a>. Get comfortable reading <code>(note: Note): string =&gt;</code> as "a function that takes a Note and returns a string" — that's all it says.</p>
+      <p>You'll see typed arrow functions constantly inside <code>.map()</code>, <code>.filter()</code>, and event handlers throughout the app template and the <a href={withBase("/crash-courses/react")}>React course</a>. Get comfortable reading <code>(note: Note): string =&gt;</code> as "a function that takes a Note and returns a string" — that's all it says.</p>
     </div>
 
     <div class="further">
@@ -467,12 +468,12 @@ async function pinNote(note: Note) {
   <section class="chapter" id="in-the-app">
     <div class="chapter-num">Chapter 08</div>
     <h2>TypeScript in the Shopify app template</h2>
-    <p>Everything above is enough to read almost any file the <code>shopify app init</code> template generates. Here's a real loader from that template — the kind of function covered in depth in <a href="/crash-courses/react-router-7">React Router 7</a>:</p>
+    <p>Everything above is enough to read almost any file the <code>shopify app init</code> template generates. Here's a real loader from that template — the kind of function covered in depth in <a href={withBase("/crash-courses/react-router-7")}>React Router 7</a>:</p>
     <CodeBlock code={loaderCode} lang="tsx" title="app/routes/app._index.tsx" />
 
     <p>Nothing here is new: <code>LoaderFunctionArgs</code> is an interface (imported, not written by you) describing what the function receives; <code>as string</code> is a narrowing shortcut telling TypeScript "trust me, I know this is a string" — use it sparingly, the same way you'd use <code>!</code>; and the return value's shape is inferred from the object literal, the same inference from Chapter 3.</p>
 
-    <p>Prisma (covered in its own <a href="/crash-courses/prisma">crash course</a>) leans on this even harder — it reads your database schema and <em>generates</em> an interface for every table, so your queries are checked against the real database shape automatically:</p>
+    <p>Prisma (covered in its own <a href={withBase("/crash-courses/prisma")}>crash course</a>) leans on this even harder — it reads your database schema and <em>generates</em> an interface for every table, so your queries are checked against the real database shape automatically:</p>
     <CodeBlock code={prismaTypeCode} lang="ts" />
 
     <div class="plain">
@@ -489,7 +490,7 @@ async function pinNote(note: Note) {
 
     <div class="tryit">
       <div class="tryit-label">✳ Where to go next</div>
-      <p>Move on to <a href="/crash-courses/react">React</a> — it uses typed props and typed state constantly, and everything in this course carries over directly. If you'd rather see TypeScript in a full running app first, the <a href="/getting-started">Getting Started</a> build walks through a real feature end to end.</p>
+      <p>Move on to <a href={withBase("/crash-courses/react")}>React</a> — it uses typed props and typed state constantly, and everything in this course carries over directly. If you'd rather see TypeScript in a full running app first, the <a href={withBase("/getting-started")}>Getting Started</a> build walks through a real feature end to end.</p>
     </div>
   </section>
 </CourseLayout>

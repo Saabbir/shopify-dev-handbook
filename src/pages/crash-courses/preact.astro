@@ -1,6 +1,7 @@
 ---
 import CourseLayout from '../../layouts/CourseLayout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { withBase } from '../../lib/url';
 
 const chapters = [
   { id: 'what-preact-is', title: 'What Preact is, and why it exists' },
@@ -94,7 +95,7 @@ const whereFitsCode = `// A Shopify app has (at least) two very different fronte
   <section class="chapter" id="what-preact-is">
     <div class="chapter-num">Reference</div>
     <h2>What Preact is, and why it exists</h2>
-    <p>Preact is a separate library from React — not a plugin or a mode you switch on — that implements the same component model and the same Hooks API (<code>useState</code>, <code>useEffect</code>, and the rest, covered from the React side in the <a href="/crash-courses/react">React course</a>), in a fraction of the code:</p>
+    <p>Preact is a separate library from React — not a plugin or a mode you switch on — that implements the same component model and the same Hooks API (<code>useState</code>, <code>useEffect</code>, and the rest, covered from the React side in the <a href={withBase("/crash-courses/react")}>React course</a>), in a fraction of the code:</p>
     <CodeBlock code={bundleSizeCode} lang="text" />
 
     <div class="plain">
@@ -124,7 +125,7 @@ const whereFitsCode = `// A Shopify app has (at least) two very different fronte
     <p>Unlike most "lightweight alternative" libraries, Preact isn't trying to be a different way of building UI — it deliberately copies React's public API, so the same code you'd write for React mostly just works:</p>
     <CodeBlock code={sameComponentCode} lang="tsx" />
 
-    <p>This means everything the <a href="/crash-courses/react">React</a> and <a href="/crash-courses/jsx">JSX</a> courses teach — components, JSX, Hooks, props, state — transfers directly. Preact is not a different thing to learn; it's a different runtime under the same thing you already know.</p>
+    <p>This means everything the <a href={withBase("/crash-courses/react")}>React</a> and <a href={withBase("/crash-courses/jsx")}>JSX</a> courses teach — components, JSX, Hooks, props, state — transfers directly. Preact is not a different thing to learn; it's a different runtime under the same thing you already know.</p>
 
     <div class="further">
       <div class="further-label">Go deeper</div>
@@ -182,7 +183,7 @@ const whereFitsCode = `// A Shopify app has (at least) two very different fronte
 
     <div class="tryit">
       <div class="tryit-label">✳ Where to go next</div>
-      <p>Continue to <a href="/crash-courses/remix-to-react-router">Remix → React Router</a> — a short piece of naming history worth knowing before you read any Shopify app tutorial written before 2025, since many still say "Remix."</p>
+      <p>Continue to <a href={withBase("/crash-courses/remix-to-react-router")}>Remix → React Router</a> — a short piece of naming history worth knowing before you read any Shopify app tutorial written before 2025, since many still say "Remix."</p>
     </div>
   </section>
 </CourseLayout>

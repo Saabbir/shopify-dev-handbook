@@ -1,6 +1,7 @@
 ---
 import CourseLayout from '../../layouts/CourseLayout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { withBase } from '../../lib/url';
 
 const chapters = [
   { id: 'what-is-an-app', title: 'What is a Shopify app, really?' },
@@ -80,7 +81,7 @@ export async function action({ request }) {
       <p>Think of the Admin as the merchant's control panel. Installing your app is like adding a new tab to that control panel. But — and this is the single most important fact in this entire course — <strong>your tab isn't hosted by Shopify.</strong> It's a completely ordinary web application that <em>you</em> build and run on your own server. Shopify just displays it, inside a frame, at the moment the merchant clicks on your app's name in their sidebar.</p>
     </div>
 
-    <p>This is why everything in the <a href="/crash-courses/react-router-7">React Router 7</a> and <a href="/crash-courses/node">Node.js</a> courses matters: your app is a real server that has to be written, hosted, and kept running by you, exactly like any other website — it just happens to render inside Shopify's Admin instead of its own blank page. Shopify's role is narrower than it feels at first: it hosts the store and the Admin shell, authenticates who's allowed to see what, and gives your app a well-defined way to ask for data. Everything your app actually <em>does</em> is code you write and infrastructure you run.</p>
+    <p>This is why everything in the <a href={withBase("/crash-courses/react-router-7")}>React Router 7</a> and <a href={withBase("/crash-courses/node")}>Node.js</a> courses matters: your app is a real server that has to be written, hosted, and kept running by you, exactly like any other website — it just happens to render inside Shopify's Admin instead of its own blank page. Shopify's role is narrower than it feels at first: it hosts the store and the Admin shell, authenticates who's allowed to see what, and gives your app a well-defined way to ask for data. Everything your app actually <em>does</em> is code you write and infrastructure you run.</p>
 
     <div class="recap">
       <div class="recap-label">Recap</div>
@@ -168,7 +169,7 @@ export async function action({ request }) {
 
     <div class="tryit">
       <div class="tryit-label">✳ Where this shows up</div>
-      <p>The Roadmap page's <a href="/roadmap">"Before you start" checklist</a> is exactly this: create a free Partner account, then a free development store from inside it. Do that before opening <a href="/getting-started">Getting Started</a> — every command in that walkthrough assumes both already exist.</p>
+      <p>The Roadmap page's <a href={withBase("/roadmap")}>"Before you start" checklist</a> is exactly this: create a free Partner account, then a free development store from inside it. Do that before opening <a href={withBase("/getting-started")}>Getting Started</a> — every command in that walkthrough assumes both already exist.</p>
     </div>
 
     <div class="recap">
@@ -242,7 +243,7 @@ export async function action({ request }) {
       <div class="mistakes-label">Common mistake</div>
       <ul>
         <li><b>Requesting more scopes than you actually use.</b> Beyond being poor practice, merchants (and App Store reviewers) are wary of broad, unexplained permission requests — ask only for what the feature in front of you genuinely needs.</li>
-        <li><b>Treating the access token like public data.</b> It's a secret, on par with a password. It's stored and used entirely on your server (inside <code>.server.ts</code> files, per the <a href="/crash-courses/node">Node.js course</a>) and must never be sent to, or embedded in, code that runs in the merchant's browser.</li>
+        <li><b>Treating the access token like public data.</b> It's a secret, on par with a password. It's stored and used entirely on your server (inside <code>.server.ts</code> files, per the <a href={withBase("/crash-courses/node")}>Node.js course</a>) and must never be sent to, or embedded in, code that runs in the merchant's browser.</li>
       </ul>
     </div>
 
@@ -259,7 +260,7 @@ export async function action({ request }) {
       <div class="further-label">Go deeper</div>
       <ul>
         <li><a href="https://shopify.dev/docs/api/usage/access-scopes" target="_blank" rel="noopener">Shopify docs — Access scopes reference</a></li>
-        <li><a href="/crash-courses/toml">This site's TOML quick reference</a> — the file format <code>shopify.app.toml</code> is written in</li>
+        <li><a href={withBase("/crash-courses/toml")}>This site's TOML quick reference</a> — the file format <code>shopify.app.toml</code> is written in</li>
       </ul>
     </div>
   </section>
@@ -267,7 +268,7 @@ export async function action({ request }) {
   <section class="chapter" id="admin-api">
     <div class="chapter-num">Chapter 06</div>
     <h2>Talking to the store: the Admin API</h2>
-    <p>Once your app holds an access token, it uses that token to make requests to Shopify's <strong>Admin API</strong> — the interface through which every product, order, and customer record actually gets read or written. New apps use the GraphQL version of this API exclusively (the older REST version is legacy) — the full mechanics of writing a query live in their own dedicated course, the <a href="/crash-courses/graphql">GraphQL crash course</a>. This chapter is only about the shape of the relationship: your server holds the token, your server calls the API, Shopify checks the token's scopes on every single call.</p>
+    <p>Once your app holds an access token, it uses that token to make requests to Shopify's <strong>Admin API</strong> — the interface through which every product, order, and customer record actually gets read or written. New apps use the GraphQL version of this API exclusively (the older REST version is legacy) — the full mechanics of writing a query live in their own dedicated course, the <a href={withBase("/crash-courses/graphql")}>GraphQL crash course</a>. This chapter is only about the shape of the relationship: your server holds the token, your server calls the API, Shopify checks the token's scopes on every single call.</p>
 
     <p>One practical fact worth knowing early: the Admin API isn't unlimited. Shopify enforces rate limits so that one app's heavy usage can't slow the platform down for everyone else — GraphQL specifically uses a "query cost" system, where more complex queries cost more of your available budget per second rather than a simple request count. You don't need the exact numbers memorized (they're in the <a href="https://shopify.dev/docs/api/usage/limits" target="_blank" rel="noopener">Admin API rate limits docs</a>, and they do shift over time), just the existence of the limit — it's why apps generally fetch only the fields they actually need, which is precisely what GraphQL is built for.</p>
 
@@ -281,7 +282,7 @@ export async function action({ request }) {
       <ul>
         <li>The Admin API is how your app reads and writes actual store data, authenticated by the access token.</li>
         <li>It's GraphQL-only for new apps, and rate-limited by query cost, not a flat request count.</li>
-        <li>See the <a href="/crash-courses/graphql">GraphQL course</a> for how to actually write a query.</li>
+        <li>See the <a href={withBase("/crash-courses/graphql")}>GraphQL course</a> for how to actually write a query.</li>
       </ul>
     </div>
 
@@ -385,7 +386,7 @@ export async function action({ request }) {
 
     <div class="tryit">
       <div class="tryit-label">✳ You've finished this course</div>
-      <p>You now have the full conceptual map: what an app is, who can install one and where it renders, the two sandboxes you build in, how installation and permissions actually work, how your app talks to a store and stays in sync with it, how billing works, and where extensions fit. Everything from here is <em>how</em>, not <em>what</em> — head into <a href="/crash-courses/modern-javascript">Modern JavaScript</a>, the first of the technical crash courses, for the pieces you're missing, or straight to <a href="/getting-started">Getting Started</a> to build a real one. The full <a href="/extensions">Extensions</a> page is the deep dive on everything introduced in this chapter.</p>
+      <p>You now have the full conceptual map: what an app is, who can install one and where it renders, the two sandboxes you build in, how installation and permissions actually work, how your app talks to a store and stays in sync with it, how billing works, and where extensions fit. Everything from here is <em>how</em>, not <em>what</em> — head into <a href={withBase("/crash-courses/modern-javascript")}>Modern JavaScript</a>, the first of the technical crash courses, for the pieces you're missing, or straight to <a href={withBase("/getting-started")}>Getting Started</a> to build a real one. The full <a href={withBase("/extensions")}>Extensions</a> page is the deep dive on everything introduced in this chapter.</p>
     </div>
   </section>
 </CourseLayout>

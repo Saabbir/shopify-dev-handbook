@@ -1,6 +1,7 @@
 ---
 import CourseLayout from '../../layouts/CourseLayout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { withBase } from '../../lib/url';
 
 const chapters = [
   { id: 'why-graphql', title: 'Why GraphQL exists' },
@@ -399,7 +400,7 @@ query {
 
     <div class="tryit">
       <div class="tryit-label">✳ Where to go next</div>
-      <p>Move on to <a href="/crash-courses/databases">Databases (SQL Fundamentals)</a> — everything above was about reading and writing <em>Shopify's</em> data. The next course covers storing your <em>own</em> app's data (notes, settings, anything Shopify doesn't hold for you) in a real database, on the way to <a href="/crash-courses/prisma">Prisma</a> right after.</p>
+      <p>Move on to <a href={withBase("/crash-courses/databases")}>Databases (SQL Fundamentals)</a> — everything above was about reading and writing <em>Shopify's</em> data. The next course covers storing your <em>own</em> app's data (notes, settings, anything Shopify doesn't hold for you) in a real database, on the way to <a href={withBase("/crash-courses/prisma")}>Prisma</a> right after.</p>
     </div>
   </section>
 </CourseLayout>

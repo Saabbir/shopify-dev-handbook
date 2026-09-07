@@ -1,6 +1,7 @@
 ---
 import CourseLayout from '../../layouts/CourseLayout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { withBase } from '../../lib/url';
 
 const chapters = [
   { id: 'what-npx-solves', title: 'What npx solves' },
@@ -154,7 +155,7 @@ npx some-package-you-just-heard-about
     <div class="further">
       <div class="further-label">Go deeper</div>
       <ul>
-        <li><a href="/crash-courses/npm-scripts">This site's npm scripts reference</a> — the <code>.bin</code> mechanism npx also relies on</li>
+        <li><a href={withBase("/crash-courses/npm-scripts")}>This site's npm scripts reference</a> — the <code>.bin</code> mechanism npx also relies on</li>
       </ul>
     </div>
   </section>
@@ -176,7 +177,7 @@ npx some-package-you-just-heard-about
     <div class="further">
       <div class="further-label">Go deeper</div>
       <ul>
-        <li><a href="/getting-started">This site's Getting Started walkthrough</a> — where the global-install path is used step by step</li>
+        <li><a href={withBase("/getting-started")}>This site's Getting Started walkthrough</a> — where the global-install path is used step by step</li>
       </ul>
     </div>
   </section>
@@ -203,7 +204,7 @@ npx some-package-you-just-heard-about
 
     <div class="tryit">
       <div class="tryit-label">✳ Where to go next</div>
-      <p>Continue to <a href="/crash-courses/eslint">ESLint</a> — a tool you'll very often run via exactly the mechanisms covered here (a global install, a project devDependency through <code>npm run</code>, or a one-off <code>npx</code> call).</p>
+      <p>Continue to <a href={withBase("/crash-courses/eslint")}>ESLint</a> — a tool you'll very often run via exactly the mechanisms covered here (a global install, a project devDependency through <code>npm run</code>, or a one-off <code>npx</code> call).</p>
     </div>
   </section>
 </CourseLayout>

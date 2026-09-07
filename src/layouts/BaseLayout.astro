@@ -1,6 +1,7 @@
 ---
 import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
+import { withBase } from '../lib/url';
 
 interface Props {
   title: string;
@@ -31,6 +32,11 @@ const navLinks = [
 const secondaryNavLinks = [{ href: '/changelog', label: 'Changelog' }];
 
 const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
+// The homepage's own path once base-prefixed (e.g. "/" on Netlify's root
+// deploy, "/shopify-app-handbook" on a GitHub Pages project deploy) — the
+// nav's "isCurrent" check below treats this one specially so the Home
+// link doesn't get matched as a prefix of every other page's path.
+const rootPath = withBase('/').replace(/\/+$/, '') || '/';
 ---
 
 <html lang="en">
@@ -39,7 +45,7 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
     <ClientRouter />
     <script is:inline>
       // Set the theme before first paint to avoid a flash of the wrong theme.
@@ -60,26 +66,26 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
   <body data-accent={accent}>
     <nav class="sitenav">
       <div class="sitenav-inner">
-        <a class="brand" href="/">
+        <a class="brand" href={withBase('/')}>
           <span class="brand-mark" aria-hidden="true">&gt;_</span>
           <span class="brand-text"><b>shopify</b> <span class="dim">app handbook</span></span>
         </a>
         <div class="sitenav-links">
           {navLinks.map((link) => {
-            const linkPath = link.href.replace(/\/+$/, '') || '/';
-            const isCurrent = path === linkPath || (linkPath !== '/' && path.startsWith(linkPath + '/'));
+            const linkPath = withBase(link.href).replace(/\/+$/, '') || '/';
+            const isCurrent = path === linkPath || (linkPath !== rootPath && path.startsWith(linkPath + '/'));
             return (
-              <a href={link.href} aria-current={isCurrent ? 'page' : undefined}>
+              <a href={withBase(link.href)} aria-current={isCurrent ? 'page' : undefined}>
                 {link.label}
               </a>
             );
           })}
           <span class="nav-sep" aria-hidden="true"></span>
           {secondaryNavLinks.map((link) => {
-            const linkPath = link.href.replace(/\/+$/, '') || '/';
-            const isCurrent = path === linkPath || (linkPath !== '/' && path.startsWith(linkPath + '/'));
+            const linkPath = withBase(link.href).replace(/\/+$/, '') || '/';
+            const isCurrent = path === linkPath || (linkPath !== rootPath && path.startsWith(linkPath + '/'));
             return (
-              <a class="nav-secondary" href={link.href} aria-current={isCurrent ? 'page' : undefined}>
+              <a class="nav-secondary" href={withBase(link.href)} aria-current={isCurrent ? 'page' : undefined}>
                 {link.label}
               </a>
             );
@@ -101,7 +107,7 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
       <button class="nav-drawer-backdrop" type="button" data-nav-close aria-label="Close menu"></button>
       <div class="nav-drawer-panel" role="dialog" aria-modal="true" aria-label="Site menu">
         <div class="nav-drawer-head">
-          <a class="brand" href="/">
+          <a class="brand" href={withBase('/')}>
             <span class="brand-mark" aria-hidden="true">&gt;_</span>
             <span class="brand-text"><b>shopify</b> <span class="dim">app handbook</span></span>
           </a>
@@ -111,20 +117,20 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
         </div>
         <nav class="nav-drawer-links" aria-label="Site">
           {navLinks.map((link) => {
-            const linkPath = link.href.replace(/\/+$/, '') || '/';
-            const isCurrent = path === linkPath || (linkPath !== '/' && path.startsWith(linkPath + '/'));
+            const linkPath = withBase(link.href).replace(/\/+$/, '') || '/';
+            const isCurrent = path === linkPath || (linkPath !== rootPath && path.startsWith(linkPath + '/'));
             return (
-              <a href={link.href} aria-current={isCurrent ? 'page' : undefined}>
+              <a href={withBase(link.href)} aria-current={isCurrent ? 'page' : undefined}>
                 {link.label}
               </a>
             );
           })}
           <span class="nav-drawer-sep" aria-hidden="true"></span>
           {secondaryNavLinks.map((link) => {
-            const linkPath = link.href.replace(/\/+$/, '') || '/';
-            const isCurrent = path === linkPath || (linkPath !== '/' && path.startsWith(linkPath + '/'));
+            const linkPath = withBase(link.href).replace(/\/+$/, '') || '/';
+            const isCurrent = path === linkPath || (linkPath !== rootPath && path.startsWith(linkPath + '/'));
             return (
-              <a class="nav-secondary" href={link.href} aria-current={isCurrent ? 'page' : undefined}>
+              <a class="nav-secondary" href={withBase(link.href)} aria-current={isCurrent ? 'page' : undefined}>
                 {link.label}
               </a>
             );
@@ -144,7 +150,7 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
         </div>
         <div class="sitefooter-top">
           <div class="sitefooter-brand">
-            <a class="brand" href="/">
+            <a class="brand" href={withBase('/')}>
               <span class="brand-mark" aria-hidden="true">&gt;_</span>
               <span class="brand-text"><b>shopify</b> <span class="dim">app handbook</span></span>
             </a>
@@ -153,18 +159,18 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
           <div class="sitefooter-col">
             <h4>Guided path</h4>
             <ul>
-              <li><a href="/">Home</a></li>
-              <li><a href="/crash-courses">Crash Courses</a></li>
-              <li><a href="/getting-started">Getting Started</a></li>
-              <li><a href="/roadmap">Roadmap</a></li>
+              <li><a href={withBase('/')}>Home</a></li>
+              <li><a href={withBase('/crash-courses')}>Crash Courses</a></li>
+              <li><a href={withBase('/getting-started')}>Getting Started</a></li>
+              <li><a href={withBase('/roadmap')}>Roadmap</a></li>
             </ul>
           </div>
           <div class="sitefooter-col">
             <h4>Reference</h4>
             <ul>
-              <li><a href="/extensions">Extensions</a></li>
-              <li><a href="/roadmap#setup">Setup checklist</a></li>
-              <li><a href="/changelog">Changelog</a></li>
+              <li><a href={withBase('/extensions')}>Extensions</a></li>
+              <li><a href={withBase('/roadmap#setup')}>Setup checklist</a></li>
+              <li><a href={withBase('/changelog')}>Changelog</a></li>
             </ul>
           </div>
           <div class="sitefooter-col">

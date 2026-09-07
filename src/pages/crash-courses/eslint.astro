@@ -1,6 +1,7 @@
 ---
 import CourseLayout from '../../layouts/CourseLayout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { withBase } from '../../lib/url';
 
 const chapters = [
   { id: 'linter-vs-typechecker', title: 'A linter vs. a type checker — different jobs' },
@@ -104,7 +105,7 @@ const autofixCode = `npx eslint . --fix
   <section class="chapter" id="linter-vs-typechecker">
     <div class="chapter-num">Reference</div>
     <h2>A linter vs. a type checker — different jobs</h2>
-    <p>If you've read the <a href="/crash-courses/typescript">TypeScript course</a>, it's easy to assume ESLint does the same kind of checking. It doesn't — the two tools catch genuinely different classes of problem:</p>
+    <p>If you've read the <a href={withBase("/crash-courses/typescript")}>TypeScript course</a>, it's easy to assume ESLint does the same kind of checking. It doesn't — the two tools catch genuinely different classes of problem:</p>
     <CodeBlock code={catchesDifferentThingsCode} lang="ts" />
 
     <p>A linter also flags things that aren't bugs at all — just conventions a team has agreed to follow, for readability or consistency rather than correctness:</p>
@@ -220,7 +221,7 @@ const autofixCode = `npx eslint . --fix
 
     <div class="tryit">
       <div class="tryit-label">✳ Where to go next</div>
-      <p>Continue to <a href="/crash-courses/toml">TOML</a> — the config file format behind <code>shopify.app.toml</code>, one of the very first files the CLI generates for you.</p>
+      <p>Continue to <a href={withBase("/crash-courses/toml")}>TOML</a> — the config file format behind <code>shopify.app.toml</code>, one of the very first files the CLI generates for you.</p>
     </div>
   </section>
 </CourseLayout>

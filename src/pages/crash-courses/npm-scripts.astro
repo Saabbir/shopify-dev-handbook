@@ -1,6 +1,7 @@
 ---
 import CourseLayout from '../../layouts/CourseLayout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { withBase } from '../../lib/url';
 
 const chapters = [
   { id: 'what-runs', title: 'What "npm run dev" actually does' },
@@ -139,7 +140,7 @@ const dotenvNoteCode = `// npm scripts do NOT automatically load a .env file's v
   <section class="chapter" id="what-runs">
     <div class="chapter-num">Reference</div>
     <h2>What "npm run dev" actually does</h2>
-    <p>The <a href="/crash-courses/node">Node.js course</a> introduced <code>package.json</code>'s <code>scripts</code> field as "named shortcuts for commands." Here's the exact mechanism behind that shortcut:</p>
+    <p>The <a href={withBase("/crash-courses/node")}>Node.js course</a> introduced <code>package.json</code>'s <code>scripts</code> field as "named shortcuts for commands." Here's the exact mechanism behind that shortcut:</p>
     <CodeBlock code={packageJsonScriptsCode} lang="json" />
     <CodeBlock code={runCommandCode} lang="bash" />
 
@@ -263,7 +264,7 @@ const dotenvNoteCode = `// npm scripts do NOT automatically load a .env file's v
 
     <div class="tryit">
       <div class="tryit-label">✳ Where to go next</div>
-      <p>Continue to <a href="/crash-courses/npx">npx</a> — the companion tool for running a package's command-line tool without adding it to <code>package.json</code> at all.</p>
+      <p>Continue to <a href={withBase("/crash-courses/npx")}>npx</a> — the companion tool for running a package's command-line tool without adding it to <code>package.json</code> at all.</p>
     </div>
   </section>
 </CourseLayout>

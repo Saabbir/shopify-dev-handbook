@@ -24,7 +24,14 @@ npm run preview  # preview the production build
 
 ## Deployment
 
-Deployed to [Netlify](https://netlify.com) as a static site. `netlify.toml` sets the build command (`npm run build`) and publish directory (`dist`) — once this repo is linked to the Netlify site in the Netlify dashboard (Site settings → Build & deploy → Link repository), every push to `main` deploys automatically.
+The site deploys to two places from the same source, distinguished by one env var:
+
+- **Netlify** — `netlify.toml` sets the build command (`npm run build`) and publish directory (`dist`). Once this repo is linked to the Netlify site in the Netlify dashboard (Site settings → Build & deploy → Link repository), every push to `main` deploys automatically. Served from the domain root.
+- **GitHub Pages** — `.github/workflows/deploy-gh-pages.yml` builds with `npm run build:gh-pages` (sets `DEPLOY_TARGET=gh-pages`) and publishes via the official `actions/deploy-pages` action on every push to `main`. Served under a sub-path — `https://saabbir.github.io/shopify-app-handbook/` — since this is a project repo, not a `saabbir.github.io` user-site repo.
+
+`astro.config.mjs` reads `DEPLOY_TARGET` to pick the right `site`/`base` pair for whichever target is building. Every internal link on the site goes through `withBase()` (`src/lib/url.ts`), which reads Astro's resolved `base` at build time — so adding a new page or link never needs to think about which target it'll deploy to; just write root-relative paths (`/roadmap`, not `roadmap` or a hardcoded domain) and pass them through `withBase()`.
+
+**One-time setup for GitHub Pages** (only needed once, not per-deploy): in the repo's **Settings → Pages**, set **Build and deployment → Source** to **GitHub Actions**. Until that's set, the workflow will run but Pages won't serve its output.
 
 ## Updating the Changelog
 
