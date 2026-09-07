@@ -1,7 +1,7 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://shopify-dev-handbook.netlify.app',
+  site: 'https://shopify-app-handbook.netlify.app',
   output: 'static',
   trailingSlash: 'never',
 });

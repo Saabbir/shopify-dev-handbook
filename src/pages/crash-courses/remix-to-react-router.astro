@@ -1,0 +1,142 @@
+---
+import CourseLayout from '../../layouts/CourseLayout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const chapters = [
+  { id: 'short-version', title: 'The short version' },
+  { id: 'what-changed', title: 'What actually changed' },
+  { id: 'reading-old-docs', title: 'Reading an old Remix tutorial today' },
+];
+
+const importSwapCode = `// Remix (before the merge) — packages named "@remix-run/*":
+import { useLoaderData, Form } from "@remix-run/react";
+import type { LoaderFunctionArgs } from "@remix-run/node";
+import { json } from "@remix-run/node";
+
+// React Router 7 (today) — one package, just "react-router":
+import { useLoaderData, Form } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
+// json() is gone — a loader can just "return { ... }" directly now,
+// React Router serializes it the same way json() used to.`;
+
+const conceptsSameCode = `// Every one of these concepts means EXACTLY what it meant in
+// Remix — only the package name and a couple of small APIs moved:
+
+// - File-based routes under app/routes/
+// - loader() — fetch data before a route renders
+// - action() — handle a form submission for a route
+// - <Form> — a form that posts to its own route's action
+// - Nested routes + <Outlet /> for shared layouts
+// - useFetcher() — an in-place loader/action call without navigating
+
+// If you've ever read a Remix tutorial explaining any of these,
+// you already know React Router 7's "framework mode" — it's the
+// same system, continued under a different name.`;
+
+const packageJsonDiffCode = `// package.json — the actual tell for "is this old Remix or new
+// React Router 7" when you're staring at an unfamiliar project:
+
+// OLD (Remix):
+"dependencies": {
+  "@remix-run/node": "^2.x",
+  "@remix-run/react": "^2.x",
+  "@remix-run/serve": "^2.x"
+}
+
+// CURRENT (React Router 7, framework mode):
+"dependencies": {
+  "react-router": "^7.x",
+  "@react-router/node": "^7.x",
+  "@react-router/serve": "^7.x"
+}
+// If you clone a Shopify app template today, it will always be
+// the "react-router" shape — the "@remix-run" shape only shows up
+// in an older project, or in an old tutorial.`;
+---
+<CourseLayout
+  title="Remix → React Router Quick Reference — Shopify App Handbook"
+  description="What actually happened to Remix: it merged into React Router 7 under the React Router name. What changed (package names, a couple of small APIs) versus what stayed exactly the same (loaders, actions, file routes) — and how to read an older Remix tutorial today."
+  accent="green"
+  courseTitle="Remix &rarr; React Router"
+  courseTagline="Short version: Remix didn't go away — its team and its ideas merged into React Router, as of React Router 7. This page exists so an older tutorial that says &quot;Remix&quot; doesn't look like a different, unrelated framework."
+  readTime="8–12 min"
+  kind="Quick Reference"
+  chapters={chapters}
+  prev={{ href: '/crash-courses/preact', title: 'Preact' }}
+  next={{ href: '/crash-courses/web-components', title: 'Web Components' }}
+>
+  <section class="chapter" id="short-version">
+    <div class="chapter-num">Reference</div>
+    <h2>The short version</h2>
+    <p><strong>Remix</strong> was a React framework, built by a small team, that pioneered the loader/action data-fetching pattern taught in the <a href="/crash-courses/react-router-7">React Router 7 course</a>. In late 2024, Remix's team and React Router's team (React Router already existed separately, as the older, more widely-used routing library) merged their projects — Remix's ideas and APIs were folded directly into <strong>React Router</strong>, starting with its major version 7. Remix as a separate framework name was retired; what it did lives on as React Router's own "framework mode."</p>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>This is a rename-and-merge, not a rewrite you need to relearn. If you already know what a loader or an action is from the <a href="/crash-courses/react-router-7">React Router 7 course</a>, you already know what an old Remix tutorial is teaching too — it's describing the exact same mechanism, just before it changed its name.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Remix merged into React Router in late 2024 — its features became React Router 7's "framework mode," not a separate product.</li>
+        <li>The Shopify app template you'd scaffold today is built on React Router 7, not Remix — but the concepts an older tutorial calls "Remix" are the same ones this handbook's <a href="/crash-courses/react-router-7">React Router 7 course</a> teaches.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://remix.run/blog/incremental-path-to-react-19" target="_blank" rel="noopener">Remix's own blog post announcing the merge</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="what-changed">
+    <div class="chapter-num">Reference</div>
+    <h2>What actually changed</h2>
+    <p>The package names changed, and a couple of small helper functions were simplified away. The core mental model did not:</p>
+    <CodeBlock code={importSwapCode} lang="ts" />
+
+    <p>Everything conceptual carries over exactly:</p>
+    <CodeBlock code={conceptsSameCode} lang="text" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Assuming "Remix" and "React Router 7" are two different things to learn.</b> They're the same system under two names, at two points in time. Nothing here needs to be learned twice.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://reactrouter.com/upgrading/remix" target="_blank" rel="noopener">React Router docs — Upgrading from Remix</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="reading-old-docs">
+    <div class="chapter-num">Reference</div>
+    <h2>Reading an old Remix tutorial today</h2>
+    <p>A quick tell for which era a piece of code or a tutorial is from — check the package names in its imports or its <code>package.json</code>:</p>
+    <CodeBlock code={packageJsonDiffCode} lang="json" />
+
+    <div class="tryit">
+      <div class="tryit-label">✳ The practical takeaway</div>
+      <p>Reading an older Remix tutorial or Stack Overflow answer: mentally swap <code>@remix-run/react</code> / <code>@remix-run/node</code> for <code>react-router</code>, drop any <code>json()</code> wrapper around a loader's return value, and everything else — the loader, the action, the <code>&lt;Form&gt;</code>, the nested routes — applies exactly as written.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Check package names (<code>@remix-run/*</code> vs. <code>react-router</code>) to tell which era a piece of code is from.</li>
+        <li>The Shopify app template you'd scaffold today is always the current React Router 7 shape.</li>
+      </ul>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Where to go next</div>
+      <p>Continue to <a href="/crash-courses/web-components">Web Components</a> — the browser-native building block that frameworks like React, Preact, and Shopify's own extension surfaces are all, at some layer, built on top of.</p>
+    </div>
+  </section>
+</CourseLayout>

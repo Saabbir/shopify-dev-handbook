@@ -2,20 +2,28 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 <BaseLayout
-  title="Learning Roadmap for Shopify App Development — Shopify Dev Handbook"
+  title="Learning Roadmap for Shopify App Development — Shopify App Handbook"
   description="Everything free, step by step: three tracks — building real embedded Shopify apps on the React Router 7 stack, a general backend foundation underneath it, and a dedicated track for reading the config files, JSDoc, and build tooling that most tutorials skip and most developers get stuck on."
   accent="gold"
+  footerNote="Free the whole way through: every tool and resource linked here has a genuine free tier as of September 2026. Hosting free tiers change often (Railway and Fly.io both dropped theirs) — re-check a platform's pricing page before relying on it long-term."
 >
   <header>
+    <p class="eyebrow">Full curriculum</p>
     <h1 class="page-title">Learning Roadmap for Shopify App Development</h1>
     <p class="lede">The full reference for going deeper: three tracks — building real embedded Shopify apps on the React Router 7 stack, a general backend foundation underneath it, and a dedicated track for reading the config files, JSDoc, and build tooling that most tutorials skip and most developers get stuck on.</p>
     <p class="lede-note">New here? The <a href="/">homepage</a> walks the whole site in order. This page is what you come back to once you've built something and want to go deeper on a specific module — read modules in any order you need, not necessarily top to bottom.</p>
+    <div class="meta-row">
+      <span class="meta-chip">3 tracks</span>
+      <span class="meta-chip">20 modules</span>
+      <span class="meta-chip">~4–5 months part-time</span>
+      <span class="meta-chip">$0 required</span>
+    </div>
   </header>
 
   <details class="setup" id="setup" open>
     <summary>Before you start — accounts &amp; tools (all free, no card needed unless noted)</summary>
     <div class="setup-grid">
-      <div>
+      <div class="setup-card" data-tone="gold">
         <h4>Local machine</h4>
         <ul>
           <li><a href="https://nodejs.org/en/download" target="_blank" rel="noopener">Node.js LTS</a> — install via <a href="https://github.com/nvm-sh/nvm" target="_blank" rel="noopener">nvm</a> (or <a href="https://github.com/coreybutler/nvm-windows" target="_blank" rel="noopener">nvm-windows</a>) so you can switch versions. <span class="why">This is the JavaScript runtime everything else runs on — the CLI, your app's server, and its build tools all need it installed first.</span></li>
@@ -23,7 +31,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <li><a href="https://git-scm.com/downloads" target="_blank" rel="noopener">Git</a>. <span class="why">Version control — the Shopify CLI sets up a repo for you when you scaffold an app, but Git itself has to already be installed for that to work, and you'll need it again to deploy.</span></li>
         </ul>
       </div>
-      <div>
+      <div class="setup-card" data-tone="violet">
         <h4>Shopify side</h4>
         <ul>
           <li><a href="https://www.shopify.com/partners" target="_blank" rel="noopener">Shopify Partner account</a> — free, no store purchase needed. <span class="why">Your developer identity on Shopify: it's how Shopify knows which apps and stores belong to you, and it's where development stores and app records live.</span></li>
@@ -31,14 +39,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <li><a href="https://shopify.dev/docs/apps/build/scaffold-app" target="_blank" rel="noopener">Shopify CLI</a> — installed per-project via <code>npm</code>, not globally. <span class="why">The one tool this entire workflow runs through: it scaffolds new apps, runs a local dev tunnel so Shopify's servers can reach your machine, generates extensions, and deploys.</span></li>
         </ul>
       </div>
-      <div>
+      <div class="setup-card" data-tone="teal">
         <h4>Free hosted database (pick one)</h4>
         <ul>
           <li><a href="https://neon.com/" target="_blank" rel="noopener">Neon</a> — free Postgres, permanent plan, no card. <span class="why">You'll swap this in for the CLI's local SQLite database once you're ready to deploy for real — Prisma just points at a different connection string, no code changes.</span></li>
           <li><a href="https://supabase.com/" target="_blank" rel="noopener">Supabase</a> — free Postgres + extras, no card. <span class="why">Same idea as Neon, with auth/storage extras bundled in that you likely won't need for your first app, but are there if you do.</span></li>
         </ul>
       </div>
-      <div>
+      <div class="setup-card" data-tone="blue">
         <h4>Free hosting (pick one, for later)</h4>
         <ul>
           <li><a href="https://vercel.com/" target="_blank" rel="noopener">Vercel</a> — Hobby plan, free forever for personal projects. <span class="why">Where your app's server actually runs once it's live, as opposed to just running on your own machine during development.</span></li>
@@ -1706,10 +1714,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </div>
   </div>
 
-  <footer class="sitefooter">
-    Free the whole way through: every tool and resource linked here has a genuine free tier as of September 2026. Hosting free tiers change often (Railway and Fly.io both dropped theirs) — re-check a platform's pricing page before relying on it long-term.
-  </footer>
-
 </BaseLayout>
 
 <style>
@@ -1736,23 +1740,53 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   .setup-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 18px;
     margin-top: 16px;
   }
 
-  .setup-grid h4 {
+  /* Each group of the setup checklist reads as its own card, tinted by a
+     different accent so the four groups stay visually distinct at a
+     glance instead of blending into one long two-column list. */
+  .setup-card {
+    border-radius: 12px;
+    padding: 20px 22px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .setup-card[data-tone="gold"] {
+    background: color-mix(in srgb, var(--gold) 9%, var(--surface));
+    border-color: color-mix(in srgb, var(--gold) 32%, var(--line));
+  }
+  .setup-card[data-tone="violet"] {
+    background: color-mix(in srgb, var(--violet) 9%, var(--surface));
+    border-color: color-mix(in srgb, var(--violet) 32%, var(--line));
+  }
+  .setup-card[data-tone="teal"] {
+    background: color-mix(in srgb, var(--teal) 9%, var(--surface));
+    border-color: color-mix(in srgb, var(--teal) 32%, var(--line));
+  }
+  .setup-card[data-tone="blue"] {
+    background: color-mix(in srgb, var(--blue) 9%, var(--surface));
+    border-color: color-mix(in srgb, var(--blue) 32%, var(--line));
+  }
+
+  .setup-card h4 {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.85rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--text-dim);
-    margin: 0 0 10px;
+    margin: 0 0 12px;
   }
+  .setup-card[data-tone="gold"] h4 { color: var(--gold); }
+  .setup-card[data-tone="violet"] h4 { color: var(--violet); }
+  .setup-card[data-tone="teal"] h4 { color: var(--teal); }
+  .setup-card[data-tone="blue"] h4 { color: var(--blue); }
 
-  .setup-grid ul { margin: 0; padding-left: 20px; font-size: var(--fs-small); }
-  .setup-grid li { margin-bottom: 12px; }
-  .setup-grid .why { display: block; color: var(--text-dim); opacity: 0.85; margin-top: 3px; }
+  .setup-card ul { margin: 0; padding-left: 20px; font-size: var(--fs-small); }
+  .setup-card li { margin-bottom: 12px; }
+  .setup-card li:last-child { margin-bottom: 0; }
+  .setup-card .why { display: block; color: var(--text-dim); opacity: 0.85; margin-top: 3px; }
 
   .lede-note {
     font-size: var(--fs-small); color: var(--text-dim); max-width: 62ch; margin: 0 0 16px;

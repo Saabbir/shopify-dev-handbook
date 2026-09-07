@@ -195,14 +195,14 @@ async function pinNote(note: Note) {
 }`;
 ---
 <CourseLayout
-  title="TypeScript Crash Course — Shopify Dev Handbook"
+  title="TypeScript Crash Course — Shopify App Handbook"
   description="TypeScript from first principles, for readers who only know HTML, CSS, and JavaScript. Types, interfaces, unions, and where they show up in a real Shopify app."
   accent="violet"
   courseTitle="TypeScript"
   courseTagline="JavaScript with a spell-checker for your data. If you can write a JS function, you can read this — every new idea is introduced from something you already know."
   readTime="45–55 min"
   chapters={chapters}
-  prev={{ href: '/crash-courses/how-shopify-apps-work', title: 'How Shopify Apps Work' }}
+  prev={{ href: '/crash-courses/modern-javascript', title: 'Modern JavaScript (ES6+)' }}
   next={{ href: '/crash-courses/react', title: 'React' }}
 >
   <section class="chapter" id="why-typescript">
@@ -228,6 +228,14 @@ async function pinNote(note: Note) {
         <li>JavaScript lets mismatched values through until the exact buggy line executes.</li>
         <li>TypeScript checks the shapes of your values <em>before</em> the code runs, at compile time.</li>
         <li>A <code>.ts</code> or <code>.tsx</code> file is a JavaScript file with type annotations added.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.typescriptlang.org/docs/handbook/intro.html" target="_blank" rel="noopener">The TypeScript Handbook — introduction</a></li>
+        <li><a href="https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html" target="_blank" rel="noopener">TypeScript in 5 minutes</a></li>
       </ul>
     </div>
   </section>
@@ -270,6 +278,13 @@ async function pinNote(note: Note) {
         <li>You'll meet TypeScript mostly as red squiggles in your editor, not as a command you run.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.typescriptlang.org/docs/handbook/2/basic-types.html#tsc-the-typescript-compiler" target="_blank" rel="noopener">TypeScript Handbook — tsc, the TypeScript compiler</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="basic-types">
@@ -295,6 +310,14 @@ async function pinNote(note: Note) {
       <div class="mistakes-label">Common mistake</div>
       <ul>
         <li><b>Over-annotating.</b> Writing <code>let title: string = "Wireless Mouse"</code> isn't wrong, but it's noise — TypeScript already knows. Save explicit annotations for places inference can't reach.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.typescriptlang.org/docs/handbook/2/basic-types.html" target="_blank" rel="noopener">TypeScript Handbook — Everyday Types</a></li>
+        <li><a href="https://www.typescriptlang.org/docs/handbook/type-inference.html" target="_blank" rel="noopener">TypeScript Handbook — Type Inference</a></li>
       </ul>
     </div>
   </section>
@@ -328,6 +351,13 @@ async function pinNote(note: Note) {
         <li><code>type</code> can name any shape, including ones that aren't plain objects.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.typescriptlang.org/docs/handbook/2/objects.html" target="_blank" rel="noopener">TypeScript Handbook — Object Types</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="unions-narrowing">
@@ -356,6 +386,13 @@ async function pinNote(note: Note) {
         <li><b>Silencing the error instead of narrowing.</b> Writing <code>note!.body</code> (the <code>!</code> means "trust me, this isn't undefined") makes the error go away without actually checking — if you're wrong, it crashes at runtime, which is the exact failure TypeScript was trying to prevent. Prefer a real <code>if</code> check.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.typescriptlang.org/docs/handbook/2/narrowing.html" target="_blank" rel="noopener">TypeScript Handbook — Narrowing</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="functions">
@@ -370,6 +407,13 @@ async function pinNote(note: Note) {
     <div class="tryit">
       <div class="tryit-label">✳ Try it yourself</div>
       <p>You'll see typed arrow functions constantly inside <code>.map()</code>, <code>.filter()</code>, and event handlers throughout the app template and the <a href="/crash-courses/react">React course</a>. Get comfortable reading <code>(note: Note): string =&gt;</code> as "a function that takes a Note and returns a string" — that's all it says.</p>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.typescriptlang.org/docs/handbook/2/functions.html" target="_blank" rel="noopener">TypeScript Handbook — Functions</a></li>
+      </ul>
     </div>
   </section>
 
@@ -411,6 +455,13 @@ async function pinNote(note: Note) {
         <li><code>never</code> — a value that should be impossible to reach; useful for exhaustiveness checks.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#any" target="_blank" rel="noopener">TypeScript Handbook — any, unknown &amp; never</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="in-the-app">
@@ -427,6 +478,13 @@ async function pinNote(note: Note) {
     <div class="plain">
       <div class="plain-label">In plain English</div>
       <p>You will rarely write an interface completely from scratch in this stack. Most of the shapes you'll type against — GraphQL responses, Prisma models, React Router's loader arguments — are generated for you. Your job is mostly reading them, which is exactly what this chapter practiced.</p>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.typescriptlang.org/docs/handbook/react.html" target="_blank" rel="noopener">TypeScript Handbook — React</a></li>
+      </ul>
     </div>
 
     <div class="tryit">

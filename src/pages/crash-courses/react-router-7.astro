@@ -202,7 +202,7 @@ export default function NotesPage() {
 // piece by piece, in Getting Started.`;
 ---
 <CourseLayout
-  title="React Router 7 Crash Course — Shopify Dev Handbook"
+  title="React Router 7 Crash Course — Shopify App Handbook"
   description="The routing and data layer the Shopify app template runs on: file-based routes, server-side loaders and actions, and how a page gets its data without a separate API layer."
   accent="purple"
   courseTitle="React Router 7"
@@ -235,6 +235,13 @@ export default function NotesPage() {
         <li>The Shopify app template uses React Router's framework mode, where files define routes.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://reactrouter.com/start/framework/installation" target="_blank" rel="noopener">React Router docs — Framework mode</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="file-routes">
@@ -255,6 +262,13 @@ export default function NotesPage() {
       <div class="tryit-label">✳ Try it yourself</div>
       <p>Open the <code>app/routes/</code> folder in a real Shopify app template project and match every filename to the URL it produces before reading any further. The pattern above is genuinely the whole system — there's no hidden config file to check against.</p>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://reactrouter.com/start/framework/routing" target="_blank" rel="noopener">React Router docs — Routing</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="loaders">
@@ -271,6 +285,11 @@ export default function NotesPage() {
 
     <div class="plain">
       <div class="plain-label">In plain English</div>
+      <p><code>authenticate.admin(request)</code>, seen in the loader above, is boilerplate every Shopify app route starts with — it confirms this request really is coming from an installed, logged-in merchant session (not a stranger), and hands back an <code>admin</code> object wired up to make GraphQL calls on that merchant's behalf. The OAuth handshake and access tokens this function relies on are covered conceptually in <a href="/crash-courses/how-shopify-apps-work">How Shopify Apps Work</a>; the GraphQL calls it enables are covered in the <a href="/crash-courses/graphql">GraphQL course</a>.</p>
+    </div>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
       <p>A loader answers "what data does this page need?" on the server, before anything is sent to the browser. The page arrives already filled in — the same way a server-rendered HTML page from a decade ago never showed a spinner for its own content, just built somewhere modern JavaScript can still live alongside it.</p>
     </div>
 
@@ -278,6 +297,13 @@ export default function NotesPage() {
       <div class="mistakes-label">Common mistake</div>
       <ul>
         <li><b>Trying to call a loader like a normal function.</b> You never call <code>loader()</code> yourself — React Router calls it for you when the route matches, and hands the result to <code>useLoaderData()</code>.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://reactrouter.com/start/framework/data-loading" target="_blank" rel="noopener">React Router docs — Data Loading</a></li>
       </ul>
     </div>
   </section>
@@ -306,6 +332,13 @@ export default function NotesPage() {
         <li><code>useFetcher()</code> does the same without navigating — for in-place actions.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://reactrouter.com/start/framework/actions" target="_blank" rel="noopener">React Router docs — Actions</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="nested-layouts">
@@ -320,6 +353,13 @@ export default function NotesPage() {
       <div class="plain-label">In plain English</div>
       <p>Think of a layout route as a picture frame, and <code>&lt;Outlet /&gt;</code> as the empty space inside it. Every child route is a different picture — the frame around it never changes.</p>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://reactrouter.com/start/framework/route-module#layout-routes" target="_blank" rel="noopener">React Router docs — Layout routes</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="in-the-app">
@@ -333,6 +373,13 @@ export default function NotesPage() {
     <div class="tryit">
       <div class="tryit-label">✳ Where this shows up</div>
       <p>This is precisely the pattern built by hand, one export at a time, in <a href="/getting-started">Getting Started</a>. If you haven't done that walkthrough yet, this course is exactly the background it assumes.</p>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://reactrouter.com/start/framework/route-module" target="_blank" rel="noopener">React Router docs — Route Module</a></li>
+      </ul>
     </div>
 
     <div class="tryit">

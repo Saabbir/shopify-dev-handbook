@@ -201,7 +201,7 @@ query {
 // "edges" specifically when you need each item's own cursor.`;
 ---
 <CourseLayout
-  title="GraphQL Crash Course — Shopify Dev Handbook"
+  title="GraphQL Crash Course — Shopify App Handbook"
   description="GraphQL from first principles: why it exists, how to write and run a query, mutations, and the connection/edges/node pagination shape used throughout Shopify's Admin API."
   accent="orange"
   courseTitle="GraphQL"
@@ -209,7 +209,7 @@ query {
   readTime="35–45 min"
   chapters={chapters}
   prev={{ href: '/crash-courses/node', title: 'Node.js' }}
-  next={{ href: '/crash-courses/prisma', title: 'Prisma' }}
+  next={{ href: '/crash-courses/databases', title: 'Databases (SQL Fundamentals)' }}
 >
   <section class="chapter" id="why-graphql">
     <div class="chapter-num">Chapter 01</div>
@@ -227,11 +227,25 @@ query {
     <CodeBlock code={graphqlPitchCode} lang="graphql" />
     <p>One endpoint, one request, exactly the fields you asked for — nested to match how you actually needed them. That's the entire pitch, and it's why Shopify's newer Admin API is GraphQL-only: it's a better fit for apps that only need a slice of a very large, deeply nested store.</p>
 
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>That <code>id: "gid://shopify/Product/123"</code> value is a <strong>GID</strong> (Global ID) — Shopify's own format for uniquely naming any object anywhere in its system, combining what kind of thing it is (<code>Product</code>) with its actual numeric id (<code>123</code>) in one string. You'll see this exact shape everywhere in the Admin API — for products, orders, customers, and every other resource — so it's worth recognizing on sight rather than treating it as a one-off.</p>
+    </div>
+
     <div class="recap">
       <div class="recap-label">Recap</div>
       <ul>
         <li>REST returns a fixed shape per URL — often too much data, or spread across too many requests.</li>
         <li>GraphQL has one endpoint; the query itself specifies exactly which fields come back.</li>
+        <li>Shopify identifies every object with a GID — a string combining its type and numeric id (e.g. <code>gid://shopify/Product/123</code>).</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://graphql.org/learn/" target="_blank" rel="noopener">graphql.org — Introduction to GraphQL</a></li>
+        <li><a href="https://shopify.dev/docs/api/usage/gids" target="_blank" rel="noopener">Shopify docs — Global IDs (GIDs)</a></li>
       </ul>
     </div>
   </section>
@@ -255,6 +269,13 @@ query {
         <li><b>Forgetting a field is an object, not a scalar.</b> The error message ("Field 'collections' of type 'ProductCollectionConnection' must have a selection of subfields") is GraphQL telling you exactly this — open a <code>{'{ }'}</code> and say which of its fields you want.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://graphql.org/learn/queries/" target="_blank" rel="noopener">graphql.org — Queries and Mutations</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="variables">
@@ -273,6 +294,13 @@ query {
     <div class="tryit">
       <div class="tryit-label">✳ Try it yourself</div>
       <p>Read <code>$id: ID!</code> out loud as a sentence: "a variable named <code>id</code>, of type <code>ID</code>, which is required." The <code>!</code> always means required — spot it in any query and you'll immediately know which variables are optional and which aren't.</p>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://graphql.org/learn/queries/#variables" target="_blank" rel="noopener">graphql.org — Variables</a></li>
+      </ul>
     </div>
   </section>
 
@@ -294,6 +322,13 @@ query {
       <div class="mistakes-label">Common mistake</div>
       <ul>
         <li><b>Only checking <code>response.ok</code> and assuming the write succeeded.</b> The HTTP request can succeed while the mutation itself reports validation errors in <code>userErrors</code> — always inspect that array before telling the user their change was saved.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://graphql.org/learn/queries/#mutations" target="_blank" rel="noopener">graphql.org — Mutations</a></li>
       </ul>
     </div>
   </section>
@@ -330,6 +365,13 @@ query {
         <li><code>nodes</code> is a shortcut for when you don't need individual cursors.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://shopify.dev/docs/api/usage/pagination-graphql" target="_blank" rel="noopener">Shopify docs — Paginating with GraphQL</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="reading-docs">
@@ -348,9 +390,16 @@ query {
       <p>Next time you run a Shopify app locally, open the GraphiQL explorer it prints a link to, and type <code>query {'{'} products(first: 5) {'{'}</code> — then let autocomplete show you every field you could ask for next. This is genuinely how experienced Shopify developers write most queries — explored live, not recalled from memory.</p>
     </div>
 
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://shopify.dev/docs/apps/build/graphql" target="_blank" rel="noopener">Shopify docs — GraphQL Admin API</a></li>
+      </ul>
+    </div>
+
     <div class="tryit">
       <div class="tryit-label">✳ Where to go next</div>
-      <p>Move on to <a href="/crash-courses/prisma">Prisma</a> to see the other side of the data layer: storing your <em>own</em> app's data (not Shopify's) in a real database.</p>
+      <p>Move on to <a href="/crash-courses/databases">Databases (SQL Fundamentals)</a> — everything above was about reading and writing <em>Shopify's</em> data. The next course covers storing your <em>own</em> app's data (notes, settings, anything Shopify doesn't hold for you) in a real database, on the way to <a href="/crash-courses/prisma">Prisma</a> right after.</p>
     </div>
   </section>
 </CourseLayout>

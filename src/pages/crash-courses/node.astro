@@ -219,7 +219,7 @@ const requestResponseCode = `// The request/response shape that every layer of t
 // is the same idea for POST/PUT/DELETE.`;
 ---
 <CourseLayout
-  title="Node.js Crash Course — Shopify Dev Handbook"
+  title="Node.js Crash Course — Shopify App Handbook"
   description="Node.js from first principles for readers who know JavaScript in the browser but have never run it anywhere else. Modules, npm, the event loop, async/await, and request/response basics."
   accent="green"
   courseTitle="Node.js"
@@ -253,6 +253,13 @@ const requestResponseCode = `// The request/response shape that every layer of t
         <li><b>Trying to use a browser API inside a loader/action.</b> <code>window</code>, <code>document</code>, and <code>localStorage</code> don't exist in Node — code inside a <code>loader</code> or <code>action</code> function runs on the server and never touches the DOM.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://nodejs.org/en/learn/getting-started/introduction-to-nodejs" target="_blank" rel="noopener">Node.js docs — Introduction to Node.js</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="modules-npm">
@@ -276,6 +283,13 @@ const requestResponseCode = `// The request/response shape that every layer of t
         <li>npm is how you install modules that other people published, instead of writing everything yourself.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="/crash-courses/modern-javascript#modules">This site's Modern JavaScript course — Modules chapter</a> — the full <code>import</code>/<code>export</code> mechanics, browser vs. Node usage</li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="running-scripts">
@@ -290,6 +304,14 @@ const requestResponseCode = `// The request/response shape that every layer of t
     <div class="tryit">
       <div class="tryit-label">✳ Try it yourself</div>
       <p>Open the <code>package.json</code> in a Shopify app template project and read every entry under <code>"scripts"</code>. Each one is a real command you could type out in full — the script name is just a shorter alias for it.</p>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="/crash-courses/npm-scripts">This site's npm scripts quick reference</a> — the exact lookup-and-run mechanism, composing scripts, and pre/post lifecycle hooks</li>
+        <li><a href="/crash-courses/npx">This site's npx quick reference</a> — running a package's command-line tool without a permanent install</li>
+      </ul>
     </div>
   </section>
 
@@ -309,6 +331,13 @@ const requestResponseCode = `// The request/response shape that every layer of t
     </div>
 
     <p>You rarely manage this hand-off yourself directly. What you <em>do</em> need is the vocabulary for working with it — which is exactly the next chapter.</p>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick" target="_blank" rel="noopener">Node.js docs — The Event Loop</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="async-story">
@@ -349,6 +378,14 @@ const requestResponseCode = `// The request/response shape that every layer of t
         <li>Every <code>await</code> needs an <code>async</code> function around it — and every Promise-returning call needs an <code>await</code> in front of it, or you get the Promise object instead of its value.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="/crash-courses/modern-javascript#promises-async">This site's Modern JavaScript course — Promises &amp; async/await chapter</a></li>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Asynchronous/Promises" target="_blank" rel="noopener">MDN — Using Promises</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="env-vars">
@@ -362,6 +399,13 @@ const requestResponseCode = `// The request/response shape that every layer of t
     <div class="tryit">
       <div class="tryit-label">✳ Where this shows up</div>
       <p><code>app/shopify.server.ts</code> and <code>app/db.server.ts</code> in the <a href="/getting-started">Getting Started</a> build both read from <code>process.env</code> — and the <code>.server.ts</code> suffix itself is a signal: React Router guarantees files named this way never get bundled into code sent to the browser, which matters enormously for a file holding secrets.</p>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs" target="_blank" rel="noopener">Node.js docs — Reading environment variables</a></li>
+      </ul>
     </div>
   </section>
 
@@ -377,6 +421,13 @@ const requestResponseCode = `// The request/response shape that every layer of t
     <div class="plain">
       <div class="plain-label">In plain English</div>
       <p>A <code>loader</code> is "what response do we send when a GET request hits this URL." An <code>action</code> is the same question for a POST. Once you see the request/response shape underneath, both start to look like thin, friendly wrappers around this one idea — not a new concept each.</p>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://nodejs.org/en/learn/getting-started/introduction-to-nodejs#a-simple-nodejs-application-example" target="_blank" rel="noopener">Node.js docs — a simple server example</a></li>
+      </ul>
     </div>
 
     <div class="tryit">

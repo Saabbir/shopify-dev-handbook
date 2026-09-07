@@ -1,0 +1,598 @@
+---
+import CourseLayout from '../../layouts/CourseLayout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const chapters = [
+  { id: 'what-is-a-database', title: 'What is a database, really?' },
+  { id: 'tables-rows-columns', title: 'Tables, rows & columns' },
+  { id: 'primary-keys', title: 'Primary keys' },
+  { id: 'select-basics', title: 'Querying: SELECT, WHERE, ORDER BY' },
+  { id: 'filtering', title: 'Filtering & matching conditions' },
+  { id: 'relationships-joins', title: 'Relationships & JOINs' },
+  { id: 'insert-update-delete', title: 'Changing data' },
+  { id: 'indexes', title: 'Indexes' },
+  { id: 'migrations-and-prisma', title: 'Migrations & where Prisma fits' },
+];
+
+// ---- Chapter 1 ----
+
+const jsonFileProblem = `// The naive approach: keep everything in a JSON file
+{
+  "products": [
+    { "id": 1, "title": "Mug", "price": 12 },
+    { "id": 2, "title": "Sticker", "price": 4 }
+  ]
+}
+
+// Works for a demo. Falls apart for real:
+// - Two requests writing at once can corrupt the whole file
+// - Finding "products under $10" means loading and scanning EVERYTHING
+// - Nothing stops you from saving { "title": "Mug", "price": "oops" }
+// - One bad write can corrupt the entire file, not just one record`;
+
+// ---- Chapter 2 ----
+
+const createProductsTable = `CREATE TABLE "Product" (
+  id      SERIAL PRIMARY KEY,
+  title   TEXT NOT NULL,
+  price   NUMERIC(10, 2) NOT NULL,
+  vendor  TEXT
+);
+-- One table, one kind of thing. Every row in "Product" has exactly
+-- these four columns — no row can secretly have an extra field or
+-- be missing one that's marked NOT NULL.`;
+
+const columnTypesEx = `-- The column types you'll actually meet constantly:
+TEXT              -- any length of text: titles, names, notes
+NUMERIC(10, 2)    -- exact decimal — ALWAYS use this for money, never FLOAT
+INTEGER           -- whole numbers: quantities, counts
+BOOLEAN           -- true/false
+TIMESTAMP         -- a date + time
+UUID              -- a randomly-generated unique identifier (Chapter 3)`;
+
+// ---- Chapter 3 ----
+
+const autoIncrementPk = `CREATE TABLE "Product" (
+  id SERIAL PRIMARY KEY,  -- 1, 2, 3, 4... assigned automatically in order
+  title TEXT NOT NULL
+);`;
+
+const cuidLikePk = `CREATE TABLE "Product" (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),  -- e.g. "a1b2c3d4-..."
+  title TEXT NOT NULL
+);
+-- This is much closer to what Prisma actually generates by default
+-- (cuid()/uuid() rather than SERIAL) — see the next course.`;
+
+// ---- Chapter 4 ----
+
+const selectAllEx = `SELECT * FROM "Product";
+-- The * means "every column." Returns every row, every column —
+-- fine for exploring, wasteful in real app code once a table grows.`;
+
+const selectColumnsEx = `SELECT title, price FROM "Product";
+-- Ask for exactly the columns you need — this is what every ORM
+-- (including Prisma) does under the hood for you automatically.`;
+
+const whereEx = `SELECT title, price
+FROM "Product"
+WHERE price < 10;
+-- Only rows where the condition is true come back.`;
+
+const orderLimitEx = `SELECT title, price
+FROM "Product"
+ORDER BY price DESC   -- highest price first (ASC = lowest first, the default)
+LIMIT 5;               -- only the first 5 rows of that ordering`;
+
+// ---- Chapter 5 ----
+
+const andOrEx = `SELECT * FROM "Product"
+WHERE price < 10 AND vendor = 'Acme';
+-- Both conditions must be true
+
+SELECT * FROM "Product"
+WHERE vendor = 'Acme' OR vendor = 'Corner Shop';
+-- Either condition can be true`;
+
+const likeInEx = `-- LIKE — partial text match. % means "anything, any length"
+SELECT * FROM "Product" WHERE title LIKE 'Mug%';   -- starts with "Mug"
+SELECT * FROM "Product" WHERE title LIKE '%Sale%'; -- contains "Sale" anywhere
+
+-- IN — matches any value in a list, instead of chaining OR
+SELECT * FROM "Product" WHERE vendor IN ('Acme', 'Corner Shop', 'Acme Co');`;
+
+const nullEx = `-- WRONG — this silently matches NOTHING, ever, on any database:
+SELECT * FROM "Product" WHERE vendor = NULL;
+
+-- NULL means "unknown/absent," not a value — so it can never equal
+-- anything, not even another NULL. Use these instead:
+SELECT * FROM "Product" WHERE vendor IS NULL;
+SELECT * FROM "Product" WHERE vendor IS NOT NULL;`;
+
+// ---- Chapter 6 ----
+
+const foreignKeyEx = `CREATE TABLE "Note" (
+  id          TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+  "productId" TEXT NOT NULL REFERENCES "Product"(id),
+  body        TEXT NOT NULL
+);
+-- "productId" is a FOREIGN KEY — it holds the id of a row in
+-- "Product". This is how two tables become related: one table
+-- stores the OTHER table's primary key as one of its own columns.`;
+
+const innerJoinEx = `SELECT "Product".title, "Note".body
+FROM "Product"
+INNER JOIN "Note" ON "Note"."productId" = "Product".id;
+
+-- Reads as: "for every Note, find its matching Product (by id),
+-- and give me the title alongside the note's body."
+-- A product with ZERO notes won't appear at all in this result.`;
+
+const leftJoinEx = `SELECT "Product".title, "Note".body
+FROM "Product"
+LEFT JOIN "Note" ON "Note"."productId" = "Product".id;
+
+-- Same idea, but EVERY product appears at least once — a product
+-- with no notes shows up with "Note".body as NULL, instead of
+-- being left out entirely.`;
+
+const manyToManyEx = `-- Products and Collections: a product can be in many collections,
+-- and a collection holds many products. Neither table can hold the
+-- other's id directly (there's no single column for "many ids").
+-- The fix: a third table in the middle, just for the relationship:
+
+CREATE TABLE "Collection" (
+  id   TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL
+);
+
+CREATE TABLE "ProductCollection" (
+  "productId"    TEXT NOT NULL REFERENCES "Product"(id),
+  "collectionId" TEXT NOT NULL REFERENCES "Collection"(id),
+  PRIMARY KEY ("productId", "collectionId")
+);
+-- One row here = "this product is in this collection." A product
+-- in 3 collections just has 3 rows in this one join table.`;
+
+// ---- Chapter 7 ----
+
+const insertEx = `INSERT INTO "Product" (title, price, vendor)
+VALUES ('Snow Globe', 18.00, 'Acme');
+-- Adds exactly one new row. Columns not listed (like the
+-- auto-generated id) fill in on their own.`;
+
+const updateEx = `UPDATE "Product"
+SET price = 15.00
+WHERE title = 'Snow Globe';
+-- Changes existing rows. WHERE decides WHICH rows — this is the
+-- single most important word in this chapter.`;
+
+const deleteEx = `DELETE FROM "Product"
+WHERE title = 'Snow Globe';
+-- Removes matching rows entirely.`;
+
+const noWhereDisasterEx = `-- Forgetting WHERE doesn't error — it just applies to EVERY ROW:
+UPDATE "Product" SET price = 0;         -- every product is now free
+DELETE FROM "Product";                   -- every product is now gone
+
+-- There is no undo button in production. Before running an UPDATE
+-- or DELETE with a WHERE clause, run the matching SELECT first and
+-- actually read the rows it returns:
+SELECT * FROM "Product" WHERE title = 'Snow Globe';  -- check this first
+-- Once you're sure that's the right set of rows, swap SELECT * for
+-- the UPDATE/DELETE, keeping the exact same WHERE clause.`;
+
+const injectionWarningEx = `// NEVER build a query by gluing raw user input into a string:
+const query = "SELECT * FROM \\"Product\\" WHERE title = '" + userInput + "'";
+// If userInput is:  '; DROP TABLE "Product"; --
+// ...that's not a title anymore, it's a second command running
+// with your database's full permissions. This is SQL injection.
+
+// Prisma (and every real database library) prevents this
+// automatically by sending your data separately from the query
+// structure — never as a string glued into SQL. One more reason
+// this stack doesn't hand-write queries like the examples above.`;
+
+// ---- Chapter 8 ----
+
+const noIndexScan = `SELECT * FROM "Product" WHERE title = 'Snow Globe';
+-- With no index on "title", the database checks EVERY single row
+-- in the table, one at a time, to find matches — a "full table scan."
+-- Fine for 50 rows. A real problem at 5 million rows.`;
+
+const createIndexEx = `CREATE INDEX "product_title_idx" ON "Product" (title);
+-- Now the database keeps a separate, pre-sorted structure just for
+-- "title" — the same query jumps almost straight to matching rows
+-- instead of checking every one.`;
+
+// ---- Chapter 9 ----
+
+const alterTableEx = `-- A migration is any change to the shape of your tables, tracked
+-- and applied in order — not just "run this once and forget it":
+ALTER TABLE "Product" ADD COLUMN "sku" TEXT;
+
+-- On a real team, everyone's database needs this SAME change, in
+-- the SAME order, including production. Doing that by hand — emailing
+-- teammates a .sql file — is exactly the problem migration tools
+-- (Prisma Migrate, among others) exist to solve.`;
+
+const prismaGeneratesThisEx = `// This is Prisma's schema syntax (next course) for the exact
+// "Product" table built throughout this chapter:
+model Product {
+  id     String  @id @default(cuid())
+  title  String
+  price  Decimal
+  vendor String?
+}
+
+// Running "npx prisma migrate dev" turns this into real SQL —
+// almost exactly the CREATE TABLE statement from Chapter 2 —
+// and applies it for you. Nothing above is a new idea anymore;
+// it's the same CREATE TABLE, INSERT, SELECT and JOIN vocabulary
+// from this whole course, generated instead of hand-written.`;
+---
+<CourseLayout
+  title="Databases (SQL Fundamentals) Crash Course — Shopify App Handbook"
+  description="Tables, keys, SELECT, JOINs, and migrations — from zero, for readers who've never touched a database before. The exact vocabulary Prisma generates SQL from in the next course."
+  accent="blue"
+  courseTitle="Databases (SQL Fundamentals)"
+  courseTagline="Prisma (next course) writes SQL for you — but reading what it generates, and understanding why a query is slow or a WHERE clause matters, means knowing what's actually happening underneath. Zero assumed knowledge: this starts at 'what is a database.'"
+  readTime="55–70 min"
+  chapters={chapters}
+  prev={{ href: '/crash-courses/graphql', title: 'GraphQL' }}
+  next={{ href: '/crash-courses/prisma', title: 'Prisma' }}
+>
+  <section class="chapter" id="what-is-a-database">
+    <div class="chapter-num">Chapter 01</div>
+    <h2>What is a database, really?</h2>
+    <p>Every app needs to remember things after the moment they happen — a note stays saved after you close the tab, an order stays placed after checkout. A plain JavaScript variable or object doesn't survive a server restart. The obvious next idea — save everything to a file — gets you further, but breaks down fast in a real app:</p>
+    <CodeBlock code={jsonFileProblem} lang="js" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>A database is a very organized, very fast filing cabinet that many people can use at the exact same time without stepping on each other, and that never forgets what's in it — even if the power goes out mid-write. It also refuses to file something in the wrong drawer: if a form says "price is a number," the database won't let "oops" through.</p>
+    </div>
+
+    <p>There are two broad families of databases. This course covers <strong>relational databases</strong> (also called SQL databases) — data organized into strict tables, which is what PostgreSQL, MySQL, and SQLite all are. The other family, <strong>NoSQL</strong> databases (MongoDB, for instance), store looser, document-shaped data instead. This site's stack — and Prisma, the next course — uses PostgreSQL specifically (via free hosts like Neon or Supabase, from the Roadmap's setup checklist), so that's the dialect every example in this course uses, though almost everything here is standard across relational databases with only minor differences.</p>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Databases solve persistence, structure enforcement, fast search, and safe concurrent access — problems a plain file runs into quickly.</li>
+        <li>Relational (SQL) databases organize data into strict tables; this course and this site's stack both use PostgreSQL.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.postgresql.org/docs/current/tutorial-start.html" target="_blank" rel="noopener">PostgreSQL — official tutorial</a></li>
+        <li><a href="https://sqlbolt.com/" target="_blank" rel="noopener">SQLBolt — free, interactive SQL lessons (run real queries in the browser)</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="tables-rows-columns">
+    <div class="chapter-num">Chapter 02</div>
+    <h2>Tables, rows &amp; columns</h2>
+    <p>A relational database organizes everything into <strong>tables</strong> — think of a table exactly like a spreadsheet. Each table holds one kind of thing (products, notes, orders). Each <strong>column</strong> is one property every row has, with a fixed type. Each <strong>row</strong> is one actual record:</p>
+    <CodeBlock code={createProductsTable} lang="sql" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>If a table is a spreadsheet, a column is a header ("Title," "Price") and a row is one filled-in line underneath it. <code>NOT NULL</code> is the database physically refusing to save a row that's missing that column's value — the database-level version of a required form field.</p>
+    </div>
+
+    <p>The column types you'll meet constantly:</p>
+    <CodeBlock code={columnTypesEx} lang="sql" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Using a floating-point type for money.</b> Floating-point numbers can't represent decimals like 19.99 exactly — the rounding errors compound over enough calculations. <code>NUMERIC(10, 2)</code> (an exact decimal, 10 digits total, 2 after the point) is the standard choice for prices, and it's what Prisma's <code>Decimal</code> type maps to.</li>
+      </ul>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Table = spreadsheet; column = header with a fixed type; row = one record.</li>
+        <li>Common types: <code>TEXT</code>, <code>NUMERIC</code>, <code>INTEGER</code>, <code>BOOLEAN</code>, <code>TIMESTAMP</code>, <code>UUID</code>.</li>
+        <li>Always use <code>NUMERIC</code>, never a floating-point type, for money.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.postgresql.org/docs/current/datatype.html" target="_blank" rel="noopener">PostgreSQL — data types reference</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="primary-keys">
+    <div class="chapter-num">Chapter 03</div>
+    <h2>Primary keys</h2>
+    <p>Every table needs one column that uniquely identifies each row — its <strong>primary key</strong>. No two rows in a table can ever share one, and it never changes once set. The classic approach is a simple auto-incrementing number:</p>
+    <CodeBlock code={autoIncrementPk} lang="sql" />
+
+    <p>Modern apps — including the Shopify app template's Prisma schema you'll see in the next course — more often use a randomly-generated string ID instead:</p>
+    <CodeBlock code={cuidLikePk} lang="sql" />
+
+    <div class="compare">
+      <div class="bad">
+        <h4>Auto-incrementing integer</h4>
+        <p>Simple, compact. But predictable (row after id 41 is probably id 42) and awkward once data is split across multiple databases, since two databases can independently generate the same number.</p>
+      </div>
+      <div class="good">
+        <h4>Random ID (UUID/cuid)</h4>
+        <p>Unpredictable and safe to generate independently anywhere — your app, a background job, another database — with no coordination needed and no collision risk. What Prisma defaults to.</p>
+      </div>
+    </div>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>A primary key is a row's permanent nametag — guaranteed unique, guaranteed to never belong to any other row, ever. It's also how other tables refer back to this one, which is exactly Chapter 6's subject.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Every table needs a primary key: unique, unchanging, one per row.</li>
+        <li>Auto-increment integers are simple; random IDs (UUID/cuid) are what most modern tools, including Prisma, default to.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-PRIMARY-KEYS" target="_blank" rel="noopener">PostgreSQL — primary keys</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="select-basics">
+    <div class="chapter-num">Chapter 04</div>
+    <h2>Querying: SELECT, WHERE, ORDER BY, LIMIT</h2>
+    <p>Reading data back out is done with <code>SELECT</code> — the query you'll write and read more than any other:</p>
+    <CodeBlock code={selectAllEx} lang="sql" />
+    <CodeBlock code={selectColumnsEx} lang="sql" />
+
+    <p>Add <code>WHERE</code> to filter which rows come back:</p>
+    <CodeBlock code={whereEx} lang="sql" />
+
+    <p><code>ORDER BY</code> and <code>LIMIT</code> control the order results come back in, and how many:</p>
+    <CodeBlock code={orderLimitEx} lang="sql" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Read a <code>SELECT</code> statement in this order, even though it's not the order it's written in: start from <code>FROM</code> (which table), narrow with <code>WHERE</code> (which rows), then <code>SELECT</code> decides which columns of those rows you actually get back.</p>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself</div>
+      <p><a href="https://sqlbolt.com/lesson/select_queries_introduction" target="_blank" rel="noopener">SQLBolt's first lesson</a> runs real SQL against a real dataset directly in your browser — no install, no account. Work through the first few exercises now; they cover exactly <code>SELECT</code>/<code>WHERE</code>/<code>ORDER BY</code> with instant feedback on whether your query is right.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li><code>SELECT columns FROM table WHERE condition ORDER BY column LIMIT n</code> is the shape of almost every read query you'll write.</li>
+        <li>Ask for only the columns you need — this is exactly what an ORM like Prisma does for you automatically.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.postgresql.org/docs/current/tutorial-select.html" target="_blank" rel="noopener">PostgreSQL — the SELECT statement</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="filtering">
+    <div class="chapter-num">Chapter 05</div>
+    <h2>Filtering &amp; matching conditions</h2>
+    <p>Combine multiple conditions with <code>AND</code>/<code>OR</code>:</p>
+    <CodeBlock code={andOrEx} lang="sql" />
+
+    <p><code>LIKE</code> matches partial text, and <code>IN</code> matches against a list of values instead of chaining several <code>OR</code>s:</p>
+    <CodeBlock code={likeInEx} lang="sql" />
+
+    <h3>NULL is not a value — it's the absence of one</h3>
+    <p>This trips up nearly everyone the first time:</p>
+    <CodeBlock code={nullEx} lang="sql" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b><code>WHERE column = NULL</code> silently matches zero rows, forever.</b> <code>NULL</code> represents "unknown" — and by definition, nothing can be confirmed equal to an unknown. Always use <code>IS NULL</code> / <code>IS NOT NULL</code> instead of <code>=</code>/<code>!=</code> when checking for <code>NULL</code>. This isn't a PostgreSQL quirk — it's how <code>NULL</code> works on every SQL database.</li>
+      </ul>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li><code>AND</code>/<code>OR</code> combine conditions; <code>LIKE</code> matches partial text with <code>%</code>; <code>IN</code> matches a list.</li>
+        <li><code>NULL</code> needs <code>IS NULL</code>/<code>IS NOT NULL</code> — <code>=</code> against <code>NULL</code> never matches anything.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.postgresql.org/docs/current/functions-comparison.html" target="_blank" rel="noopener">PostgreSQL — comparison operators &amp; NULL</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="relationships-joins">
+    <div class="chapter-num">Chapter 06</div>
+    <h2>Relationships &amp; JOINs</h2>
+    <p>Real data isn't one table in isolation — a product has notes, an order has line items, a customer has orders. A <strong>foreign key</strong> is how one table points at a row in another:</p>
+    <CodeBlock code={foreignKeyEx} lang="sql" />
+
+    <p><code>JOIN</code> is how you pull related rows back out together in one query, instead of querying each table separately and matching things up yourself in code:</p>
+    <CodeBlock code={innerJoinEx} lang="sql" />
+    <CodeBlock code={leftJoinEx} lang="sql" />
+
+    <div class="compare">
+      <div class="bad">
+        <h4>INNER JOIN</h4>
+        <p>Only rows that match on <em>both</em> sides come back. A product with zero matching notes is left out of the results entirely.</p>
+      </div>
+      <div class="good">
+        <h4>LEFT JOIN</h4>
+        <p>Every row from the left (first) table comes back regardless, filling in <code>NULL</code> where there's no match. Use this whenever "products with no notes yet" should still appear.</p>
+      </div>
+    </div>
+
+    <h3>Many-to-many: when neither side can hold the other's key</h3>
+    <p>A product can belong to several collections, and a collection holds many products — neither table has room for "many ids" in a single column. The fix is a third table sitting in between, just for the relationship itself:</p>
+    <CodeBlock code={manyToManyEx} lang="sql" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>A foreign key is one row saying "I belong to that row over there," by storing its id. A JOIN is the database fetching both sides of that relationship in a single trip, instead of you making two separate queries and matching them up yourself. A many-to-many join table is just a list of pairs: "this product, that collection" — one row per pairing.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>A foreign key column stores another table's primary key, creating a relationship between the two tables.</li>
+        <li><code>INNER JOIN</code> — only matching rows; <code>LEFT JOIN</code> — every row from the first table, matches or not.</li>
+        <li>Many-to-many relationships need a third "join table" in the middle — this is exactly what Prisma calls an implicit or explicit many-to-many relation.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.postgresql.org/docs/current/tutorial-join.html" target="_blank" rel="noopener">PostgreSQL — joins between tables</a></li>
+        <li><a href="https://sqlbolt.com/lesson/select_queries_with_joins" target="_blank" rel="noopener">SQLBolt — JOIN exercises</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="insert-update-delete">
+    <div class="chapter-num">Chapter 07</div>
+    <h2>Changing data: INSERT, UPDATE, DELETE</h2>
+    <p>Adding a new row:</p>
+    <CodeBlock code={insertEx} lang="sql" />
+
+    <p>Changing existing rows:</p>
+    <CodeBlock code={updateEx} lang="sql" />
+
+    <p>Removing rows:</p>
+    <CodeBlock code={deleteEx} lang="sql" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">The most important warning in this course</div>
+      <ul>
+        <li><b>An <code>UPDATE</code> or <code>DELETE</code> with no <code>WHERE</code> clause applies to every row in the table — and there's no confirmation prompt, no undo.</b></li>
+      </ul>
+      <CodeBlock code={noWhereDisasterEx} lang="sql" />
+    </div>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p><code>WHERE</code> isn't optional syntax that happens to be common — it's the entire difference between "change this one thing" and "change everything." Get in the habit of writing and running the <code>SELECT</code> version of any risky query first, actually reading what comes back, before turning it into an <code>UPDATE</code> or <code>DELETE</code>.</p>
+    </div>
+
+    <h3>A quick word on SQL injection</h3>
+    <p>Since you now know queries are just text, it's worth knowing how that becomes a security hole — and why every real app avoids hand-building queries at all:</p>
+    <CodeBlock code={injectionWarningEx} lang="js" />
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li><code>INSERT INTO table (...) VALUES (...)</code>, <code>UPDATE table SET ... WHERE ...</code>, <code>DELETE FROM table WHERE ...</code>.</li>
+        <li>A missing <code>WHERE</code> on <code>UPDATE</code>/<code>DELETE</code> is the single most damaging beginner mistake in SQL — always test with <code>SELECT</code> first.</li>
+        <li>Never build a query by concatenating raw user input into a string — that's SQL injection. Prisma (and every real database library) prevents this by design.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.postgresql.org/docs/current/dml.html" target="_blank" rel="noopener">PostgreSQL — inserting, updating &amp; deleting data</a></li>
+        <li><a href="https://owasp.org/www-community/attacks/SQL_Injection" target="_blank" rel="noopener">OWASP — SQL injection, explained</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="indexes">
+    <div class="chapter-num">Chapter 08</div>
+    <h2>Indexes</h2>
+    <p>Without help, finding matching rows means checking every single row in the table, one at a time:</p>
+    <CodeBlock code={noIndexScan} lang="sql" />
+
+    <p>An <strong>index</strong> is a separate, pre-sorted structure the database maintains for one column (or a few), so it can jump almost straight to matches instead of scanning everything:</p>
+    <CodeBlock code={createIndexEx} lang="sql" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>An index is exactly like a book's index at the back — instead of reading every page to find "database," you check the index, get a page number, and jump straight there. Primary keys are automatically indexed; foreign key columns very often should be too, since they're constantly used to filter and join.</p>
+    </div>
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Indexing everything "just in case."</b> Every index speeds up reads on that column, but slightly slows down every <code>INSERT</code>/<code>UPDATE</code> (the index itself has to be kept up to date) and uses extra storage. Add indexes to columns you actually filter, sort, or join on frequently — not reflexively to every column.</li>
+      </ul>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Without an index, a query checks every row — a full table scan, fine at small scale, slow at large scale.</li>
+        <li>An index trades a small write-time and storage cost for much faster reads on that column.</li>
+        <li>Primary keys are auto-indexed; foreign keys usually deserve one too.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.postgresql.org/docs/current/indexes.html" target="_blank" rel="noopener">PostgreSQL — indexes</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="migrations-and-prisma">
+    <div class="chapter-num">Chapter 09</div>
+    <h2>Migrations &amp; where Prisma fits</h2>
+    <p>A table's shape isn't fixed forever — a new feature needs a new column, a new relationship needs a new foreign key. Changing that shape is a <strong>migration</strong>:</p>
+    <CodeBlock code={alterTableEx} lang="sql" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>A migration is a schema change with a paper trail — recorded, ordered, and repeatable, so your laptop, your teammate's laptop, and production all end up with the exact same table shape, applied in the exact same order, instead of drifting apart from manual, undocumented changes.</p>
+    </div>
+
+    <p>Every idea in this course — tables, primary keys, <code>SELECT</code>/<code>WHERE</code>, JOINs, <code>INSERT</code>/<code>UPDATE</code>/<code>DELETE</code>, indexes, migrations — is exactly the vocabulary the next course, Prisma, builds on. Prisma doesn't replace any of this; it generates it for you from a simpler schema file:</p>
+    <CodeBlock code={prismaGeneratesThisEx} lang="prisma" />
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself — course wrap-up</div>
+      <p>Before starting the Prisma course, look back at Chapter 2's <code>CREATE TABLE "Product"</code> statement and Chapter 6's foreign key example. Keep them in mind as you read Prisma's <code>schema.prisma</code> syntax next — you'll be able to point at almost every line and say what real SQL it becomes.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>A migration is a tracked, ordered, repeatable schema change — not a one-off manual edit.</li>
+        <li>Prisma Migrate (next course) generates and runs migrations for you, from a schema file instead of hand-written SQL.</li>
+        <li>Everything in Prisma's generated SQL and typed client maps directly back to the tables/keys/queries vocabulary from this course.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.postgresql.org/docs/current/sql-altertable.html" target="_blank" rel="noopener">PostgreSQL — ALTER TABLE</a></li>
+        <li><a href="https://www.prisma.io/docs/orm/prisma-migrate" target="_blank" rel="noopener">Prisma — Migrate overview</a></li>
+      </ul>
+    </div>
+  </section>
+</CourseLayout>

@@ -2,11 +2,13 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 <BaseLayout
-  title="Shopify Dev Changelog — Shopify Dev Handbook"
+  title="Shopify Dev Changelog — Shopify App Handbook"
   description="The high-signal version of Shopify's own changelog — only the changes that actually require you to know something or do something."
   accent="orange"
+  footerNote={`This page is maintained by a scheduled check against <a href="https://shopify.dev/changelog" target="_blank" rel="noopener">shopify.dev/changelog</a> — it adds an entry when something clears the "necessary or huge" bar above, dated to when Shopify announced it. It can lag the live changelog by up to a week and, being a curated summary, can miss something relevant to your specific app. Always verify against the primary source before acting on a breaking change.`}
 >
   <header>
+    <p class="eyebrow">Stay current</p>
     <h1 class="page-title">Shopify Dev Changelog</h1>
     <p class="lede">The high-signal version of Shopify's own changelog — only the changes that actually require you to know something or do something. Not a mirror of every line item.</p>
   </header>
@@ -128,9 +130,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </div>
   </section>
 
-  <footer class="sitefooter">
-    This page is maintained by a scheduled check against <a href="https://shopify.dev/changelog" target="_blank" rel="noopener">shopify.dev/changelog</a> — it adds an entry when something clears the "necessary or huge" bar above, dated to when Shopify announced it. It can lag the live changelog by up to a week and, being a curated summary, can miss something relevant to your specific app. Always verify against the primary source before acting on a breaking change.
-  </footer>
 </BaseLayout>
 
 <style>
@@ -146,6 +145,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   }
   .policy b { color: var(--text); font-weight: 600; }
 
+  .stack { margin-bottom: 48px; }
   .stack .sub { color: var(--text-dim); font-size: var(--fs-small); margin: 0 0 20px; }
   .stack dl { display: grid; grid-template-columns: 160px 1fr; gap: 14px 20px; margin: 0; font-size: var(--fs-small); }
   .stack dt { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--text-dim); font-size: 0.85rem; padding-top: 2px; }

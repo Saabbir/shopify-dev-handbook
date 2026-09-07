@@ -7,18 +7,28 @@ interface Props {
   description: string;
   accent?: 'gold' | 'teal' | 'purple' | 'blue' | 'green' | 'orange' | 'violet';
   wide?: boolean;
+  footerNote?: string;
 }
 
-const { title, description, accent = 'gold', wide = false } = Astro.props;
+const {
+  title,
+  description,
+  accent = 'gold',
+  wide = false,
+  footerNote = 'Everywhere on this site, "read more" points back to <a href="https://shopify.dev" target="_blank" rel="noopener">shopify.dev</a> — Shopify’s own docs are always the tiebreaker when something here and the live docs disagree.',
+} = Astro.props;
 
+// Ordered to match the guided path the homepage walks (learn the platform,
+// fill in the toolkit, build, go deeper, reach further) rather than
+// alphabetically or by when each page was added.
 const navLinks = [
   { href: '/', label: 'Home' },
-  { href: '/roadmap', label: 'Roadmap' },
-  { href: '/getting-started', label: 'Getting Started' },
-  { href: '/extensions', label: 'Extensions' },
   { href: '/crash-courses', label: 'Crash Courses' },
-  { href: '/changelog', label: 'Changelog' },
+  { href: '/getting-started', label: 'Getting Started' },
+  { href: '/roadmap', label: 'Roadmap' },
+  { href: '/extensions', label: 'Extensions' },
 ];
+const secondaryNavLinks = [{ href: '/changelog', label: 'Changelog' }];
 
 const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
 ---
@@ -50,7 +60,10 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
   <body data-accent={accent}>
     <nav class="sitenav">
       <div class="sitenav-inner">
-        <a class="brand" href="/">shopify dev handbook</a>
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true">&gt;_</span>
+          <span class="brand-text"><b>shopify</b> <span class="dim">app handbook</span></span>
+        </a>
         <div class="sitenav-links">
           {navLinks.map((link) => {
             const linkPath = link.href.replace(/\/+$/, '') || '/';
@@ -61,17 +74,114 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
               </a>
             );
           })}
+          <span class="nav-sep" aria-hidden="true"></span>
+          {secondaryNavLinks.map((link) => {
+            const linkPath = link.href.replace(/\/+$/, '') || '/';
+            const isCurrent = path === linkPath || (linkPath !== '/' && path.startsWith(linkPath + '/'));
+            return (
+              <a class="nav-secondary" href={link.href} aria-current={isCurrent ? 'page' : undefined}>
+                {link.label}
+              </a>
+            );
+          })}
+        </div>
+        <div class="sitenav-toolbar">
           <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch between dark and warm reading mode">
             <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          </button>
+          <button id="nav-toggle" class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav-drawer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
         </div>
       </div>
     </nav>
 
+    <div class="nav-drawer" id="nav-drawer">
+      <button class="nav-drawer-backdrop" type="button" data-nav-close aria-label="Close menu"></button>
+      <div class="nav-drawer-panel" role="dialog" aria-modal="true" aria-label="Site menu">
+        <div class="nav-drawer-head">
+          <a class="brand" href="/">
+            <span class="brand-mark" aria-hidden="true">&gt;_</span>
+            <span class="brand-text"><b>shopify</b> <span class="dim">app handbook</span></span>
+          </a>
+          <button class="nav-close" type="button" data-nav-close aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <nav class="nav-drawer-links" aria-label="Site">
+          {navLinks.map((link) => {
+            const linkPath = link.href.replace(/\/+$/, '') || '/';
+            const isCurrent = path === linkPath || (linkPath !== '/' && path.startsWith(linkPath + '/'));
+            return (
+              <a href={link.href} aria-current={isCurrent ? 'page' : undefined}>
+                {link.label}
+              </a>
+            );
+          })}
+          <span class="nav-drawer-sep" aria-hidden="true"></span>
+          {secondaryNavLinks.map((link) => {
+            const linkPath = link.href.replace(/\/+$/, '') || '/';
+            const isCurrent = path === linkPath || (linkPath !== '/' && path.startsWith(linkPath + '/'));
+            return (
+              <a class="nav-secondary" href={link.href} aria-current={isCurrent ? 'page' : undefined}>
+                {link.label}
+              </a>
+            );
+          })}
+        </nav>
+      </div>
+    </div>
+
     <main class:list={['wrap', { 'wrap-wide': wide }]}>
       <slot />
     </main>
+
+    <footer class="sitefooter">
+      <div class="sitefooter-inner">
+        <div class="sitefooter-note-wrap">
+          <p class="sitefooter-note" set:html={footerNote} />
+        </div>
+        <div class="sitefooter-top">
+          <div class="sitefooter-brand">
+            <a class="brand" href="/">
+              <span class="brand-mark" aria-hidden="true">&gt;_</span>
+              <span class="brand-text"><b>shopify</b> <span class="dim">app handbook</span></span>
+            </a>
+            <p>A free, zero-assumed-knowledge path into Shopify app development — every tool and resource linked across this site has a genuine free tier.</p>
+          </div>
+          <div class="sitefooter-col">
+            <h4>Guided path</h4>
+            <ul>
+              <li><a href="/">Home</a></li>
+              <li><a href="/crash-courses">Crash Courses</a></li>
+              <li><a href="/getting-started">Getting Started</a></li>
+              <li><a href="/roadmap">Roadmap</a></li>
+            </ul>
+          </div>
+          <div class="sitefooter-col">
+            <h4>Reference</h4>
+            <ul>
+              <li><a href="/extensions">Extensions</a></li>
+              <li><a href="/roadmap#setup">Setup checklist</a></li>
+              <li><a href="/changelog">Changelog</a></li>
+            </ul>
+          </div>
+          <div class="sitefooter-col">
+            <h4>Elsewhere</h4>
+            <ul>
+              <li><a href="https://shopify.dev" target="_blank" rel="noopener">shopify.dev</a></li>
+              <li><a href="https://www.shopify.com/partners" target="_blank" rel="noopener">Shopify Partners</a></li>
+              <li><a href="https://github.com/Saabbir/shopify-app-handbook" target="_blank" rel="noopener">Source on GitHub</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="sitefooter-bottom">
+          <span>An independent, unofficial guide — not affiliated with or endorsed by Shopify Inc.</span>
+          <span>Built with Astro.</span>
+        </div>
+      </div>
+    </footer>
 
     <script>
       // Theme toggle — delegated on document so it keeps working across
@@ -99,6 +209,25 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
         } catch (e) {}
       }
 
+      // Mobile nav drawer — same delegated-on-document pattern as the
+      // theme toggle above, so it keeps working across ClientRouter swaps
+      // without needing to re-bind listeners on the new page's DOM.
+      function openDrawer() {
+        const drawer = document.getElementById('nav-drawer');
+        const toggle = document.getElementById('nav-toggle');
+        drawer?.classList.add('is-open');
+        toggle?.setAttribute('aria-expanded', 'true');
+        document.body.classList.add('nav-open');
+      }
+
+      function closeDrawer() {
+        const drawer = document.getElementById('nav-drawer');
+        const toggle = document.getElementById('nav-toggle');
+        drawer?.classList.remove('is-open');
+        toggle?.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('nav-open');
+      }
+
       // Astro's ClientRouter resets <html>'s attributes to match the
       // incoming page's raw (server-rendered) markup on every SPA
       // navigation — which has no data-theme, since it's only ever set
@@ -106,6 +235,11 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
       // on the very next link click. Re-apply right after every swap.
       document.addEventListener('astro:after-swap', () => {
         applyTheme(getPreferredTheme());
+        closeDrawer();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeDrawer();
       });
 
       document.addEventListener('click', (e) => {
@@ -114,6 +248,24 @@ const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
         if (toggle) {
           const isWarm = document.documentElement.getAttribute('data-theme') === 'warm';
           setTheme(isWarm ? 'dark' : 'warm');
+          return;
+        }
+
+        const navToggle = target.closest('#nav-toggle');
+        if (navToggle) {
+          openDrawer();
+          return;
+        }
+
+        const navClose = target.closest('[data-nav-close]');
+        if (navClose) {
+          closeDrawer();
+          return;
+        }
+
+        const drawerLink = target.closest('.nav-drawer-links a');
+        if (drawerLink) {
+          closeDrawer();
           return;
         }
 

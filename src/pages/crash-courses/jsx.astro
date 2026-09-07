@@ -1,0 +1,335 @@
+---
+import CourseLayout from '../../layouts/CourseLayout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const chapters = [
+  { id: 'what-jsx-is', title: 'What JSX actually is' },
+  { id: 'expressions', title: 'Embedding values & logic' },
+  { id: 'lists-fragments', title: 'Lists, keys & fragments' },
+  { id: 'gotchas', title: 'The gotchas that trip up HTML habits' },
+];
+
+const jsxLooksLikeHtmlCode = `const heading = <h1 className="title">Hello</h1>;
+// This is NOT a string, and it's NOT real HTML. It's JSX — a
+// syntax extension to JavaScript that LOOKS like HTML, but every
+// browser on earth would fail to run this line as-is.`;
+
+const compiledOutputCode = `// What a build tool actually turns the JSX above into, before any
+// browser ever sees it. This is plain JavaScript — every browser
+// understands this without any special syntax support at all:
+const heading = React.createElement(
+  "h1",
+  { className: "title" },
+  "Hello"
+);
+// React.createElement(tag, props, ...children) builds a plain JS
+// object describing "an h1, with this class, containing this text."
+// JSX is purely a shorthand for writing calls like this by hand.`;
+
+const notCompiledCode = `<h1 className="title">Hello</h1>
+// Paste JUST this line into a .js file and run it in a browser or
+// plain Node — it throws a SyntaxError. Browsers do not understand
+// JSX. Something has to convert it to React.createElement(...)
+// calls first, which is why every JSX-using project needs a build
+// step (Babel, TypeScript, or Vite's built-in transform) before
+// the code can run anywhere.`;
+
+const expressionCode = `const name = "Alex";
+const items = 3;
+
+const el = (
+  <p>
+    Hello, {name}! You have {items} item{items !== 1 ? "s" : ""} in
+    your cart. Total: \${(items * 4.5).toFixed(2)}
+  </p>
+);
+// Anything inside { } is plain JavaScript, evaluated and dropped
+// into the output. Curly braces are the ONLY way to step out of
+// "this is markup" back into "this is a JS expression."`;
+
+const conditionalCode = `function Badge({ isNew }: { isNew: boolean }) {
+  return (
+    <div>
+      {/* && renders its right side only if the left side is truthy,
+          and renders nothing (not even a blank space) otherwise */}
+      {isNew && <span className="badge">New</span>}
+
+      {/* the ternary is JSX's if/else — there's no if statement
+          allowed directly inside markup, only expressions */}
+      {isNew ? <span>Just added</span> : <span>In stock</span>}
+    </div>
+  );
+}`;
+
+const noIfStatementCode = `// This does NOT work — an if statement is not an expression,
+// and only expressions are allowed inside { }:
+return <div>{ if (isNew) { <span>New</span> } }</div>; // SyntaxError
+
+// Either move the if OUTSIDE the JSX entirely:
+if (isNew) {
+  return <span>New</span>;
+}
+return <span>Not new</span>;
+
+// ...or use a ternary/&& INSIDE the JSX, as in the example above.`;
+
+const listNoKeyCode = `const items = ["Mug", "Sticker", "Tote bag"];
+
+// Works, but React will warn in the console about a missing "key":
+<ul>
+  {items.map((item) => (
+    <li>{item}</li>
+  ))}
+</ul>`;
+
+const listWithKeyCode = `const items = [
+  { id: "a1", title: "Mug" },
+  { id: "a2", title: "Sticker" },
+  { id: "a3", title: "Tote bag" },
+];
+
+<ul>
+  {items.map((item) => (
+    <li key={item.id}>{item.title}</li>
+  ))}
+</ul>
+// key isn't a visible prop — React reads it to tell "this exact
+// row" apart from every other row across re-renders, so it can
+// figure out which rows moved, which are new, and which were
+// removed, instead of re-building the whole list from scratch
+// every time. Use a stable, unique id from your data — never the
+// array index, since indexes shift when items are added/removed.`;
+
+const fragmentCode = `// A component can only return ONE root element. This is invalid —
+// two siblings with nothing wrapping them:
+function Row() {
+  return (
+    <td>Name</td>
+    <td>Price</td>
+  );
+}
+
+// Wrapping in a <div> works, but adds a real DOM element you may
+// not want (breaking a <table> row, adding unwanted CSS box, etc).
+// A Fragment groups children WITHOUT adding any element to the
+// output at all:
+import { Fragment } from "react";
+
+function Row() {
+  return (
+    <Fragment>
+      <td>Name</td>
+      <td>Price</td>
+    </Fragment>
+  );
+}
+
+// The shorthand <>...</> means exactly the same thing and is what
+// you'll see in almost all real code:
+function Row() {
+  return (
+    <>
+      <td>Name</td>
+      <td>Price</td>
+    </>
+  );
+}`;
+
+const classNameCode = `// HTML:   <div class="card">
+// JSX:    <div className="card">
+// "class" is a reserved word in JavaScript, so JSX uses the DOM
+// property name (className) instead of the HTML attribute name.
+// The same is true for "for" on a <label> — JSX uses htmlFor.`;
+
+const selfCloseCode = `// HTML lets you leave void elements unclosed:
+<img src="cat.png">
+<br>
+<input type="text">
+
+// JSX requires every element to be explicitly closed, including
+// ones with no children — a trailing slash closes it inline:
+<img src="cat.png" />
+<br />
+<input type="text" />
+// Forgetting the slash on a no-children element is a build error,
+// not a warning — JSX is stricter about this than HTML ever was.`;
+
+const camelCaseCode = `// HTML attributes are lowercase. JSX props for anything
+// JavaScript-controlled use camelCase, matching the DOM property:
+<button onclick="...">      →  <button onClick={handleClick}>
+<div tabindex="0">          →  <div tabIndex={0}>
+<input readonly>            →  <input readOnly />
+
+// Exceptions: standard HTML/ARIA attributes with a hyphen stay
+// exactly as-is (data-* and aria-* are NOT camelCased):
+<div data-testid="card" aria-label="Product card">`;
+
+const styleObjectCode = `// HTML: a style attribute is one semicolon-separated string
+<div style="color: red; font-size: 14px;">
+
+// JSX: style takes a JS OBJECT, not a string — CSS property names
+// become camelCase, and values are usually numbers (assumed px) or
+// strings:
+<div style={{ color: "red", fontSize: 14 }}>
+// The outer { } is "step into JS"; the inner { } is the object
+// literal itself — two different braces doing two different jobs,
+// which is exactly why this one specific line trips up beginners.`;
+---
+<CourseLayout
+  title="JSX Quick Reference — Shopify App Handbook"
+  description="What JSX actually is (and isn't), how to embed logic and lists inside it, and the specific gotchas — className, self-closing tags, camelCase props — that trip up anyone coming from plain HTML."
+  accent="purple"
+  courseTitle="JSX"
+  courseTagline="The markup-in-JavaScript syntax React (and Preact) is built on. Not required reading before the React course, but this is where to come back to if a specific piece of its syntax doesn't make sense yet."
+  readTime="15–20 min"
+  kind="Quick Reference"
+  chapters={chapters}
+  prev={{ href: '/crash-courses/react', title: 'React' }}
+  next={{ href: '/crash-courses/preact', title: 'Preact' }}
+>
+  <section class="chapter" id="what-jsx-is">
+    <div class="chapter-num">Reference</div>
+    <h2>What JSX actually is</h2>
+    <p>JSX looks exactly like HTML sitting inside JavaScript, which is both what makes it easy to read and what makes it easy to misunderstand:</p>
+    <CodeBlock code={jsxLooksLikeHtmlCode} lang="tsx" />
+    <p>It is not a string, not real HTML, and not understood by any browser. JSX is <strong>syntax sugar</strong> — a shorthand — for calling a function that builds a plain JavaScript object describing what should render:</p>
+    <CodeBlock code={compiledOutputCode} lang="js" title="what the JSX above compiles to" />
+
+    <div class="support-tag caution">
+      <span class="support-icon">⚠</span> Always needs a build step — never works unmodified in a browser
+    </div>
+    <CodeBlock code={notCompiledCode} lang="tsx" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>JSX is a translator's shorthand, not a new language a browser learns. Every <code>&lt;div&gt;...&lt;/div&gt;</code> you write in a component gets converted into a plain function call before your code ever runs — you're just not the one typing out the function call by hand. This is exactly what the Vite build step (already set up in the Shopify app template, and covered from the tooling side in the <a href="/crash-courses/react">React course</a>) is doing every time you save a file.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>JSX is HTML-like syntax that compiles to <code>React.createElement(...)</code> calls — it is not HTML and browsers cannot run it directly.</li>
+        <li>Every JSX-using project needs a build step (Babel, TypeScript, or Vite) to convert it to plain JavaScript first.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://react.dev/learn/writing-markup-with-jsx" target="_blank" rel="noopener">React docs — Writing Markup with JSX</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="expressions">
+    <div class="chapter-num">Reference</div>
+    <h2>Embedding values &amp; logic</h2>
+    <p>Curly braces <code>{'{ }'}</code> are the one and only way to step out of "this is markup" and back into "this is a JavaScript expression" — anything inside them is evaluated and the result is dropped into the output:</p>
+    <CodeBlock code={expressionCode} lang="tsx" />
+
+    <p>Since only <em>expressions</em> (things that produce a value) are allowed inside <code>{'{ }'}</code>, conditional rendering leans on the ternary operator and the <code>&&</code> operator instead of an <code>if</code> statement:</p>
+    <CodeBlock code={conditionalCode} lang="tsx" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Reaching for an <code>if</code> statement directly inside JSX.</b> Statements aren't allowed inside <code>{'{ }'}</code>, only expressions — move the <code>if</code> above the <code>return</code>, or swap it for a ternary/<code>&&</code>.</li>
+      </ul>
+    </div>
+    <CodeBlock code={noIfStatementCode} lang="tsx" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p><code>&&</code> as a rendering trick relies on a plain JavaScript rule: <code>false && anything</code> short-circuits to <code>false</code> without evaluating the right side, and React simply renders nothing for <code>false</code>, <code>null</code>, or <code>undefined</code>. It's not special JSX behavior — it's ordinary JS logic, reused.</p>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://react.dev/learn/conditional-rendering" target="_blank" rel="noopener">React docs — Conditional Rendering</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="lists-fragments">
+    <div class="chapter-num">Reference</div>
+    <h2>Lists, keys &amp; fragments</h2>
+    <p>Rendering an array means mapping it to JSX elements — same <code>.map()</code> from plain JavaScript, just producing markup instead of data:</p>
+    <CodeBlock code={listNoKeyCode} lang="tsx" />
+
+    <p>React needs a stable, unique <strong>key</strong> on each item in a list, so it can tell which row is which across re-renders instead of guessing from position:</p>
+    <CodeBlock code={listWithKeyCode} lang="tsx" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Using the array index as the key.</b> It works by coincidence for a list that never reorders or has items added/removed from the middle — and silently causes wrong data to show in the wrong row the moment it does. Use a real, stable id from the data itself.</li>
+      </ul>
+    </div>
+
+    <p>A component can only return <em>one</em> root element. A <strong>Fragment</strong> groups several elements together without adding an actual element to the page — useful when a wrapping <code>&lt;div&gt;</code> would break layout (inside a <code>&lt;table&gt;</code> row, for instance):</p>
+    <CodeBlock code={fragmentCode} lang="tsx" />
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Render a list with <code>.map()</code>, same as any other array transform.</li>
+        <li>Every item needs a stable, unique <code>key</code> — never the array index if the list can reorder or change.</li>
+        <li>A component returns exactly one root element; <code>&lt;&gt;...&lt;/&gt;</code> (a Fragment) groups siblings without adding a real DOM element.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://react.dev/learn/rendering-lists" target="_blank" rel="noopener">React docs — Rendering Lists</a></li>
+        <li><a href="https://react.dev/reference/react/Fragment" target="_blank" rel="noopener">React docs — Fragment</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="gotchas">
+    <div class="chapter-num">Reference</div>
+    <h2>The gotchas that trip up HTML habits</h2>
+    <p>JSX looks like HTML closely enough that a few real differences catch almost everyone at least once.</p>
+
+    <h3><code>class</code> becomes <code>className</code></h3>
+    <CodeBlock code={classNameCode} lang="tsx" />
+
+    <h3>Every element must be explicitly closed</h3>
+    <CodeBlock code={selfCloseCode} lang="tsx" />
+
+    <h3>JS-controlled attributes are camelCase</h3>
+    <CodeBlock code={camelCaseCode} lang="tsx" />
+
+    <h3>Inline styles are an object, not a string</h3>
+    <CodeBlock code={styleObjectCode} lang="tsx" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Almost every gotcha on this list comes from the same root cause: HTML attributes are just text, but JSX props are real JavaScript values, and a handful of HTML attribute names collide with existing JavaScript keywords (<code>class</code>, <code>for</code>) or don't match their DOM property name exactly. JSX resolves the collision by using the JavaScript-side name instead of the HTML-side one.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li><code>class</code> → <code>className</code>, <code>for</code> → <code>htmlFor</code> (reserved-word collisions).</li>
+        <li>Every element needs an explicit close, including self-closing ones (<code>&lt;img /&gt;</code>, not <code>&lt;img&gt;</code>).</li>
+        <li>JS-controlled attributes are camelCase (<code>onClick</code>, <code>tabIndex</code>); raw HTML/ARIA attributes with a hyphen (<code>data-*</code>, <code>aria-*</code>) are not.</li>
+        <li><code>style</code> takes a JS object with camelCase CSS properties, not a semicolon-separated string.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://react.dev/reference/react-dom/components/common" target="_blank" rel="noopener">React docs — common DOM component props</a></li>
+      </ul>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Where to go next</div>
+      <p>Continue to <a href="/crash-courses/preact">Preact</a> — a much smaller runtime built to run this exact same JSX syntax, useful to know about even if the Shopify app template itself uses React.</p>
+    </div>
+  </section>
+</CourseLayout>

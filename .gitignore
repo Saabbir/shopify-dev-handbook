@@ -5,3 +5,4 @@ dist/
 .netlify/
 deploy-*.zip
 .DS_Store
+_to_delete/

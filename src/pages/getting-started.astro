@@ -57,13 +57,20 @@ const actionCode = `export async function action({ request }) {
 const deployCommand = `shopify app deploy`;
 ---
 <BaseLayout
-  title="Your First Shopify App — Shopify Dev Handbook"
+  title="Your First Shopify App — Shopify App Handbook"
   description="One straight line from an empty folder to a deployed, installed app: scaffold it, tour every generated file, build one real feature, ship it. Free the whole way."
   accent="blue"
+  footerNote={`Every command and file path here reflects Shopify's current React Router app template as of September 2026 — exact generated file names can shift slightly between CLI versions. When in doubt, <a href="https://shopify.dev/docs/apps/build/scaffold-app" target="_blank" rel="noopener">shopify.dev's own scaffolding guide</a> is the tiebreaker.`}
 >
   <header>
+    <p class="eyebrow">Build a real app</p>
     <h1 class="page-title">Your First Shopify App, Start to Finish</h1>
     <p class="lede">One straight line from an empty folder to a deployed, installed app: scaffold it, tour every generated file, build one real feature, ship it. Free the whole way.</p>
+    <div class="meta-row">
+      <span class="meta-chip">7 steps</span>
+      <span class="meta-chip">~2–3 hrs</span>
+      <span class="meta-chip">$0 required</span>
+    </div>
   </header>
 
   <div class="goal">
@@ -267,9 +274,6 @@ const deployCommand = `shopify app deploy`;
     </div>
   </div>
 
-  <footer class="sitefooter">
-    Every command and file path here reflects Shopify's current React Router app template as of September 2026 — exact generated file names can shift slightly between CLI versions. When in doubt, <a href="https://shopify.dev/docs/apps/build/scaffold-app" target="_blank" rel="noopener">shopify.dev's own scaffolding guide</a> is the tiebreaker.
-  </footer>
 </BaseLayout>
 
 <style>

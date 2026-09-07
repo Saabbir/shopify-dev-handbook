@@ -1,0 +1,269 @@
+---
+import CourseLayout from '../../layouts/CourseLayout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const chapters = [
+  { id: 'what-runs', title: 'What "npm run dev" actually does' },
+  { id: 'path-trick', title: 'The .bin trick: why bare command names work' },
+  { id: 'composition-hooks', title: 'Composing scripts & lifecycle hooks' },
+  { id: 'args-and-env', title: 'Passing arguments & environment variables' },
+];
+
+const packageJsonScriptsCode = `{
+  "name": "my-shopify-app",
+  "scripts": {
+    "dev": "shopify app dev",
+    "build": "react-router build",
+    "lint": "eslint ."
+  }
+}
+// "scripts" is a plain object: a name you type, mapped to a real
+// shell command npm runs on your behalf. There is no magic in the
+// name itself — "dev" isn't special to npm, it's just what this
+// project's author chose to call it.`;
+
+const runCommandCode = `npm run dev
+// npm does exactly three things here:
+//  1. Looks up "dev" in package.json's "scripts" object
+//  2. Finds the string "shopify app dev"
+//  3. Runs that exact string in a shell, as if you'd typed it
+//     yourself — same working directory, same terminal output
+// "npm run dev" is not a command with its own separate behavior.
+// It is a lookup, followed by running whatever text it found.`;
+
+const twoShortcutsCode = `// A couple of names are shortcuts npm recognizes without "run":
+npm start    // same as: npm run start
+npm test     // same as: npm run test
+// Every OTHER script name needs the explicit "run":
+npm run dev  // "npm dev" does NOT work — only start/test are special`;
+
+const binPathCode = `// This works inside a script...
+"lint": "eslint ."
+
+// ...but running the exact same command directly in your terminal
+// often fails, unless eslint happens to be installed globally:
+$ eslint .
+command not found: eslint
+
+// The reason: npm run temporarily prepends
+// "./node_modules/.bin" to the PATH for the duration of the
+// script. Every package with a command-line tool (eslint, vite,
+// react-router, shopify) installs its executable into that exact
+// folder. Your terminal doesn't know to look there by default —
+// npm run does, automatically, every time.`;
+
+const binFolderCode = `node_modules/.bin/
+├── eslint      →  really node_modules/eslint/bin/eslint.js
+├── vite        →  really node_modules/vite/bin/vite.js
+└── shopify     →  really node_modules/@shopify/cli/bin/shopify.js
+// These are just symlinks (shortcuts) npm creates automatically
+// during "npm install", pointing at each package's own declared
+// executable. This is the entire mechanism — no separate registry,
+// no global state, just files in a folder that only exists while
+// npm run has added it to PATH.`;
+
+const compositionCode = `{
+  "scripts": {
+    "dev:frontend": "vite",
+    "dev:backend": "node server.js",
+    "dev": "concurrently \\"npm:dev:frontend\\" \\"npm:dev:backend\\""
+  }
+}
+// One script can reference and run OTHERS. "concurrently" (a small
+// npm package, not a built-in feature) runs several scripts in
+// parallel and interleaves their output — exactly what a Shopify
+// app template needs to run its frontend build tool and its
+// backend server side by side from one single "npm run dev".`;
+
+const prePostHookCode = `{
+  "scripts": {
+    "prebuild": "eslint .",
+    "build": "react-router build",
+    "postbuild": "echo Build finished"
+  }
+}
+// npm has one small piece of REAL built-in magic (not just string
+// lookup): running "npm run build" automatically runs "prebuild"
+// immediately before it, and "postbuild" immediately after —
+// purely from the "pre"/"post" prefix on the name. No composition
+// syntax needed for this specific case.
+//
+// npm run build   actually runs, in order:
+//   1. prebuild   (eslint .)
+//   2. build      (react-router build)
+//   3. postbuild  (echo Build finished)
+// If any step exits with an error, the chain stops there.`;
+
+const argsCode = `// Extra flags after "--" are passed straight through to the
+// underlying command, not consumed by npm itself:
+npm run build -- --outDir dist-staging
+// "scripts.build" is "react-router build" — the actual command
+// that runs is: react-router build --outDir dist-staging
+// The "--" is a signal meaning "everything after this is for the
+// script, not for npm" — without it, npm tries to interpret the
+// flags itself and usually errors or ignores them.`;
+
+const envVarCode = `{
+  "name": "my-shopify-app",
+  "version": "1.0.0",
+  "scripts": {
+    "show-name": "echo $npm_package_name"
+  }
+}
+// npm automatically exposes fields from package.json as
+// environment variables, prefixed npm_package_, available to any
+// script. "npm run show-name" prints "my-shopify-app" — read
+// straight out of the "name" field above, with zero extra config.`;
+
+const dotenvNoteCode = `// npm scripts do NOT automatically load a .env file's variables
+// — that's a separate concern, usually handled by the tool being
+// run (Vite loads .env itself for frontend code; a Node server
+// needs something like the "dotenv" package, or Node's own
+// built-in --env-file flag, to read one) rather than by npm.
+// If a variable from .env isn't showing up inside a script, npm
+// is very rarely the reason — check whichever tool the script
+// actually runs instead.`;
+---
+<CourseLayout
+  title="npm scripts Quick Reference — Shopify App Handbook"
+  description="What 'npm run dev' actually does under the hood: the exact lookup-and-run mechanism, why bare command names like 'eslint' work inside a script but not in a plain terminal, composing scripts together, pre/post lifecycle hooks, and passing arguments and environment variables through."
+  accent="gold"
+  courseTitle="npm scripts"
+  courseTagline="What every 'npm run ___' command in a Shopify app template is actually doing — a plain lookup in package.json, followed by running whatever text it finds, with one real trick (the .bin PATH) making it feel like more."
+  readTime="15–20 min"
+  kind="Quick Reference"
+  chapters={chapters}
+  prev={{ href: '/crash-courses/web-components', title: 'Web Components' }}
+  next={{ href: '/crash-courses/npx', title: 'npx' }}
+>
+  <section class="chapter" id="what-runs">
+    <div class="chapter-num">Reference</div>
+    <h2>What "npm run dev" actually does</h2>
+    <p>The <a href="/crash-courses/node">Node.js course</a> introduced <code>package.json</code>'s <code>scripts</code> field as "named shortcuts for commands." Here's the exact mechanism behind that shortcut:</p>
+    <CodeBlock code={packageJsonScriptsCode} lang="json" />
+    <CodeBlock code={runCommandCode} lang="bash" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p><code>npm run dev</code> is a text lookup, not a built-in behavior. There's nothing npm inherently knows about "starting a dev server" — it just finds the string next to <code>"dev"</code> in the file and executes it, character for character, as if you'd typed it into the terminal yourself.</p>
+    </div>
+
+    <p>Two names are recognized without the word <code>run</code> at all, purely as a convenience — every other script name needs it:</p>
+    <CodeBlock code={twoShortcutsCode} lang="bash" />
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li><code>npm run &lt;name&gt;</code> looks up <code>&lt;name&gt;</code> in <code>package.json</code>'s <code>scripts</code> object and runs whatever command string it finds — nothing more.</li>
+        <li><code>npm start</code>/<code>npm test</code> work without <code>run</code>; every other script name needs it explicitly.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://docs.npmjs.com/cli/v10/using-npm/scripts" target="_blank" rel="noopener">npm docs — scripts</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="path-trick">
+    <div class="chapter-num">Reference</div>
+    <h2>The .bin trick: why bare command names work</h2>
+    <p>A script like <code>"lint": "eslint ."</code> runs fine through <code>npm run lint</code> — but typing <code>eslint .</code> directly into a plain terminal often fails, unless ESLint happens to be installed globally on your machine:</p>
+    <CodeBlock code={binPathCode} lang="bash" />
+
+    <p>The reason is a folder every installed package with a command-line tool populates automatically:</p>
+    <CodeBlock code={binFolderCode} lang="text" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p><code>npm run</code> temporarily tells your shell "also look in this project's own private toolbox" for the duration of the script — <code>./node_modules/.bin</code>. Once the script finishes, that folder is no longer on the PATH. This is why a project's own installed tools (its exact pinned version of ESLint, Vite, or the Shopify CLI) run correctly through a script even if nothing is installed globally on your machine at all.</p>
+    </div>
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Assuming a command not found in your terminal means it's not installed.</b> It might just mean it's installed locally to the project (in <code>node_modules/.bin</code>) rather than globally — try it through <code>npm run</code>, or prefix it with <code>npx</code> (its own reference page, next).</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://docs.npmjs.com/cli/v10/configuring-npm/folders#executables" target="_blank" rel="noopener">npm docs — how executables are installed</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="composition-hooks">
+    <div class="chapter-num">Reference</div>
+    <h2>Composing scripts &amp; lifecycle hooks</h2>
+    <p>One script can call other scripts by name, using <code>npm:</code> as a prefix — this is exactly how a Shopify app template's single <code>npm run dev</code> starts both a frontend build tool and a backend server together:</p>
+    <CodeBlock code={compositionCode} lang="json" />
+
+    <p>Separately — and this is genuine built-in behavior, not just a naming convention — a script named <code>pre&lt;name&gt;</code> or <code>post&lt;name&gt;</code> runs automatically immediately before or after <code>&lt;name&gt;</code>, with no extra wiring:</p>
+    <CodeBlock code={prePostHookCode} lang="json" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Not noticing a <code>pre</code>/<code>post</code> script exists.</b> If <code>npm run build</code> seems to be doing more than the <code>"build"</code> entry alone would explain, check for <code>prebuild</code>/<code>postbuild</code> entries in the same file — npm runs them automatically, without mentioning it in the terminal output beyond the extra command lines themselves.</li>
+      </ul>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li><code>npm:&lt;script-name&gt;</code> inside another script's command lets scripts call each other, often combined with a small package like <code>concurrently</code> to run several in parallel.</li>
+        <li><code>pre&lt;name&gt;</code> / <code>post&lt;name&gt;</code> scripts run automatically around <code>&lt;name&gt;</code> — real npm behavior, not just a naming habit.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://docs.npmjs.com/cli/v10/using-npm/scripts#pre--post-scripts" target="_blank" rel="noopener">npm docs — pre &amp; post scripts</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="args-and-env">
+    <div class="chapter-num">Reference</div>
+    <h2>Passing arguments &amp; environment variables</h2>
+    <p>Anything after a standalone <code>--</code> is passed straight through to the script's own command, rather than being interpreted by npm itself:</p>
+    <CodeBlock code={argsCode} lang="bash" />
+
+    <p>npm also automatically exposes fields from <code>package.json</code> as environment variables inside any script, prefixed <code>npm_package_</code>:</p>
+    <CodeBlock code={envVarCode} lang="json" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Expecting a <code>.env</code> file to "just work" inside every script.</b> It doesn't — loading <code>.env</code> is the job of whichever tool the script runs (Vite does it for frontend code automatically; a plain Node server needs the <code>dotenv</code> package or Node's own <code>--env-file</code> flag), not something npm itself provides.</li>
+      </ul>
+    </div>
+    <CodeBlock code={dotenvNoteCode} lang="text" />
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Text after <code>--</code> passes through to the underlying command untouched.</li>
+        <li><code>package.json</code> fields are auto-exposed as <code>npm_package_*</code> environment variables inside any script.</li>
+        <li><code>.env</code> loading is not an npm feature — it's handled (or not) by whatever tool the script actually runs.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://docs.npmjs.com/cli/v10/using-npm/scripts#environment" target="_blank" rel="noopener">npm docs — script environment variables</a></li>
+      </ul>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Where to go next</div>
+      <p>Continue to <a href="/crash-courses/npx">npx</a> — the companion tool for running a package's command-line tool without adding it to <code>package.json</code> at all.</p>
+    </div>
+  </section>
+</CourseLayout>

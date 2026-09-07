@@ -1,4 +1,4 @@
-# Shopify Dev Handbook
+# Shopify App Handbook
 
 A learning site for Shopify app and extension development — curriculum, a guided first build, an extensions deep dive, crash courses on the underlying tech, and a curated changelog.
 

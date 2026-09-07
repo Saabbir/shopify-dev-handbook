@@ -280,7 +280,7 @@ export default function NotesWidget() {
 // touching the DOM directly.`;
 ---
 <CourseLayout
-  title="React Crash Course — Shopify Dev Handbook"
+  title="React Crash Course — Shopify App Handbook"
   description="React from first principles for readers who know HTML, CSS, and JavaScript but have never touched a frontend framework. Components, props, state, and effects."
   accent="blue"
   courseTitle="React"
@@ -311,6 +311,14 @@ export default function NotesWidget() {
         <li>React is declarative: you describe the desired result for the current data, and React updates the page to match.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://react.dev/learn" target="_blank" rel="noopener">React docs: Quick Start</a> — the official walkthrough this course is based on</li>
+        <li><a href="https://react.dev/learn/thinking-in-react" target="_blank" rel="noopener">Thinking in React</a> — the declarative mindset applied step by step to a real UI</li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="jsx">
@@ -337,6 +345,13 @@ export default function NotesWidget() {
       <div class="mistakes-label">Common mistake</div>
       <ul>
         <li><b>"Adjacent JSX elements must be wrapped in an enclosing tag."</b> This means you returned two sibling elements with nothing wrapping them. Wrap them in a fragment (<code>&lt;&gt;...&lt;/&gt;</code>) or a <code>&lt;div&gt;</code>.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="/crash-courses/jsx">This site's JSX quick reference</a> — more on lists/keys, fragments, and the specific gotchas (className, self-closing tags) coming from plain HTML</li>
       </ul>
     </div>
   </section>
@@ -368,6 +383,14 @@ export default function NotesWidget() {
         <li>Data only flows one way: parent to child, never back up automatically.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://react.dev/learn/your-first-component" target="_blank" rel="noopener">React docs: Your First Component</a></li>
+        <li><a href="https://react.dev/learn/passing-props-to-a-component" target="_blank" rel="noopener">React docs: Passing Props to a Component</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="state">
@@ -381,7 +404,7 @@ export default function NotesWidget() {
       <p>React only re-runs a component's function (and updates the screen) when it's explicitly told the data changed. Reassigning a normal variable is invisible to React — nothing tells it to look again.</p>
     </div>
 
-    <p>The <code>useState</code> hook fixes this — it gives React visibility into the change:</p>
+    <p>The <code>useState</code> <strong>hook</strong> fixes this — it gives React visibility into the change. A hook is just a special function, always starting with <code>use</code>, that lets a component tap into React features like state; you call it directly inside a component, never inside a condition or a loop:</p>
     <CodeBlock code={useStateCode} lang="tsx" />
     <p>Calling <code>setLiked(...)</code> does two things: it updates the stored value, <em>and</em> it tells React "re-run this component, something changed." That second part is the whole reason <code>useState</code> exists instead of a plain variable.</p>
 
@@ -393,6 +416,14 @@ export default function NotesWidget() {
       <div class="mistakes-label">Common mistake</div>
       <ul>
         <li><b>Mutating state directly</b> (<code>items.push(x)</code>, <code>user.name = "new"</code>) instead of calling the setter with a new array or object. The screen silently fails to update, with no error to point you at the cause.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://react.dev/learn/state-a-components-memory" target="_blank" rel="noopener">React docs: State: A Component's Memory</a></li>
+        <li><a href="https://react.dev/reference/react/useState" target="_blank" rel="noopener">React docs: useState reference</a></li>
       </ul>
     </div>
   </section>
@@ -417,6 +448,13 @@ export default function NotesWidget() {
       <div class="tryit-label">✳ Try it yourself</div>
       <p>In the <code>NoteList</code> example, think through what would happen if you used the array index as the key instead of <code>note.id</code>, and then deleted the first note in the list: every remaining note would shift up one index, so React would think item positions changed identity — not that one item was removed.</p>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://react.dev/learn/rendering-lists" target="_blank" rel="noopener">React docs: Rendering Lists</a> — covers <code>key</code> in depth, including why the index is usually the wrong choice</li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="events-forms">
@@ -427,7 +465,7 @@ export default function NotesWidget() {
 
     <p>Two details worth slowing down on:</p>
     <ul>
-      <li><code>e.preventDefault()</code> stops the browser's default behavior — for a form, that default is a full-page reload/navigation, which would blow away all your React state.</li>
+      <li>The <code>e: React.FormEvent</code> annotation types the event object the handler receives — it's one of the built-in TypeScript types that ship with React itself, so you get autocomplete on <code>e</code> without writing the type by hand. <code>e.preventDefault()</code> stops the browser's default behavior — for a form, that default is a full-page reload/navigation, which would blow away all your React state.</li>
       <li>The input's <code>value</code> comes from state, and <code>onChange</code> writes every keystroke back into that same state. This pairing is called a <strong>controlled input</strong>.</li>
     </ul>
     <CodeBlock code={controlledExplainCode} lang="js" />
@@ -436,6 +474,14 @@ export default function NotesWidget() {
       <div class="mistakes-label">Common mistake</div>
       <ul>
         <li><b>Setting <code>value</code> without <code>onChange</code>.</b> React will render the input, then refuse to let you type in it — the box appears "frozen" on its initial value, because nothing is ever writing your keystrokes back into state.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://react.dev/learn/responding-to-events" target="_blank" rel="noopener">React docs: Responding to Events</a></li>
+        <li><a href="https://react.dev/reference/react-dom/components/input" target="_blank" rel="noopener">React docs: &lt;input&gt; (controlled vs. uncontrolled)</a></li>
       </ul>
     </div>
   </section>
@@ -465,6 +511,14 @@ export default function NotesWidget() {
       <div class="tryit-label">✳ Where this shows up</div>
       <p>In the app template covered in <a href="/crash-courses/react-router-7">React Router 7</a>, most data fetching actually happens in a <strong>loader</strong> before the component even renders — not in a <code>useEffect</code>. You'll still reach for <code>useEffect</code> for things a loader can't do: reacting to a prop changing after the page already loaded, or talking to a browser-only API.</p>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://react.dev/learn/synchronizing-with-effects" target="_blank" rel="noopener">React docs: Synchronizing with Effects</a></li>
+        <li><a href="https://react.dev/learn/you-might-not-need-an-effect" target="_blank" rel="noopener">React docs: You Might Not Need an Effect</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="putting-together">
@@ -483,6 +537,14 @@ export default function NotesWidget() {
     <div class="tryit">
       <div class="tryit-label">✳ Where to go next</div>
       <p>Move on to <a href="/crash-courses/react-router-7">React Router 7</a> to see how a real page gets its initial data — the piece that sits just outside everything covered here.</p>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://react.dev/learn" target="_blank" rel="noopener">React docs: Learn React</a> — the full guide, if you want more than a crash course</li>
+        <li><a href="https://react.dev/reference/react" target="_blank" rel="noopener">React docs: API Reference</a></li>
+      </ul>
     </div>
   </section>
 </CourseLayout>

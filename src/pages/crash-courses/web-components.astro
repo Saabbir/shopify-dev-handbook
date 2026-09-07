@@ -1,0 +1,232 @@
+---
+import CourseLayout from '../../layouts/CourseLayout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const chapters = [
+  { id: 'custom-elements', title: 'Custom elements: defining your own HTML tag' },
+  { id: 'shadow-dom', title: 'Shadow DOM: real encapsulation' },
+  { id: 'shopify-usage', title: 'Where Shopify actually uses this' },
+  { id: 'vs-react', title: 'Web Components vs. React — when to reach for which' },
+];
+
+const definingElementCode = `// A Web Component is a real, new HTML tag, defined in plain
+// JavaScript — no framework, no build step required at all:
+class HelloBanner extends HTMLElement {
+  connectedCallback() {
+    // Runs once, when this element is actually inserted into the page
+    this.innerHTML = \`<p>Hello, \${this.getAttribute("name")}!</p>\`;
+  }
+}
+
+customElements.define("hello-banner", HelloBanner);
+// From this line on, <hello-banner> is a real tag the browser
+// understands — usable in plain HTML, with no import, no React,
+// no build tool, on any page that loads this one script.`;
+
+const usingElementCode = `<!-- Anywhere in the page, even a page with zero other JavaScript
+     frameworks loaded: -->
+<hello-banner name="Alex"></hello-banner>
+<!-- Renders: "Hello, Alex!" -->
+
+<!-- The browser itself instantiates the class, calls its
+     lifecycle methods, and treats it exactly like <div> or <button>
+     — it's a first-class citizen of the DOM, not a library
+     construct sitting on top of it. -->`;
+
+const supportBaselineCode = `// Custom elements, Shadow DOM, and HTML templates (the three
+// pieces together called "Web Components") have been supported,
+// unprefixed, in every major browser for years now.`;
+
+const shadowDomCode = `class HelloBanner extends HTMLElement {
+  connectedCallback() {
+    // attachShadow creates an isolated mini-DOM tree just for
+    // this element, walled off from the rest of the page:
+    const shadow = this.attachShadow({ mode: "open" });
+    shadow.innerHTML = \`
+      <style>
+        /* This CSS ONLY affects markup inside this shadow root.
+           It can never leak out and restyle the rest of the page
+           — and the page's own CSS can never reach in here either. */
+        p { color: purple; font-weight: bold; }
+      </style>
+      <p>Hello, \${this.getAttribute("name")}!</p>
+    \`;
+  }
+}
+customElements.define("hello-banner", HelloBanner);`;
+
+const noShadowProblemCode = `// WITHOUT Shadow DOM, a component's markup lives in the regular
+// page DOM — any global CSS on the page can accidentally restyle
+// it, and any component-scoped CSS can accidentally leak out and
+// restyle the rest of the page. This is exactly the class of bug
+// CSS methodologies like BEM exist to work around by convention.
+// Shadow DOM solves the same problem at the platform level, with
+// a real boundary instead of a naming convention.`;
+
+const polarisWcUsageCode = `<!-- Inside a Shopify Admin UI extension, this is real markup you
+     write — these are genuine custom elements, defined by
+     Shopify's Polaris Web Components library and registered with
+     the browser exactly the way "hello-banner" was defined above: -->
+<s-banner tone="warning">
+  <s-text>This order has an unfulfilled item.</s-text>
+</s-banner>
+<s-button variant="primary">Mark as fulfilled</s-button>
+<!-- Shopify chose Web Components specifically because they run
+     natively in the sandboxed iframe an extension renders inside
+     — with no dependency on which frontend framework (or none at
+     all) the rest of that surface happens to use. -->`;
+
+const compareCode = `// The same idea, done in a Web Component vs. done in React:
+
+// Web Component — the tag exists for the browser itself, usable
+// from any page, any framework, or no framework at all:
+customElements.define("price-tag", PriceTagElement);
+// <price-tag amount="19.99"></price-tag>  — works anywhere
+
+// React component — only exists inside a React tree, rendered by
+// React's own runtime, not a real HTML tag the browser knows:
+function PriceTag({ amount }: { amount: number }) {
+  return <span>\${'\${amount.toFixed(2)}'}</span>;
+}
+// <PriceTag amount={19.99} />  — only works inside React`;
+---
+<CourseLayout
+  title="Web Components Quick Reference — Shopify App Handbook"
+  description="Custom elements and Shadow DOM — the browser-native standard for defining your own HTML tags, framework-independent. What it actually is, and how it's the real technology behind Shopify's Polaris Web Components used in Admin and Checkout UI extensions."
+  accent="teal"
+  courseTitle="Web Components"
+  courseTagline="A browser-native standard for defining your own HTML tags in plain JavaScript, with no framework and no build step required. This is the real technology behind the &quot;Polaris Web Components&quot; the Extensions page mentions."
+  readTime="15–20 min"
+  kind="Quick Reference"
+  chapters={chapters}
+  prev={{ href: '/crash-courses/remix-to-react-router', title: 'Remix → React Router' }}
+  next={{ href: '/crash-courses/npm-scripts', title: 'npm scripts' }}
+>
+  <section class="chapter" id="custom-elements">
+    <div class="chapter-num">Reference</div>
+    <h2>Custom elements: defining your own HTML tag</h2>
+    <p>Every framework this site covers — React, Preact — builds components that only exist <em>inside that framework's own runtime</em>. A <strong>custom element</strong> is different: it's a real, new HTML tag, defined once in plain JavaScript, that the browser itself then understands natively, everywhere, forever — no framework required to use it:</p>
+    <CodeBlock code={definingElementCode} lang="js" />
+    <CodeBlock code={usingElementCode} lang="html" />
+
+    <div class="support-tag good">
+      <span class="support-icon">✓</span> Baseline widely available — no build step or compilation needed, works directly in every modern browser
+    </div>
+    <CodeBlock code={supportBaselineCode} lang="text" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>A custom element is what a React or Preact component is trying to approximate, one platform layer down: instead of a library deciding what <code>&lt;hello-banner&gt;</code> means and rendering it for you, you're teaching the browser itself a new tag, the same way <code>&lt;video&gt;</code> or <code>&lt;details&gt;</code> were taught to it by the people who built the browser.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>A custom element is a real HTML tag, defined in plain JavaScript via <code>customElements.define()</code>, understood natively by the browser.</li>
+        <li>Unlike a React/Preact component, it works on any page, with any framework, or no framework — nothing has to render it for you.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements" target="_blank" rel="noopener">MDN — Using custom elements</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="shadow-dom">
+    <div class="chapter-num">Reference</div>
+    <h2>Shadow DOM: real encapsulation</h2>
+    <p>On its own, a custom element's markup still lives in the regular page — its CSS can leak out, and the page's CSS can leak in. <strong>Shadow DOM</strong> gives an element its own private, walled-off mini-document that neither side can accidentally reach into:</p>
+    <CodeBlock code={shadowDomCode} lang="js" />
+
+    <p>Without it, style leakage in either direction is a real, common bug class:</p>
+    <CodeBlock code={noShadowProblemCode} lang="text" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Shadow DOM is to CSS what an <code>&lt;iframe&gt;</code> is to a whole page — a hard boundary the browser itself enforces, instead of a naming convention (like prefixing every class name) that only works if everyone follows it perfectly, everywhere, forever.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Shadow DOM gives an element an isolated DOM/CSS scope — styles can't leak in or out.</li>
+        <li>It's what makes a custom element safe to drop into a page you don't fully control the CSS of (exactly the situation a Shopify extension runs in).</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM" target="_blank" rel="noopener">MDN — Using shadow DOM</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="shopify-usage">
+    <div class="chapter-num">Reference</div>
+    <h2>Where Shopify actually uses this</h2>
+    <p>The <a href="/extensions">Extensions page</a> mentions that Admin and Checkout UI extensions are "built with Polaris Web Components" — a different component set from the React-based Polaris library used in your main embedded app. This is exactly the technology covered in this reference: Polaris Web Components are genuine custom elements, each one defined and registered with the browser the same way <code>hello-banner</code> was above:</p>
+    <CodeBlock code={polarisWcUsageCode} lang="html" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Shopify's extension surfaces render inside a sandboxed environment (an iframe, for security and stability reasons covered conceptually in <a href="/crash-courses/how-shopify-apps-work">How Shopify Apps Work</a>) where it can't assume your app's own frontend framework is available. A Web Component doesn't need to assume that either — it's understood by the browser directly, which is precisely why it's the right tool for a component that has to render correctly regardless of what (if anything) built the surrounding page.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Shopify's Polaris Web Components (used in Admin and Checkout UI extensions) are real custom elements, not a React-based library.</li>
+        <li>This is a deliberate choice — Web Components work regardless of what framework (if any) is loaded in the surrounding page, which matters inside a sandboxed extension surface.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://shopify.dev/docs/api/app-home/using-polaris-components" target="_blank" rel="noopener">Shopify docs — Polaris web components</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="vs-react">
+    <div class="chapter-num">Reference</div>
+    <h2>Web Components vs. React — when to reach for which</h2>
+    <CodeBlock code={compareCode} lang="tsx" />
+
+    <div class="compare">
+      <div class="good">
+        <h4>Reach for a Web Component when...</h4>
+        <p>The markup needs to run correctly regardless of what (if any) framework surrounds it — a sandboxed extension surface, a widget embedded on arbitrary third-party pages, or a component meant to be reused across projects that don't all share one framework.</p>
+      </div>
+      <div class="good">
+        <h4>Reach for React (or Preact) when...</h4>
+        <p>You're building an application-shaped UI within a project that already committed to that framework — most state management, routing, and data-fetching patterns (like the loaders/actions from the <a href="/crash-courses/react-router-7">React Router 7 course</a>) are framework features, not something Web Components provide on their own.</p>
+      </div>
+    </div>
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Treating this as "which one is better."</b> They solve different problems — Web Components are a browser-native way to package a single reusable, framework-independent element; React is an application framework with its own state, routing, and data-fetching model. A Shopify app template genuinely uses React for its own admin UI and Web Components for its extension surfaces, at the same time, on purpose.</li>
+      </ul>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Web Components (custom elements + Shadow DOM) are a browser-native, framework-independent way to define a reusable HTML tag.</li>
+        <li>They're the real technology behind Shopify's Polaris Web Components, used specifically because extension surfaces can't assume any one frontend framework is present.</li>
+        <li>React/Preact remain the right tool for an application's own UI — Web Components aren't a replacement for a framework's state/routing/data model.</li>
+      </ul>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Where to go next</div>
+      <p>Continue to <a href="/crash-courses/npm-scripts">npm scripts</a> — moving from the frontend to the tooling that actually runs your project day to day.</p>
+    </div>
+  </section>
+</CourseLayout>

@@ -69,12 +69,13 @@ const quickLinks = [
 ];
 ---
 <BaseLayout
-  title="Shopify Dev Handbook"
+  title="Shopify App Handbook"
   description="A step-by-step path into Shopify app development for people who've never built one before — from what a Shopify app even is, through building and deploying a real one, to reaching the storefront and checkout."
   accent="gold"
 >
   <div class="hero">
-    <h1>Shopify Dev Handbook</h1>
+    <p class="eyebrow">Free, start to finish</p>
+    <h1>Shopify App Handbook</h1>
     <p class="lede">The official docs are a great reference — once you know what you're looking for. This site is the part before that: a step-by-step path that assumes nothing, starting from "what is a Shopify app?" and ending with a real, deployed one.</p>
     <p class="free-note">Every tool, account, and resource linked across this site has a genuine free tier.</p>
   </div>
@@ -113,9 +114,6 @@ const quickLinks = [
     </div>
   </div>
 
-  <footer class="sitefooter">
-    Everywhere on this site, "read more" points back to <a href="https://shopify.dev" target="_blank" rel="noopener">shopify.dev</a> — Shopify's own docs are always the tiebreaker when something here and the live docs disagree.
-  </footer>
 </BaseLayout>
 
 <style>
@@ -123,7 +121,7 @@ const quickLinks = [
     font-family: 'IBM Plex Mono', monospace; font-weight: 700;
     font-size: clamp(2.1rem, 6vw, 3.2rem); margin: 0 0 18px; letter-spacing: -0.015em;
   }
-  .hero .lede { font-size: var(--fs-lede); max-width: 60ch; }
+  .hero .lede { font-size: var(--fs-lede); }
   .hero .free-note {
     font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem;
     color: var(--green); margin: 0 0 52px;
@@ -179,7 +177,7 @@ const quickLinks = [
   .card h3 {
     font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.2rem; margin: 0 0 12px; color: var(--text);
   }
-  .card p { margin: 0 0 14px; font-size: var(--fs-small); color: var(--text-dim); line-height: 1.65; max-width: 68ch; }
+  .card p { margin: 0 0 14px; font-size: var(--fs-small); color: var(--text-dim); line-height: 1.65; }
   .card .skip {
     font-size: 0.85rem; font-style: italic; color: var(--node-accent, var(--accent)); opacity: 0.9;
   }

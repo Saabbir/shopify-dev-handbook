@@ -16,6 +16,7 @@ interface Props {
   chapters: Chapter[];
   prev?: { href: string; title: string };
   next?: { href: string; title: string };
+  kind?: string;
 }
 
 const {
@@ -28,6 +29,7 @@ const {
   chapters,
   prev,
   next,
+  kind = 'Crash Course',
 } = Astro.props;
 ---
 
@@ -56,7 +58,7 @@ const {
       <div class="course-inner">
         <p class="course-crumb"><a href="/crash-courses">Crash Courses</a> <span>/</span> {courseTitle}</p>
         <div class="course-hero">
-          <div class="course-eyebrow">Crash Course &middot; {chapters.length} chapters &middot; {readTime}</div>
+          <div class="course-eyebrow">{kind} &middot; {chapters.length} chapters &middot; {readTime}</div>
           <h1>{courseTitle}</h1>
           <p class="lede">{courseTagline}</p>
         </div>
@@ -77,10 +79,6 @@ const {
             </a>
           ) : <span class="pager-spacer" />}
         </nav>
-
-        <footer class="sitefooter course-footer">
-          Everywhere on this site, "read more" points back to <a href="https://shopify.dev" target="_blank" rel="noopener">shopify.dev</a> &mdash; Shopify's own docs are always the tiebreaker when something here and the live docs disagree.
-        </footer>
       </div>
     </article>
   </div>
@@ -183,7 +181,6 @@ const {
     font-family: 'IBM Plex Mono', monospace; font-weight: 700;
     font-size: clamp(2rem, 4.5vw, 2.75rem); margin: 0 0 18px; letter-spacing: -0.015em; line-height: 1.15;
   }
-  .course-hero .lede { max-width: 60ch; }
 
   .course-pager {
     display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 64px;
@@ -200,8 +197,6 @@ const {
   }
   .pager-link b { font-size: 1.05rem; color: var(--text); font-weight: 700; }
   .pager-spacer { display: block; }
-
-  .course-footer { margin-top: 48px; }
 
   @media (max-width: 980px) {
     .course { grid-template-columns: 1fr; }

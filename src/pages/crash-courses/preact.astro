@@ -1,0 +1,188 @@
+---
+import CourseLayout from '../../layouts/CourseLayout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const chapters = [
+  { id: 'what-preact-is', title: 'What Preact is, and why it exists' },
+  { id: 'same-api', title: 'The same component model, on purpose' },
+  { id: 'compat', title: 'preact/compat: dropping it into a React-shaped project' },
+  { id: 'where-it-fits', title: 'Where it fits (and where it doesn’t) for a Shopify app' },
+];
+
+const bundleSizeCode = `// Roughly, gzipped, as shipped to the browser:
+react + react-dom     ~45 KB
+preact                 ~4 KB
+// Preact isn't "React but worse" — it's a from-scratch
+// re-implementation of React's component model and Hooks API,
+// built specifically to be tiny. Every kilobyte here is JavaScript
+// the visitor's browser has to download and run before your app
+// does anything, which matters most on a slow connection or an
+// older phone — exactly the audience a storefront-facing widget
+// (as opposed to an internal admin screen) can't assume away.`;
+
+const sameComponentCode = `// This component is 100% identical code whether "react" or
+// "preact/compat" is the package it imports from:
+import { useState } from "react"; // or "preact/hooks" directly
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      Clicked {count} times
+    </button>
+  );
+}
+// Same JSX, same Hooks (useState, useEffect, useContext...), same
+// mental model taught in the React and JSX courses. Preact deliberately
+// copies React's public API rather than inventing its own.`;
+
+const compatAliasCode = `// vite.config.ts — the actual mechanism that lets an existing
+// React codebase run on Preact with (usually) zero code changes:
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  resolve: {
+    alias: {
+      react: "preact/compat",
+      "react-dom": "preact/compat",
+    },
+  },
+});
+// Every "import ... from 'react'" in your code and in your
+// node_modules dependencies gets silently redirected to Preact's
+// compatibility layer at build time. The app never knows.`;
+
+const compatLimitCode = `// preact/compat covers the vast majority of React's API, but it's
+// not a byte-for-byte reimplementation — some deep React internals
+// (certain edge cases in the newer concurrent-rendering APIs, some
+// third-party libraries that reach into React internals directly
+// instead of using its public API) aren't guaranteed to work.
+// The rule of thumb: plain components, Hooks, and Context all work
+// fine. A library that pokes at React's internals might not.`;
+
+const whereFitsCode = `// A Shopify app has (at least) two very different frontend
+// surfaces, with very different constraints:
+
+// 1. The embedded admin UI (what merchants see inside /admin)
+//    - Loaded once per merchant session inside an already-large
+//      Shopify Admin page. Bundle size matters, but much less.
+//    - The official app template uses React + Polaris (Shopify's
+//      own design system), which is built for React specifically.
+//    - Verdict: use React here. This is what Getting Started and
+//      the React / React Router 7 courses both build.
+
+// 2. A storefront-facing widget (a theme app extension's own UI,
+//    injected into a merchant's live storefront)
+//    - Loaded by every visitor to that storefront, on top of
+//      everything else the theme already loads. Every KB counts
+//      toward real page-load and conversion-rate impact.
+//    - Verdict: Preact (or no framework at all) is worth
+//      considering here specifically because of its size.`;
+---
+<CourseLayout
+  title="Preact Quick Reference — Shopify App Handbook"
+  description="What Preact is, why it exists (bundle size), how it copies React's own API on purpose, the preact/compat alias that lets existing React code run on it, and where it realistically fits in a Shopify app's frontend."
+  accent="orange"
+  courseTitle="Preact"
+  courseTagline="A from-scratch, ~4KB re-implementation of React's component model and Hooks API. Not what the official Shopify app template uses for its admin UI — but worth knowing about for anything that ships to a storefront."
+  readTime="12–18 min"
+  kind="Quick Reference"
+  chapters={chapters}
+  prev={{ href: '/crash-courses/jsx', title: 'JSX' }}
+  next={{ href: '/crash-courses/remix-to-react-router', title: 'Remix → React Router' }}
+>
+  <section class="chapter" id="what-preact-is">
+    <div class="chapter-num">Reference</div>
+    <h2>What Preact is, and why it exists</h2>
+    <p>Preact is a separate library from React — not a plugin or a mode you switch on — that implements the same component model and the same Hooks API (<code>useState</code>, <code>useEffect</code>, and the rest, covered from the React side in the <a href="/crash-courses/react">React course</a>), in a fraction of the code:</p>
+    <CodeBlock code={bundleSizeCode} lang="text" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Every script tag a browser downloads is time the visitor waits before anything on the page can respond to a click. React's own runtime — the part that isn't your app code, just the library itself — weighs roughly 10&times; what Preact's does. For most apps that's a rounding error next to everything else on the page; for something that has to load fast on a stranger's phone before they bounce, it can be the difference that matters.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Preact is a separate, much smaller (~4KB vs. ~45KB) library that implements React's own component model and Hooks API.</li>
+        <li>It exists specifically to reduce the JavaScript weight shipped to the browser.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://preactjs.com/guide/v10/differences-to-react" target="_blank" rel="noopener">Preact — Differences to React</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="same-api">
+    <div class="chapter-num">Reference</div>
+    <h2>The same component model, on purpose</h2>
+    <p>Unlike most "lightweight alternative" libraries, Preact isn't trying to be a different way of building UI — it deliberately copies React's public API, so the same code you'd write for React mostly just works:</p>
+    <CodeBlock code={sameComponentCode} lang="tsx" />
+
+    <p>This means everything the <a href="/crash-courses/react">React</a> and <a href="/crash-courses/jsx">JSX</a> courses teach — components, JSX, Hooks, props, state — transfers directly. Preact is not a different thing to learn; it's a different runtime under the same thing you already know.</p>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://preactjs.com/guide/v10/hooks" target="_blank" rel="noopener">Preact — Hooks</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="compat">
+    <div class="chapter-num">Reference</div>
+    <h2><code>preact/compat</code>: dropping it into a React-shaped project</h2>
+    <p>Most real projects — including third-party component libraries — import from <code>"react"</code> by name. <code>preact/compat</code> is a compatibility layer that lets a build tool silently redirect those imports to Preact instead, without touching the project's own source code:</p>
+    <CodeBlock code={compatAliasCode} lang="ts" title="vite.config.ts" />
+
+    <div class="support-tag caution">
+      <span class="support-icon">⚠</span> Covers most of React's API, not a guaranteed 1:1 — check before relying on it for a library that touches React internals directly
+    </div>
+    <CodeBlock code={compatLimitCode} lang="text" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Assuming every React library "just works" under <code>preact/compat</code>.</b> Ordinary components and Hooks-based libraries almost always do. A library that reaches into React's internal implementation details (rare, but it happens, usually in older or very low-level packages) may not — check that specific library's own compatibility notes before committing to the swap on an existing project.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://preactjs.com/guide/v10/switching-to-preact" target="_blank" rel="noopener">Preact — Switching a React app to Preact</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="where-it-fits">
+    <div class="chapter-num">Reference</div>
+    <h2>Where it fits (and where it doesn't) for a Shopify app</h2>
+    <p>A Shopify app typically has two very different frontend surfaces, and the right choice differs between them:</p>
+    <CodeBlock code={whereFitsCode} lang="text" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>The question isn't "is Preact better than React" — it's "who's paying the bundle-size cost, and how much does it matter to them." A merchant using your embedded admin page has already loaded the whole Shopify Admin around it; their own customers browsing a storefront haven't loaded anything yet, and every extra kilobyte is a kilobyte closer to them giving up on a slow page.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>The official Shopify app template's embedded admin UI uses React + Polaris — that's what Getting Started and the React/React Router 7 courses build, and there's no need to swap it for Preact there.</li>
+        <li>Preact is worth considering specifically for storefront-facing code (a theme app extension's own widget), where every kilobyte shipped to every visitor matters more.</li>
+        <li><code>preact/compat</code> is the mechanism that lets existing React-shaped code run on Preact with little to no code change.</li>
+      </ul>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Where to go next</div>
+      <p>Continue to <a href="/crash-courses/remix-to-react-router">Remix → React Router</a> — a short piece of naming history worth knowing before you read any Shopify app tutorial written before 2025, since many still say "Remix."</p>
+    </div>
+  </section>
+</CourseLayout>

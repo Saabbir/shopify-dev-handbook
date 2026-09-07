@@ -25,6 +25,10 @@
 
   --accent: var(--gold);
 
+  /* -------- surface tones for alternating section backgrounds -------- */
+  --band-1: var(--bg);
+  --band-2: var(--surface);
+
   /* -------- typography scale -------- */
   --fs-tiny: 0.82rem;
   --fs-small: 0.92rem;
@@ -66,9 +70,20 @@
   --prose-width: 820px;
 }
 
+/* Wire each page's data-accent prop (set on <body> by BaseLayout) to the
+   shared --accent variable everything else reads from. Without this, every
+   page renders with the same gold accent no matter what accent it passes in. */
+body[data-accent="gold"] { --accent: var(--gold); }
+body[data-accent="teal"] { --accent: var(--teal); }
+body[data-accent="purple"] { --accent: var(--purple); }
+body[data-accent="blue"] { --accent: var(--blue); }
+body[data-accent="green"] { --accent: var(--green); }
+body[data-accent="orange"] { --accent: var(--orange); }
+body[data-accent="violet"] { --accent: var(--violet); }
+
 html {
   background: var(--bg);
-  font-size: 18px;
+  font-size: 16px;
 }
 
 body {
@@ -95,19 +110,141 @@ a { color: inherit; }
 }
 .sitenav-inner {
   max-width: var(--container); margin: 0 auto; padding: 18px var(--gutter);
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 28px;
 }
-.sitenav .brand {
+/* Explicit column placement: without this, hiding .sitenav-links on mobile
+   (display:none) removes it from the grid's auto-placement flow entirely,
+   which shifts .sitenav-toolbar into the now-vacant middle (1fr) track
+   instead of the right-hand auto track — leaving a blank gap where the
+   toolbar used to sit and the toolbar itself drifting away from the edge. */
+.sitenav-inner .brand { grid-column: 1; }
+.sitenav-links { grid-column: 2; }
+.sitenav-toolbar { grid-column: 3; }
+
+/* Shared brand lockup (icon + wordmark) — reused as-is in the top nav, the
+   mobile drawer header, and the footer, so it's a standalone component
+   rather than scoped to any one of those, which previously left it
+   unstyled (and default-underlined, and not laid out as a row) everywhere
+   except the top nav. */
+.brand {
+  display: inline-flex; align-items: center; gap: 11px;
   font-family: 'IBM Plex Mono', monospace; font-weight: 700;
   font-size: 1.05rem; text-decoration: none; color: var(--text);
 }
-.sitenav-links { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.brand-mark {
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 30px; height: 30px; border-radius: 8px;
+  background: var(--accent); color: var(--bg);
+  font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 0.86rem;
+  letter-spacing: -0.03em;
+  transition: background-color 0.2s ease;
+}
+.brand-text { white-space: nowrap; }
+.brand-text b { color: var(--accent); transition: color 0.2s ease; }
+.brand-text .dim { color: var(--text-dim); font-weight: 500; }
+
+.sitenav-links {
+  display: flex; align-items: center; justify-content: center; gap: 34px; flex-wrap: wrap;
+  min-width: 0;
+}
 .sitenav-links a {
   font-family: 'IBM Plex Mono', monospace; font-size: 0.88rem; text-decoration: none; color: var(--text-dim);
-  border-bottom: 2px solid transparent; padding-bottom: 3px; font-weight: 500;
+  border-bottom: 2px solid transparent; padding-bottom: 3px; font-weight: 500; white-space: nowrap;
 }
 .sitenav-links a:hover { color: var(--text); }
 .sitenav-links a[aria-current="page"] { color: var(--accent); border-color: var(--accent); }
+.sitenav-links .nav-sep {
+  width: 1px; height: 16px; background: var(--line); flex-shrink: 0;
+}
+.sitenav-links a.nav-secondary { opacity: 0.75; }
+.sitenav-links a.nav-secondary:hover { opacity: 1; }
+.sitenav-toolbar { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+.nav-toggle {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 38px; height: 38px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface-alt); color: var(--text);
+  cursor: pointer; padding: 0; flex-shrink: 0;
+}
+.nav-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.nav-toggle svg { width: 20px; height: 20px; }
+
+@media (max-width: 900px) {
+  /* Below this width the link row is replaced entirely by the hamburger
+     drawer (below) rather than wrapping to a second row — a second row
+     read as "all crammed together with no gaps", which is what the
+     full-width three-column bar was meant to fix in the first place. */
+  .sitenav-links { display: none; }
+  .nav-toggle { display: inline-flex; }
+  /* Icon mark drops out of the top bar only — there's already a hamburger
+     and a theme toggle competing for the same row, and the wordmark alone
+     is enough to identify the site. The drawer header and footer keep the
+     full icon + wordmark lockup since they aren't competing for space. */
+  .sitenav .brand-mark { display: none; }
+}
+
+/* ---------------- mobile nav drawer ---------------- */
+.nav-drawer {
+  position: fixed; inset: 0; z-index: 100;
+  visibility: hidden; pointer-events: none;
+}
+.nav-drawer.is-open { visibility: visible; pointer-events: auto; }
+
+.nav-drawer-backdrop {
+  position: absolute; inset: 0; border: none; padding: 0; margin: 0;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0; transition: opacity 0.25s ease;
+  cursor: pointer;
+}
+.nav-drawer.is-open .nav-drawer-backdrop { opacity: 1; }
+
+.nav-drawer-panel {
+  position: absolute; top: 0; right: 0; bottom: 0;
+  width: min(80vw, 320px);
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+  box-shadow: -12px 0 32px rgba(0, 0, 0, 0.25);
+  transform: translateX(100%);
+  transition: transform 0.28s ease;
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.nav-drawer.is-open .nav-drawer-panel { transform: translateX(0); }
+
+.nav-drawer-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 20px 22px; border-bottom: 1px solid var(--line); flex-shrink: 0;
+}
+/* Wordmark only here too — same reasoning as the top bar: the drawer
+   header already has a close button competing for the row. */
+.nav-drawer-head .brand-mark { display: none; }
+.nav-close {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 999px; flex-shrink: 0;
+  border: 1px solid var(--line); background: var(--surface-alt); color: var(--text);
+  cursor: pointer; padding: 0;
+}
+.nav-close:hover { border-color: var(--accent); color: var(--accent); }
+.nav-close svg { width: 16px; height: 16px; }
+
+.nav-drawer-links { display: flex; flex-direction: column; padding: 14px 10px 30px; }
+.nav-drawer-links a {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.95rem; font-weight: 500;
+  text-decoration: none; color: var(--text-dim);
+  padding: 13px 12px; border-radius: 8px;
+}
+.nav-drawer-links a:hover { color: var(--text); background: var(--surface-alt); }
+.nav-drawer-links a[aria-current="page"] { color: var(--accent); }
+.nav-drawer-links a.nav-secondary { opacity: 0.75; }
+.nav-drawer-sep { display: block; height: 1px; background: var(--line); margin: 10px 12px; }
+
+/* Prevent background scroll while the drawer is open. */
+body.nav-open { overflow: hidden; }
+
+@media (min-width: 901px) {
+  .nav-drawer { display: none; }
+}
 
 .theme-toggle {
   display: inline-flex; align-items: center; justify-content: center;
@@ -126,11 +263,20 @@ a { color: inherit; }
 .wrap { max-width: var(--container); margin: 0 auto; padding: 72px var(--gutter) 120px; }
 .wrap-wide { max-width: none; padding: 0; }
 
+.eyebrow {
+  font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 0.82rem;
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin: 0 0 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.eyebrow::before {
+  content: ""; width: 22px; height: 2px; background: var(--accent); flex-shrink: 0;
+}
+
 header h1, .page-title {
   font-family: 'IBM Plex Mono', monospace; font-weight: 700;
   font-size: var(--fs-h1); margin: 0 0 18px; letter-spacing: -0.015em; line-height: 1.15;
 }
-.lede { color: var(--text-dim); font-size: var(--fs-lede); line-height: 1.55; max-width: 42ch; margin: 0 0 16px; }
+.lede { color: var(--text-dim); font-size: var(--fs-lede); line-height: 1.55; max-width: 60ch; margin: 0 0 16px; }
 
 .meta-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 44px; }
 .meta-chip {
@@ -139,14 +285,43 @@ header h1, .page-title {
 }
 
 /* ---------------- shared components ---------------- */
+/* Intentionally no max-width here: these boxes live inside .wrap (already
+   capped at --container and centered), so they fill the space they're given
+   instead of clipping narrower and leaving blank space to one side. */
 .card, .eighty, .concepts, .learnmore, .stack, .goal, .concept {
   background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
-  padding: 28px 30px; box-shadow: var(--shadow); max-width: var(--prose-width);
+  padding: 28px 30px; box-shadow: var(--shadow);
 }
 .eighty h2, .concepts h2, .learnmore h2, .stack h2, .concept h2 {
   font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.05rem; margin: 0 0 14px; color: var(--accent);
 }
 .card + .card, .card + .eighty, .eighty + .concepts, .concepts + .goal { margin-top: 20px; }
+
+/* Consistent reading measure, applied once, site-wide: no paragraph, list,
+   or definition on a normal (non-course) page should run edge to edge no
+   matter which box/card/section it happens to sit in. Previously this was
+   set locally per-page (or not at all) — inconsistent by construction, since
+   every new box needed its own copy of the same rule. One rule here instead,
+   scoped to descendants of the main content area so it can't be missed.
+   Course pages are excluded (:not(.wrap-wide)) because their prose already
+   lives in CourseLayout's own fixed 760px reading column — adding a second,
+   narrower cap on top of that would leave blank space inside it, the exact
+   bug this rule exists to avoid elsewhere. A couple of one-off elements that
+   hold prose in a bare <div> instead of a <p> are listed explicitly since
+   the tag selectors below can't reach them. */
+.wrap:not(.wrap-wide) p,
+.wrap:not(.wrap-wide) li,
+.wrap:not(.wrap-wide) dd,
+.wrap:not(.wrap-wide) .setup-note,
+.wrap:not(.wrap-wide) .last-checked,
+.sitefooter-note {
+  max-width: 68ch;
+}
+/* Exception: .booklist's <li> is a full-width card row, not a prose bullet
+   (its own <p> description inside is still capped by the rule above). */
+.wrap:not(.wrap-wide) .booklist > li {
+  max-width: none;
+}
 
 p, li { font-size: var(--fs-body); }
 
@@ -258,7 +433,7 @@ pre code { background: none; border: none; padding: 0; color: #d8e4f0; font-size
 
 /* chapter recap */
 .recap {
-  background: var(--surface-alt); border-radius: 10px; padding: 20px 24px; margin: 32px 0 0;
+  background: var(--surface-alt); border-radius: 10px; padding: 20px 24px; margin: 32px 0 24px;
 }
 .recap .recap-label {
   font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; font-weight: 700;
@@ -284,6 +459,31 @@ pre code { background: none; border: none; padding: 0; color: #d8e4f0; font-size
   .compare { grid-template-columns: 1fr; }
 }
 
+/* per-feature browser-support / compilation callout */
+.support-tag {
+  display: inline-flex; align-items: flex-start; gap: 7px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; font-weight: 600; line-height: 1.5;
+  padding: 6px 12px; border-radius: 8px; margin: 0 0 16px; border: 1px solid var(--line);
+  background: var(--surface-alt);
+}
+.support-tag.good { color: var(--ok); border-color: var(--ok); }
+.support-tag.caution { color: var(--warn); border-color: var(--warn); }
+.support-tag .support-icon { flex-shrink: 0; }
+
+/* supplementary "go deeper" reading links */
+.further {
+  border: 1px solid var(--line); border-radius: 10px; padding: 16px 22px; margin: 0 0 24px;
+  background: var(--surface);
+}
+.further .further-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin: 0 0 10px;
+}
+.further ul { margin: 0; padding-left: 20px; font-size: var(--fs-small); }
+.further li { margin-bottom: 6px; }
+.further li:last-child { margin-bottom: 0; }
+.further a { color: var(--accent); }
+
 /* ---------------- crash-course topic sections ---------------- */
 section.topic { margin: 48px 0; }
 section.topic h2 {
@@ -300,18 +500,44 @@ section.topic li { margin-bottom: 8px; }
 }
 .callout b { color: var(--text); }
 
+/* card-style accordions: each <details> reads as its own small card rather
+   than a plain top-ruled list, so stacked collapsible sections stay legible */
 details {
-  border-top: 1px solid var(--line);
-  padding-top: 16px;
-  margin-top: 6px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 4px 18px;
+  margin-top: 10px;
+  transition: border-color 0.15s ease;
 }
-details + details { margin-top: 14px; padding-top: 14px; }
+details + details { margin-top: 10px; }
+details[open] {
+  border-color: var(--line);
+  padding-bottom: 6px;
+}
 summary {
   cursor: pointer; font-size: 0.94rem; color: var(--text-dim);
-  font-family: 'IBM Plex Mono', monospace; font-weight: 500;
+  font-family: 'IBM Plex Mono', monospace; font-weight: 600;
+  padding: 14px 0; list-style: none;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
-summary:hover { color: var(--text); }
-details[open] summary { color: var(--text); margin-bottom: 12px; }
+summary::-webkit-details-marker { display: none; }
+summary::after {
+  content: "";
+  flex-shrink: 0;
+  width: 8px; height: 8px;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+  opacity: 0.6;
+}
+details[open] summary::after { transform: rotate(-135deg); }
+summary:hover { color: var(--accent); }
+details[open] summary { color: var(--text); margin-bottom: 6px; }
+details .res-list, details .path, details .pitfalls, details .checkpoint,
+details > p, details > ul, details > ol, details > div {
+  padding-bottom: 16px;
+}
 
 .res-list ul, .learnmore ul { padding-left: 18px; margin: 0; font-size: var(--fs-small); }
 .res-list li, .learnmore li { margin-bottom: 8px; }
@@ -344,11 +570,56 @@ details[open] summary { color: var(--text); margin-bottom: 12px; }
 .siblings a:hover { color: var(--accent); border-color: var(--accent); }
 .siblings .label { font-size: 0.85rem; color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; }
 
-footer.sitefooter {
-  margin-top: 52px; padding-top: 26px; border-top: 1px solid var(--line);
+/* ---------------- shared site footer ---------------- */
+.sitefooter {
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+.sitefooter-inner {
+  max-width: var(--container); margin: 0 auto; padding: 48px var(--gutter) 36px;
+}
+.sitefooter-top {
+  display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 32px;
+  padding-bottom: 36px; margin-bottom: 24px; border-bottom: 1px solid var(--line);
+}
+.sitefooter-brand .brand {
+  margin-bottom: 14px;
+}
+.sitefooter-brand p {
+  font-size: var(--fs-small); color: var(--text-dim); line-height: 1.65; margin: 0; max-width: 34ch;
+}
+.sitefooter-col h4 {
+  font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 0.78rem;
+  text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin: 0 0 14px;
+}
+.sitefooter-col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.sitefooter-col a {
+  font-size: 0.9rem; text-decoration: none; color: var(--text);
+}
+.sitefooter-col a:hover { color: var(--accent); }
+.sitefooter-bottom {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  font-size: var(--fs-tiny); color: var(--text-dim);
+}
+.sitefooter-bottom a { color: var(--text-dim); text-decoration: underline; text-decoration-color: var(--line); }
+.sitefooter-bottom a:hover { color: var(--accent); }
+/* The divider lives on the full-width wrapper, not the (measure-capped)
+   text itself, so the rule spans the whole footer instead of stopping
+   wherever the note's 68ch text happens to end. */
+.sitefooter-note-wrap {
+  padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid var(--line);
+}
+.sitefooter-note {
   font-size: var(--fs-small); color: var(--text-dim); line-height: 1.6;
 }
-footer.sitefooter a { color: var(--accent); }
+.sitefooter-note a { color: var(--accent); }
+
+@media (max-width: 780px) {
+  .sitefooter-top { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .sitefooter-top { grid-template-columns: 1fr; }
+}
 
 /* ---------------- topic/card grids (hub pages) ---------------- */
 .topicgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
@@ -377,7 +648,7 @@ footer.sitefooter a { color: var(--accent); }
   .topicgrid { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
-  html { font-size: 16.5px; }
+  html { font-size: 15px; }
   .wrap { padding: 44px 18px 80px; }
   .card, .eighty, .concepts, .learnmore, .stack, .goal, .concept { padding: 20px 20px; }
 }

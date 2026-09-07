@@ -1,0 +1,1460 @@
+---
+import CourseLayout from '../../layouts/CourseLayout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const chapters = [
+  { id: 'what-is-modern-js', title: 'What "modern JavaScript" means' },
+  { id: 'let-const-scope', title: 'let, const & block scope' },
+  { id: 'arrow-functions', title: 'Arrow functions' },
+  { id: 'template-literals', title: 'Template literals' },
+  { id: 'destructuring-defaults', title: 'Destructuring & defaults' },
+  { id: 'spread-rest', title: 'Spread & rest' },
+  { id: 'modules', title: 'Modules: import & export' },
+  { id: 'promises-async', title: 'Promises & async/await' },
+  { id: 'classes-and-friends', title: 'Classes, ?. and ??' },
+  { id: 'array-object-utilities', title: 'Array & object utilities' },
+  { id: 'string-number-niceties', title: 'String & number niceties' },
+  { id: 'more-promise-tools', title: 'More Promise tools' },
+  { id: 'small-syntax-sugar', title: 'Small syntax sugar' },
+  { id: 'brand-new', title: 'Brand-new — check first' },
+];
+
+const es5VsModern = `// ES5 — the way JavaScript looked for over a decade
+var prices = [12, 8, 25, 4];
+var cheap = [];
+for (var i = 0; i < prices.length; i++) {
+  if (prices[i] < 15) {
+    cheap.push(prices[i]);
+  }
+}
+console.log(cheap); // [12, 8, 4]
+
+// The same thing, written in modern JavaScript (ES6+)
+const prices2 = [12, 8, 25, 4];
+const cheap2 = prices2.filter((price) => price < 15);
+console.log(cheap2); // [12, 8, 4]`;
+
+const varLoopBug = `// The classic var-in-a-loop bug
+for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 0);
+}
+// Prints: 3, 3, 3 — not 0, 1, 2!
+// Every callback shares the SAME "i", because var isn't scoped to the loop body.`;
+
+const letLoopFix = `// Same loop, with let instead of var
+for (let i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 0);
+}
+// Prints: 0, 1, 2 — each turn of the loop gets its own "i".`;
+
+const constNotFrozen = `const note = { productId: "123", body: "Restock next week" };
+
+note.body = "Restock next week — supplier confirmed"; // fine, mutating a field
+note.priority = "high"; // fine, adding a field
+
+note = { productId: "456", body: "Different note" };
+// TypeError: Assignment to constant variable.
+// const locks the BINDING (the name "note"), not the object's contents.`;
+
+const regularFnThis = `const cart = {
+  items: ["Mug", "Sticker"],
+  logItems: function () {
+    this.items.forEach(function (item) {
+      // Inside this plain callback, "this" is NOT the cart anymore —
+      // it's undefined (in strict mode) or the global object.
+      console.log(this.storeName + ": " + item); // TypeError
+    });
+  },
+};`;
+
+const arrowFnThis = `const cart = {
+  items: ["Mug", "Sticker"],
+  storeName: "Corner Shop",
+  logItems: function () {
+    this.items.forEach((item) => {
+      // An arrow function has no "this" of its own — it uses
+      // whatever "this" was in logItems, which is the cart. Works.
+      console.log(this.storeName + ": " + item);
+    });
+  },
+};
+cart.logItems();
+// Corner Shop: Mug
+// Corner Shop: Sticker`;
+
+const arrowShapes = `// No arguments
+const sayHi = () => console.log("hi");
+
+// One argument — parens are optional
+const double = (n) => n * 2;
+const double2 = n => n * 2; // same thing
+
+// Multiple arguments — parens required
+const add = (a, b) => a + b;
+
+// Implicit return: no { } means "return this expression"
+const square = (n) => n * n;
+
+// Block body: use { } and an explicit "return" for multiple statements
+const describe = (n) => {
+  const parity = n % 2 === 0 ? "even" : "odd";
+  return \`\${n} is \${parity}\`;
+};`;
+
+const templateBasic = `const product = "Wireless Mouse";
+const price = 24.99;
+
+// ES5 — string concatenation
+var line1 = "Buy " + product + " for $" + price.toFixed(2);
+
+// Modern — a template literal (backticks, not quotes)
+const line2 = \`Buy \${product} for $\${price.toFixed(2)}\`;
+// Both produce: "Buy Wireless Mouse for $24.99"`;
+
+const templateMultiline = `// Multi-line strings, no \\n needed
+const receipt = \`
+  Order #4821
+  \${product} x1
+  Total: $\${price.toFixed(2)}
+\`;
+// (any expression goes inside \${ } — not just variables)`;
+
+const arrayDestructure = `const products = ["Mug", "Sticker", "Tote Bag"];
+
+// ES5
+var first = products[0];
+var second = products[1];
+
+// Modern — array destructuring, by position
+const [first2, second2] = products;
+console.log(first2, second2); // "Mug" "Sticker"
+
+// Skip an item with a blank slot
+const [, , third] = products;
+console.log(third); // "Tote Bag"`;
+
+const objectDestructure = `// Data shaped like what a Shopify Admin API response looks like
+const product = { id: "gid://1", title: "Mug", price: 12, vendor: "Acme" };
+
+// ES5
+var title = product.title;
+var price = product.price;
+
+// Modern — object destructuring, by KEY name (order doesn't matter)
+const { title: title2, price: price2 } = product;
+
+// Rename while destructuring, and give a default for a field
+// that might not exist:
+const { vendor: brand, inStock = true } = product;
+console.log(brand, inStock); // "Acme" true`;
+
+const defaultParams = `// ES5 — manually filling in a missing argument
+function greet(name) {
+  name = name || "there";
+  return "Hi, " + name;
+}
+
+// Modern — a default value right in the parameter list
+function greet2(name = "there") {
+  return \`Hi, \${name}\`;
+}
+greet2();        // "Hi, there"
+greet2("Sam");   // "Hi, Sam"`;
+
+const spreadArrays = `const base = ["Mug", "Sticker"];
+
+// Copy an array (not a reference to the same array)
+const copy = [...base];
+
+// Merge two arrays
+const seasonal = ["Snow Globe"];
+const allProducts = [...base, ...seasonal];
+// ["Mug", "Sticker", "Snow Globe"]
+
+// Add an item WITHOUT mutating the original — the pattern
+// you'll use constantly in React state updates
+const withNew = [...base, "Tote Bag"];`;
+
+const spreadObjects = `const note = { productId: "123", body: "Restock" };
+
+// Merge/override fields into a NEW object — doesn't touch "note"
+const updated = { ...note, body: "Restock — confirmed", priority: "high" };
+// { productId: "123", body: "Restock — confirmed", priority: "high" }`;
+
+const restParams = `// Rest — collects "the remaining arguments" into a real array
+function total(...amounts) {
+  return amounts.reduce((sum, n) => sum + n, 0);
+}
+total(10, 20, 30); // 60
+
+// Rest in destructuring — "everything else"
+const { title, ...otherFields } = product;
+// title: "Mug", otherFields: { id, price, vendor }`;
+
+const shallowCopyGotcha = `const original = { customer: { name: "Sam" }, total: 40 };
+const copy = { ...original };
+
+copy.total = 50;              // fine — original.total is still 40
+copy.customer.name = "Alex";  // ⚠ original.customer.name is ALSO "Alex"
+
+// Spread only copies the top level. Nested objects/arrays are
+// still shared references between the original and the copy.`;
+
+const namedExport = `// math.js
+export function add(a, b) {
+  return a + b;
+}
+export const PI = 3.14159;
+
+// app.js
+import { add, PI } from "./math.js";
+add(2, PI);`;
+
+const defaultExport = `// note-card.js
+export default function NoteCard({ body }) {
+  // ...
+}
+
+// app.js — a default export can be imported under any name
+import NoteCard from "./note-card.js";
+import Card from "./note-card.js"; // also valid, same thing`;
+
+const browserModulesEx = `<!-- index.html -->
+<!-- The type="module" attribute is what makes import/export legal here.
+     Without it, a plain <script> throws a SyntaxError on "import". -->
+<script type="module" src="/app.js"></script>`;
+
+const browserModulesJs = `// app.js
+import { add, PI } from "./math.js";
+
+console.log(add(2, PI));
+// No build step, no bundler — the browser fetches math.js itself and
+// runs this directly. Try it: save two files like this next to each
+// other and open the HTML file with a local dev server (opening it as
+// a bare file:// URL will hit CORS errors — modules require http(s)).`;
+
+const moduleScopeEx = `<script>
+  var x = "classic script";
+</script>
+<script type="module">
+  console.log(window.x); // "classic script" — classic scripts leak to window
+
+  var y = "module script";
+  console.log(window.y); // undefined — modules do NOT leak, even with var
+  console.log(this);     // undefined — top-level "this" is undefined in a module
+                          // (it's "window" in a classic script)
+</script>`;
+
+const moduleCachingEx = `// counter.js
+console.log("counter.js ran");
+export let count = 0;
+
+// a.js
+import { count } from "./counter.js"; // logs "counter.js ran"
+
+// b.js — imported on the same page, AFTER a.js
+import { count } from "./counter.js"; // logs nothing — already cached.
+// Every module runs exactly once per page, no matter how many
+// other files import it. Both a.js and b.js share the SAME "count".`;
+
+const fullExampleHtml = `<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Module demo</title>
+</head>
+<body>
+  <p>Order total: <span id="total">—</span></p>
+
+  <!-- One entry point. Everything it imports loads automatically. -->
+  <script type="module" src="/app.js"></script>
+</body>
+</html>`;
+
+const fullExampleMathJs = `// math.js
+export function add(a, b) {
+  return a + b;
+}
+
+export function applyTax(amount, rate) {
+  return amount * (1 + rate);
+}`;
+
+const fullExampleFormatJs = `// format.js
+// A default export — this file's one main job is formatting currency.
+export default function formatCurrency(amount) {
+  return \`$\${amount.toFixed(2)}\`;
+}`;
+
+const fullExampleAppJs = `// app.js — the entry point referenced by index.html
+import { add, applyTax } from "./math.js";
+import formatCurrency from "./format.js";
+
+const subtotal = add(19.99, 5.0);
+const total = applyTax(subtotal, 0.08);
+
+document.getElementById("total").textContent = formatCurrency(total);
+// "$27.01"`;
+
+const importMapEx = `<!-- Without an import map, this fails —
+     browsers can only resolve relative (./), absolute (/), or full
+     URLs on their own. A bare word like "lodash-es" means nothing
+     to a browser by itself: -->
+<script type="module">
+  import { debounce } from "lodash-es"; // TypeError: Failed to resolve module specifier
+</script>
+
+<!-- An import map teaches the browser what bare specifiers mean,
+     BEFORE any module script runs: -->
+<script type="importmap">
+{
+  "imports": {
+    "lodash-es": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js",
+    "utils/": "/src/utils/"
+  }
+}
+</script>
+
+<script type="module">
+  import { debounce } from "lodash-es";          // now resolves ✓
+  import { formatDate } from "utils/dates.js";   // "utils/" maps to /src/utils/
+</script>`;
+
+const commonjsAside = `// You'll still see this older Node.js style ("CommonJS") here and there:
+const fs = require("fs");
+module.exports = { readConfig };
+
+// Modern Node and the whole Shopify app template use ESM
+// (the import/export syntax above) instead — CommonJS is legacy,
+// not something you need to write yourself, just recognize on sight.`;
+
+const callbackHell = `// "Callback hell" — the pre-Promise way of chaining async steps
+getProduct(id, function (product) {
+  getReviews(product.id, function (reviews) {
+    getAuthor(reviews[0].authorId, function (author) {
+      console.log(author.name);
+      // one more nested step and this becomes unreadable
+    });
+  });
+});`;
+
+const promiseChain = `// A Promise represents "a value that will exist later" —
+// it's either pending, fulfilled (.then), or rejected (.catch)
+getProduct(id)
+  .then((product) => getReviews(product.id))
+  .then((reviews) => getAuthor(reviews[0].authorId))
+  .then((author) => console.log(author.name))
+  .catch((err) => console.error("Something failed:", err));`;
+
+const asyncAwait = `// async/await — Promises, written to read like ordinary
+// step-by-step code (this is what you'll actually write day to day)
+async function logFirstReviewAuthor(id) {
+  try {
+    const product = await getProduct(id);
+    const reviews = await getReviews(product.id);
+    const author = await getAuthor(reviews[0].authorId);
+    console.log(author.name);
+  } catch (err) {
+    console.error("Something failed:", err);
+  }
+}`;
+
+const realLoaderAsync = `// This is the exact shape you'll write constantly in a Shopify app —
+// a route loader that awaits the Admin API before the page can render
+export async function loader({ request }) {
+  const { admin } = await authenticate.admin(request);
+  const response = await admin.graphql(\`{ products(first: 5) { edges { node { id title } } } }\`);
+  const { data } = await response.json();
+  return { products: data.products.edges.map((e) => e.node) };
+}`;
+
+const promiseAllExample = `// Awaiting one at a time when the calls don't depend on each other
+// wastes time — they run one after another instead of together:
+const products = await getProducts();   // waits
+const settings = await getSettings();   // THEN waits again
+
+// Promise.all runs independent promises concurrently:
+const [products2, settings2] = await Promise.all([
+  getProducts(),
+  getSettings(),
+]);`;
+
+const classExample = `class Cart {
+  constructor(shop) {
+    this.shop = shop;
+    this.items = [];
+  }
+
+  add(item) {
+    this.items.push(item);
+  }
+
+  get total() {
+    return this.items.reduce((sum, i) => sum + i.price, 0);
+  }
+}
+
+const cart = new Cart("corner-shop.myshopify.com");
+cart.add({ name: "Mug", price: 12 });
+console.log(cart.total); // 12`;
+
+const classExtends = `class DiscountCart extends Cart {
+  constructor(shop, discountPercent) {
+    super(shop); // must call super() before using "this"
+    this.discountPercent = discountPercent;
+  }
+
+  get total() {
+    const fullTotal = super.total; // reuse the parent's calculation
+    return fullTotal * (1 - this.discountPercent / 100);
+  }
+}`;
+
+const optionalChaining = `const order = { customer: { name: "Sam" } };
+
+// ES5-era — you had to guard every step by hand
+var city = order.customer && order.customer.address && order.customer.address.city;
+
+// Modern — optional chaining short-circuits to undefined
+// the instant something along the chain is null/undefined
+const city2 = order.customer?.address?.city; // undefined, no crash
+
+// Works on function calls too — only calls if the function exists
+order.onSave?.();`;
+
+const nullishCoalescing = `const settings = { retries: 0, timeout: null };
+
+// ||  treats EVERY falsy value (0, "", false, null, undefined) as "missing"
+const retries1 = settings.retries || 3; // 3 — wrong! 0 is a valid setting.
+
+// ??  only falls back on null or undefined specifically
+const retries2 = settings.retries ?? 3; // 0 — correct.
+const timeout2 = settings.timeout ?? 5000; // 5000 — timeout really is null`;
+
+// ---- Chapter 10: array & object utilities ----
+
+const includesEx = `const tags = ["sale", "new", "limited"];
+
+// Old way
+if (tags.indexOf("sale") !== -1) { /* ... */ }
+
+// Modern — reads as what it means
+if (tags.includes("sale")) { /* ... */ }`;
+
+const flatMapEx = `const orders = [["Mug"], ["Sticker", "Tote Bag"], []];
+
+orders.flat();
+// ["Mug", "Sticker", "Tote Bag"] — flattens one level deep
+
+const prices = [10, 20, 30];
+prices.flatMap((p) => [p, p * 1.1]);
+// [10, 11, 20, 22, 30, 33] — map, then flatten the results`;
+
+const entriesValuesEx = `const stock = { mugs: 12, stickers: 40, totes: 3 };
+
+Object.keys(stock);   // ["mugs", "stickers", "totes"]
+Object.values(stock); // [12, 40, 3]
+Object.entries(stock);
+// [["mugs", 12], ["stickers", 40], ["totes", 3]] — perfect for looping:
+
+for (const [name, count] of Object.entries(stock)) {
+  console.log(\`\${name}: \${count}\`);
+}`;
+
+const fromEntriesEx = `const pairs = [["mugs", 12], ["stickers", 40]];
+
+Object.fromEntries(pairs);
+// { mugs: 12, stickers: 40 } — the reverse of Object.entries()
+// handy after filtering/mapping an object's entries as an array`;
+
+const atMethodEx = `const items = ["Mug", "Sticker", "Tote Bag"];
+
+// Old way to get the last item
+items[items.length - 1]; // "Tote Bag"
+
+// Modern — negative indices count from the end
+items.at(-1); // "Tote Bag"
+items.at(-2); // "Sticker"`;
+
+const findLastEx = `const events = [
+  { type: "created", at: 1 },
+  { type: "updated", at: 2 },
+  { type: "updated", at: 3 },
+];
+
+events.find((e) => e.type === "updated");     // the FIRST match (at: 2)
+events.findLast((e) => e.type === "updated"); // the LAST match (at: 3)`;
+
+const hasOwnEx = `const note = { body: "Restock" };
+
+// Old way — works, but reads awkwardly and can misbehave on
+// objects with an overridden hasOwnProperty
+Object.prototype.hasOwnProperty.call(note, "body");
+
+// Modern — a plain, safe static method
+Object.hasOwn(note, "body");   // true
+Object.hasOwn(note, "author"); // false`;
+
+// ---- Chapter 11: string & number niceties ----
+
+const padEx = `const orderIds = [4, 82, 156];
+
+orderIds.map((id) => String(id).padStart(5, "0"));
+// ["00004", "00082", "00156"] — handy for order numbers, invoice IDs
+
+"Sam".padEnd(10, ".");
+// "Sam......."`;
+
+const trimEx = `const input = "   sam@example.com  ";
+
+input.trim();       // "sam@example.com" (both sides — you likely knew this one)
+input.trimStart();  // "sam@example.com  " (left only)
+input.trimEnd();    // "   sam@example.com" (right only)`;
+
+const replaceAllEx = `const sku = "MUG-RED-SMALL";
+
+// Old way — replace() only replaces the FIRST match unless you
+// pass a global regex, which trips people up constantly
+sku.replace(/-/g, "_");
+
+// Modern — does what it says, no regex needed for a plain string
+sku.replaceAll("-", "_");
+// "MUG_RED_SMALL"`;
+
+const matchAllEx = `const text = "Order #4821, Order #5190, Order #6003";
+
+// Old way — only gets the first match with a plain regex
+text.match(/Order #(\\d+)/);
+
+// Modern — an iterator over EVERY match, each with its capture groups
+for (const match of text.matchAll(/Order #(\\d+)/g)) {
+  console.log(match[1]); // "4821", then "5190", then "6003"
+}`;
+
+const numericSeparatorEx = `// Old way — hard to tell how many zeros at a glance
+const inCents1 = 1000000;
+
+// Modern — underscores as a purely visual separator (ignored by JS)
+const inCents2 = 1_000_000;
+console.log(inCents1 === inCents2); // true`;
+
+const bigIntEx = `// Regular numbers lose precision above 2^53
+9007199254740993 === 9007199254740992; // true — wrong! precision lost.
+
+// BigInt — a second numeric type for integers of any size,
+// written with an "n" suffix. Rare in everyday app code (Shopify's
+// GraphQL API returns normal numbers/strings), but good to recognize.
+const big = 9007199254740993n;
+typeof big; // "bigint"`;
+
+// ---- Chapter 12: more Promise tools ----
+
+const promiseFinallyEx = `showSpinner();
+
+fetchOrder(id)
+  .then((order) => render(order))
+  .catch((err) => showError(err))
+  .finally(() => hideSpinner());
+  // .finally runs whether it succeeded or failed — perfect for
+  // "stop the loading spinner" cleanup you'd otherwise have to
+  // duplicate in both .then and .catch`;
+
+const allSettledEx = `// Promise.all rejects ENTIRELY if even one promise rejects —
+// you lose the results of everything that succeeded.
+// Promise.allSettled always waits for all of them and reports each outcome:
+const results = await Promise.allSettled([
+  fetchProduct(1),
+  fetchProduct(2), // suppose this one fails
+  fetchProduct(3),
+]);
+// [
+//   { status: "fulfilled", value: {...} },
+//   { status: "rejected", reason: Error(...) },
+//   { status: "fulfilled", value: {...} },
+// ]`;
+
+const promiseAnyEx = `// Promise.any resolves as soon as ANY promise succeeds,
+// and only rejects if ALL of them fail. Useful for "try several
+// sources, take whichever answers first":
+const fastest = await Promise.any([
+  fetchFromMirror1(),
+  fetchFromMirror2(),
+  fetchFromMirror3(),
+]);`;
+
+const topLevelAwaitEx = `// Inside a module (not inside a function), you can now
+// "await" directly at the top level — no wrapping async function needed:
+const config = await loadConfig();
+console.log(config.apiUrl);
+// Only works in ESM modules (Chapter 07) — not in CommonJS files or
+// in a script tag without type="module".`;
+
+const forAwaitEx = `// Looping over a sequence of promises/async values one at a time
+async function logAll(urls) {
+  for await (const response of urls.map(fetch)) {
+    console.log(response.status);
+  }
+}
+// Niche — you'll meet it if you work with streaming APIs or
+// async generators, rarely needed in a typical Shopify app route.`;
+
+// ---- Chapter 13: small syntax sugar ----
+
+const logicalAssignEx = `let config = { retries: 0, timeout: null, cache: undefined };
+
+// Old way
+config.timeout = config.timeout || 5000;
+
+// Modern — combines the operator with assignment, and only
+// assigns when the check on the left calls for it
+config.timeout ??= 5000;   // assign only if null/undefined
+config.cache ||= {};       // assign only if falsy
+config.retries &&= 10;     // reassign only if currently truthy`;
+
+const globalThisEx = `// Old way — which global object you're on depends on the
+// environment (window in a browser, global in Node, self in a worker)
+// so cross-environment code needed awkward feature-detection.
+
+// Modern — one name that always works, everywhere JS runs
+globalThis.fetch;
+globalThis.setTimeout;`;
+
+const dynamicImportEx = `// Static imports (Chapter 07) all load up front. A dynamic import()
+// loads a module on demand — as a Promise — which is how code-splitting
+// (loading a big chart library only when the user opens the chart page,
+// for instance) works under the hood in Vite/React Router.
+button.addEventListener("click", async () => {
+  const { renderChart } = await import("./chart.js");
+  renderChart(data);
+});`;
+
+const privateFieldsEx = `class Cart {
+  #items = []; // "#" makes this field private — inaccessible outside the class
+
+  add(item) {
+    this.#items.push(item);
+  }
+
+  get count() {
+    return this.#items.length;
+  }
+}
+
+const cart = new Cart();
+cart.add({ name: "Mug" });
+cart.count;     // 1
+cart.#items;    // SyntaxError — not accessible from outside the class`;
+
+const errorCauseEx = `try {
+  await syncInventory();
+} catch (err) {
+  // "cause" lets you wrap a lower-level error without losing it,
+  // instead of just re-throwing a new, less specific one
+  throw new Error("Inventory sync failed", { cause: err });
+}`;
+
+// ---- Chapter 14: brand-new, check compatibility first ----
+
+const immutableArrayMethodsEx = `const prices = [30, 10, 20];
+
+// .sort() mutates the ORIGINAL array — a classic source of bugs
+prices.sort(); // prices is now [10, 20, 30], permanently
+
+// toSorted() / toReversed() / toSpliced() / with() return a
+// NEW array instead, leaving the original untouched
+const original = [30, 10, 20];
+const sorted = original.toSorted();
+console.log(original); // still [30, 10, 20]
+console.log(sorted);   // [10, 20, 30]`;
+
+const groupByEx = `const products = [
+  { name: "Mug", category: "Kitchen" },
+  { name: "Sticker", category: "Stationery" },
+  { name: "Mug Warmer", category: "Kitchen" },
+];
+
+Object.groupBy(products, (p) => p.category);
+// {
+//   Kitchen: [{ name: "Mug", ... }, { name: "Mug Warmer", ... }],
+//   Stationery: [{ name: "Sticker", ... }],
+// }
+// Before this existed, grouping meant hand-rolling a reduce().`;
+
+const setMethodsEx = `const inStock = new Set(["Mug", "Sticker", "Tote Bag"]);
+const onSale = new Set(["Sticker", "Snow Globe"]);
+
+inStock.intersection(onSale); // Set {"Sticker"} — in both
+inStock.difference(onSale);   // Set {"Mug", "Tote Bag"} — in stock, not on sale
+inStock.union(onSale);        // Set {"Mug", "Sticker", "Tote Bag", "Snow Globe"}`;
+
+const structuredCloneEx = `const original = { customer: { name: "Sam" }, items: ["Mug"] };
+
+// Unlike spread (Chapter 06), this is a REAL deep copy —
+// nested objects/arrays are fully independent afterward
+const copy = structuredClone(original);
+copy.customer.name = "Alex";
+console.log(original.customer.name); // still "Sam"`;
+
+const promiseWithResolversEx = `// Old way to get a promise's resolve/reject functions OUT of its executor
+function oldWay() {
+  let resolve, reject;
+  const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
+  return { promise, resolve, reject };
+}
+
+// Modern — the same thing, built in
+const { promise, resolve, reject } = Promise.withResolvers();`;
+---
+<CourseLayout
+  title="Modern JavaScript (ES6+) Crash Course — Shopify App Handbook"
+  description="ES6 and beyond for readers whose JavaScript stopped at ES5: let/const, arrow functions, destructuring, modules, promises, async/await, classes, and the syntax every later course on this site assumes you already read fluently."
+  accent="teal"
+  courseTitle="Modern JavaScript (ES6+)"
+  courseTagline="Every course after this one — TypeScript, React, Node — writes code in this syntax without re-explaining it. If your JavaScript knowledge stopped around ES5, this fills the gap first: core ES6 syntax, then a feature-by-feature tour through everything ES2016–ES2024+ added, each one tagged with exactly how safe it is to use."
+  readTime="80–95 min"
+  chapters={chapters}
+  prev={{ href: '/crash-courses/how-shopify-apps-work', title: 'How Shopify Apps Work' }}
+  next={{ href: '/crash-courses/typescript', title: 'TypeScript' }}
+>
+  <section class="chapter" id="what-is-modern-js">
+    <div class="chapter-num">Chapter 01</div>
+    <h2>What "modern JavaScript" means</h2>
+    <p>JavaScript standardized a version called <strong>ES5</strong> in 2009, and for years that's what "JavaScript" meant — <code>var</code>, plain <code>function</code> expressions, manual string concatenation. In 2015, a much bigger update called <strong>ES6</strong> (also called <strong>ES2015</strong>) shipped, and the language has released a smaller update every year since (ES2016, ES2017, and so on). Collectively, everything from ES6 onward is what people mean by "modern JavaScript."</p>
+
+    <p>Here's the same small task, written both ways:</p>
+    <CodeBlock code={es5VsModern} lang="js" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Nothing about your computer or browser changed between these two examples — modern JavaScript is still JavaScript, running the same way it always has. What changed is the <em>syntax available to write it with</em>: shorter, more expressive ways to say the same things, plus a handful of genuinely new capabilities (like Promises, covered in Chapter 8) that didn't exist before.</p>
+    </div>
+
+    <p>Why this course exists on its own, separate from the TypeScript and React courses that follow it: those courses (and basically every real Shopify app codebase, tutorial, and Stack Overflow answer you'll ever read) are written entirely in this modern style. They don't pause to explain <code>const</code>, arrow functions, or <code>async/await</code> — they assume you already read them as easily as an <code>if</code> statement. This chapter-by-chapter walkthrough is that assumption, made explicit and taught from zero.</p>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>ES5 (2009) was the long-standing baseline; ES6/ES2015 (2015) was a major update, and the language has shipped smaller yearly updates since.</li>
+        <li>"Modern JavaScript" / "ES6+" refers to all of that combined — it's still the same language, just newer syntax and a few new capabilities.</li>
+        <li>Every course after this one on this site is written in this style without re-explaining it.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Language_Resources" target="_blank" rel="noopener">MDN — JavaScript language resources</a></li>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/JavaScript_technologies_overview" target="_blank" rel="noopener">MDN — JavaScript technologies overview</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="let-const-scope">
+    <div class="chapter-num">Chapter 02</div>
+    <h2>let, const &amp; block scope</h2>
+    <p><code>var</code> is scoped to the nearest <em>function</em>, not the nearest <code>{'{ }'}</code> block — which produces bugs that look bizarre until you know this rule. The classic example is a loop:</p>
+    <CodeBlock code={varLoopBug} lang="js" />
+
+    <p><code>let</code> fixes this by being scoped to the block it's declared in — the loop body, the <code>if</code>, whatever <code>{'{ }'}</code> it's inside of, exactly like most other languages work:</p>
+    <CodeBlock code={letLoopFix} lang="js" />
+
+    <p><code>const</code> works exactly like <code>let</code> for scoping, with one extra rule: once assigned, the variable name can't be reassigned to point at something else.</p>
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Assuming <code>const</code> makes objects/arrays immutable.</b> It doesn't — it only locks the <em>variable name</em> to one value. If that value is an object or array, its contents can still change freely:</li>
+      </ul>
+      <CodeBlock code={constNotFrozen} lang="js" />
+    </div>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p><code>const</code> is a label glued to a box, not a lock on what's inside the box. You can't glue a different label over it later (reassign), but you can absolutely reach in and change what's inside (mutate).</p>
+    </div>
+
+    <p>In modern code, the convention is: reach for <code>const</code> by default, and only use <code>let</code> when you genuinely need to reassign the variable later (a loop counter, a value that changes as code runs). <code>var</code> is considered legacy at this point — you'll still see it in older code, but there's no reason to write new code with it.</p>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li><code>var</code> is function-scoped and hoists in confusing ways; <code>let</code>/<code>const</code> are block-scoped and behave predictably.</li>
+        <li><code>const</code> prevents reassigning the variable, not mutating what it points to.</li>
+        <li>Default to <code>const</code>; use <code>let</code> only when you'll reassign; avoid <code>var</code> in new code.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let" target="_blank" rel="noopener">MDN — let</a></li>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const" target="_blank" rel="noopener">MDN — const</a></li>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Glossary/Hoisting" target="_blank" rel="noopener">MDN — hoisting (why the var loop bug happens)</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="arrow-functions">
+    <div class="chapter-num">Chapter 03</div>
+    <h2>Arrow functions</h2>
+    <p>An arrow function is a shorter way to write a function expression. All of these are valid:</p>
+    <CodeBlock code={arrowShapes} lang="js" />
+
+    <p>Shorter syntax is nice, but it's not the main reason arrow functions matter. The real difference is how they handle <code>this</code>. A regular <code>function</code> gets its own <code>this</code>, freshly determined by how it's called — which frequently isn't what you want inside a callback:</p>
+    <CodeBlock code={regularFnThis} lang="js" />
+
+    <p>An arrow function has no <code>this</code> of its own — it simply uses whatever <code>this</code> already means in the surrounding code. Swap the callback for an arrow function and the bug disappears:</p>
+    <CodeBlock code={arrowFnThis} lang="js" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Think of <code>this</code> as "whoever's talking right now." A regular function walks into the room and decides for itself who's talking, based on how it got called — which is often not who you meant. An arrow function just keeps listening to whoever was already talking when it was written.</p>
+    </div>
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Using an arrow function as an object method.</b> Since an arrow function borrows <code>this</code> from its surroundings, an arrow function assigned directly as <code>{'logItems: () => { this.items ... }'}</code> on an object won't have <code>this</code> pointing at that object — there's no enclosing "talker" to borrow from except whatever's outside the object literal. Use a regular <code>function</code> (or the shorthand method syntax from Chapter 5) for methods themselves; arrow functions shine for the callbacks <em>inside</em> those methods.</li>
+      </ul>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself</div>
+      <p>In your browser's console (or the <a href="https://jsfiddle.net/" target="_blank" rel="noopener">JSFiddle</a> playground), recreate the <code>cart</code> example above with both a regular <code>function</code> callback and an arrow function callback inside <code>logItems</code>. Log <code>this</code> at the top of each to see the difference directly, instead of just taking it on faith.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Arrow functions are a shorter function syntax with several valid shapes depending on argument count and body.</li>
+        <li>Their real distinguishing feature: no own <code>this</code> — they inherit it from the surrounding scope.</li>
+        <li>This makes them ideal for callbacks inside methods, but not as the methods themselves.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions" target="_blank" rel="noopener">MDN — Arrow function expressions</a></li>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this" target="_blank" rel="noopener">MDN — this</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="template-literals">
+    <div class="chapter-num">Chapter 04</div>
+    <h2>Template literals</h2>
+    <p>Template literals use backticks (<code>`</code>) instead of quotes, and let you embed any expression directly inside the string with <code>{'${ }'}</code> — no more gluing strings together with <code>+</code>:</p>
+    <CodeBlock code={templateBasic} lang="js" />
+
+    <p>They also span multiple lines without any special escape character:</p>
+    <CodeBlock code={templateMultiline} lang="js" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>A template literal is a string with fill-in-the-blank slots. Whatever JavaScript expression you put inside <code>{'${ }'}</code> gets evaluated and dropped into the string at that spot — a variable, a function call, math, anything.</p>
+    </div>
+
+    <p>You'll see these constantly for building GraphQL query strings, log messages, and dynamic UI text — anywhere a string needs a variable mixed in.</p>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Backticks instead of quotes, <code>{'${expression}'}</code> for interpolation.</li>
+        <li>Multi-line strings work without special escaping.</li>
+        <li>This is the default way to build strings in modern code — plain <code>+</code> concatenation is now mostly seen in older code.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals" target="_blank" rel="noopener">MDN — Template literals</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="destructuring-defaults">
+    <div class="chapter-num">Chapter 05</div>
+    <h2>Destructuring &amp; default parameters</h2>
+    <p><strong>Destructuring</strong> pulls values out of an array or object into their own named variables in one step, instead of accessing them one field at a time.</p>
+
+    <h3>Array destructuring — by position</h3>
+    <CodeBlock code={arrayDestructure} lang="js" />
+
+    <h3>Object destructuring — by key name</h3>
+    <p>This is the one you'll use constantly — pulling specific fields out of API responses, function arguments, and component props:</p>
+    <CodeBlock code={objectDestructure} lang="js" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Destructuring is unpacking. If a box (object or array) has several things in it, destructuring lets you say "give me these specific items, under these specific names" in one line, instead of reaching in one at a time.</p>
+    </div>
+
+    <h3>Default parameters</h3>
+    <p>A related idea: give a function parameter a fallback value that's used only when the caller doesn't provide one.</p>
+    <CodeBlock code={defaultParams} lang="js" />
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself</div>
+      <p>Write a function <code>formatProduct({'{ title, price, currency = "USD" }'})</code> that destructures its single object argument (this pattern — destructuring right in the parameter list — is extremely common) and returns a string like <code>"Mug — 12 USD"</code>. Call it with and without a <code>currency</code> field to see the default kick in.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Array destructuring unpacks by position; object destructuring unpacks by key name.</li>
+        <li>Both support renaming and default values for missing fields.</li>
+        <li>Default parameters give a function argument a fallback value when the caller omits it.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment" target="_blank" rel="noopener">MDN — Destructuring assignment</a></li>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters" target="_blank" rel="noopener">MDN — Default parameters</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="spread-rest">
+    <div class="chapter-num">Chapter 06</div>
+    <h2>Spread &amp; rest</h2>
+    <p>Both use the same <code>...</code> syntax, for two opposite jobs: <strong>spread</strong> expands a collection out into individual items; <strong>rest</strong> gathers individual items back into a collection.</p>
+
+    <h3>Spread — arrays</h3>
+    <CodeBlock code={spreadArrays} lang="js" />
+
+    <h3>Spread — objects</h3>
+    <CodeBlock code={spreadObjects} lang="js" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Assuming spread deep-copies.</b> Spread only copies the top level of an object or array. Anything nested inside (an object inside an object, an array inside an array) is still the <em>same</em> nested object in both the original and the copy:</li>
+      </ul>
+      <CodeBlock code={shallowCopyGotcha} lang="js" />
+    </div>
+
+    <h3>Rest — the opposite direction</h3>
+    <CodeBlock code={restParams} lang="js" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Spread says "unpack everything in here." Rest says "pack everything left over into here." Same three dots, opposite direction — which one you're looking at depends on whether it appears where a value is being read (spread) or where a value is being declared (rest).</p>
+    </div>
+
+    <p>Spread on objects is the standard way you'll update state without mutating the original — you'll see <code>{'{ ...previous, field: newValue }'}</code> constantly once you reach the React course.</p>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Spread (<code>...arr</code>, <code>...obj</code>) expands a collection into individual values — for copying and merging.</li>
+        <li>Rest (<code>...args</code>) does the reverse — gathers individual values into an array.</li>
+        <li>Spread copies are shallow — nested objects/arrays are still shared references.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax" target="_blank" rel="noopener">MDN — Spread syntax</a></li>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/rest_parameters" target="_blank" rel="noopener">MDN — Rest parameters</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="modules">
+    <div class="chapter-num">Chapter 07</div>
+    <h2>Modules: import &amp; export</h2>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2015 spec; supported natively by every evergreen browser and by Node.js since Node 12+) — works directly, with no compiling or bundling required to use the syntax itself.</p>
+    <p>Before modules, every <code>&lt;script&gt;</code> on a page shared one global scope — two files could easily clash by declaring the same variable name. A <strong>module</strong> is a file with its own private scope: nothing inside it is visible to any other file unless it's explicitly <code>export</code>ed, and nothing from elsewhere is visible unless it's explicitly <code>import</code>ed.</p>
+
+    <h3>Named exports</h3>
+    <p>Export as many named things from a file as you want; import exactly the ones you need, by name:</p>
+    <CodeBlock code={namedExport} lang="js" />
+
+    <h3>Default exports</h3>
+    <p>A file can also have one <code>default</code> export — typically "the one main thing this file provides":</p>
+    <CodeBlock code={defaultExport} lang="js" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>A module is a file that only shares what it deliberately hands out through the front door (<code>export</code>), and only receives what it deliberately asks for (<code>import</code>). No more accidental name collisions between unrelated files.</p>
+    </div>
+
+    <h3>Yes — this works directly in the browser, no build step required</h3>
+    <p>Add <code>type="module"</code> to a <code>&lt;script&gt;</code> tag and the browser understands <code>import</code>/<code>export</code> natively — it fetches each imported file itself and runs the whole thing, no bundler involved:</p>
+    <CodeBlock code={browserModulesEx} lang="html" />
+    <CodeBlock code={browserModulesJs} lang="js" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Two things that trip people up here</div>
+      <ul>
+        <li><b>Forgetting <code>type="module"</code>.</b> A plain <code>&lt;script&gt;</code> (no <code>type</code> attribute) throws <code>SyntaxError: Cannot use import statement outside a module</code> the instant it hits an <code>import</code>. This is almost always what's actually wrong when that error shows up.</li>
+        <li><b>Opening the HTML file directly (<code>file://...</code>) instead of through a local server.</b> Modules are fetched with real HTTP requests under the hood, and browsers block that over the bare <code>file://</code> protocol for security reasons. Any local dev server (including <code>npx serve</code>, or the one this whole stack already runs via <code>shopify app dev</code>) works fine.</li>
+      </ul>
+    </div>
+
+    <h3>What type="module" actually changes</h3>
+    <p>Adding <code>type="module"</code> isn't just "turns on import/export" — it changes several things about how that script runs, all at once:</p>
+    <ul>
+      <li><b>Strict mode is automatic.</b> No <code>"use strict"</code> needed — modules are always strict.</li>
+      <li><b>Deferred by default.</b> Like the <code>defer</code> attribute on a classic script, a module script doesn't block HTML parsing — it downloads in the background and runs after the page is parsed, in the order it appears.</li>
+      <li><b>Its own scope — nothing leaks to <code>window</code>.</b> A classic script's top-level <code>var</code> and function declarations become properties of <code>window</code>. A module's don't, even with <code>var</code>:</li>
+    </ul>
+    <CodeBlock code={moduleScopeEx} lang="html" />
+    <ul>
+      <li><b>Runs exactly once, no matter how many files import it.</b> The browser caches modules by URL — the first import runs the file and caches its exports; every later import of that same URL reuses the cached result instead of re-running it:</li>
+    </ul>
+    <CodeBlock code={moduleCachingEx} lang="js" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>A classic <code>&lt;script&gt;</code> behaves like it's pasted directly into the page — sharing one scope with everything else. A module behaves like a real, separate program file that only talks to others through its declared imports/exports, and that the browser is smart enough to only ever load once.</p>
+    </div>
+
+    <h3>A complete example — four files, no build tool</h3>
+    <p>Putting it all together: an entry HTML file, an entry script, and two modules it imports from. Save all four in the same folder exactly as shown:</p>
+    <CodeBlock code={fullExampleHtml} lang="html" title="index.html" />
+    <CodeBlock code={fullExampleMathJs} lang="js" title="math.js" />
+    <CodeBlock code={fullExampleFormatJs} lang="js" title="format.js" />
+    <CodeBlock code={fullExampleAppJs} lang="js" title="app.js" />
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself</div>
+      <p>Save those four files in one folder, then serve them with any local server — <code>npx serve</code> is the fastest one-liner if you have Node installed. Open the printed <code>localhost</code> URL and you should see "Order total: $27.01". Then break it on purpose: rename <code>math.js</code> without updating the <code>import</code> in <code>app.js</code>, reload, and read the exact error the browser gives you in the console.</p>
+    </div>
+
+    <h3>Import maps: teaching the browser what a bare name means</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline widely available (full cross-browser support landed in 2023) — an HTML/browser feature, not a JavaScript language feature, so it's tracked separately from the TC39/ECMAScript version numbers used elsewhere in this course.</p>
+    <p>Every import so far has used a relative path (<code>"./math.js"</code>) or a full URL. But code you've read elsewhere almost certainly has lines like <code>import React from "react"</code> — a bare word, no <code>./</code>, no URL. Browsers can't resolve that on their own:</p>
+    <CodeBlock code={importMapEx} lang="html" />
+    <p>An <strong>import map</strong> is a block of JSON, declared before any module script runs, that tells the browser exactly what URL each bare name should resolve to — turning "resolve this package name" from a Node.js/bundler-only trick into something the browser can do natively.</p>
+
+    <p>So why does every real project — including the Shopify app template — still use a bundler (Vite) instead of shipping raw modules and import maps like the examples above? Not because modules need it to <em>work</em>, but for everything else a real app needs on top: compiling TypeScript and JSX into plain JavaScript, combining hundreds of small files into a handful of optimized requests, and swapping code instantly as you edit during development. In fact, what Vite does when you write <code>{'import { useState } from "react"'}</code> is conceptually the same job an import map does — resolving a bare name to a real location — just handled automatically at build time instead of hand-written as JSON. The browser support question and the "should I bundle" question are genuinely separate; this stack bundles for those other reasons, not because <code>import</code>/<code>export</code> themselves need translating.</p>
+
+    <div class="mistakes">
+      <div class="mistakes-label">Older syntax you'll still run into</div>
+      <ul>
+        <li><b>CommonJS (<code>require</code>/<code>module.exports</code>).</b> This is Node.js's original module system, from before JavaScript itself had one built in. You don't need to write it yourself on this stack, just recognize it when you see it in older tutorials or packages:</li>
+      </ul>
+      <CodeBlock code={commonjsAside} lang="js" />
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>A module is a file with its own scope; sharing between files is explicit via <code>export</code>/<code>import</code>.</li>
+        <li>Named exports (many per file, imported by name) vs. one default export per file.</li>
+        <li><code>&lt;script type="module"&gt;</code> runs import/export directly in any browser today — no build step required to make the syntax work.</li>
+        <li><code>type="module"</code> also makes the script strict-mode, deferred, scoped to itself (no leaking to <code>window</code>), and cached/run-once per URL.</li>
+        <li>Import maps teach the browser what a bare specifier like <code>"react"</code> means — the browser-native version of what a bundler resolves automatically.</li>
+        <li>This stack bundles anyway (via Vite) for TypeScript/JSX compilation and request-count optimization, not because modules themselves need translating.</li>
+        <li>CommonJS (<code>require</code>) is the older Node-only system — recognize it, don't write new code with it.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules" target="_blank" rel="noopener">MDN — JavaScript modules guide</a></li>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/module" target="_blank" rel="noopener">MDN — script type="module"</a></li>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap" target="_blank" rel="noopener">MDN — import maps</a></li>
+        <li><a href="https://caniuse.com/es6-module" target="_blank" rel="noopener">caniuse.com — ES modules browser support</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="promises-async">
+    <div class="chapter-num">Chapter 08</div>
+    <h2>Promises &amp; async/await</h2>
+    <p>A lot of what your code does has to wait — for a network request, a database query, a file read. Before Promises, waiting for several such things in sequence meant nesting callbacks inside callbacks:</p>
+    <CodeBlock code={callbackHell} lang="js" />
+
+    <p>A <strong>Promise</strong> represents "a value that will exist later." It's in one of three states: pending, fulfilled (success — handled with <code>.then</code>), or rejected (failure — handled with <code>.catch</code>). Promises can be chained instead of nested:</p>
+    <CodeBlock code={promiseChain} lang="js" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Ordering food at a counter: you don't get your food immediately, you get a receipt (the Promise) that represents "food, eventually." You can keep doing other things while you wait. When it's ready, you either get your food (fulfilled) or told they're out of it (rejected).</p>
+    </div>
+
+    <p><code>async</code>/<code>await</code> is newer syntax that lets you write Promise-based code so it <em>reads</em> like ordinary top-to-bottom code, while still working exactly like the chain above underneath:</p>
+    <CodeBlock code={asyncAwait} lang="js" />
+
+    <p>This is the shape you'll write constantly once you reach the Shopify-specific courses — every route loader and action in the app template is an <code>async</code> function that <code>await</code>s the Admin API:</p>
+    <CodeBlock code={realLoaderAsync} lang="tsx" title="a preview of what's coming — Getting Started walks through this for real" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistakes</div>
+      <ul>
+        <li><b>Forgetting <code>await</code>.</b> Calling an <code>async</code> function without <code>await</code> gives you back the Promise itself, not the value it resolves to — a frequent source of "why does this object look weird" bugs.</li>
+        <li><b>No <code>try/catch</code>.</b> A rejected Promise inside an <code>async</code> function without a surrounding <code>try/catch</code> throws an unhandled error. Always wrap <code>await</code> calls that can fail.</li>
+        <li><b>Awaiting independent things one at a time.</b> If two <code>await</code> calls don't depend on each other's results, awaiting them sequentially wastes time — <code>Promise.all</code> runs them together:</li>
+      </ul>
+      <CodeBlock code={promiseAllExample} lang="js" />
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself</div>
+      <p>In a browser console, run <code>fetch("https://api.github.com/zen").then(r =&gt; r.text()).then(console.log)</code> — a real Promise chain hitting a real API. Then rewrite it as an <code>async</code> function using <code>await</code> instead, and confirm you get the same result.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>A Promise represents a value that will exist later — pending, then fulfilled or rejected.</li>
+        <li><code>async</code>/<code>await</code> is Promise-based code written to read like synchronous code.</li>
+        <li>Wrap awaited calls that can fail in <code>try/catch</code>; use <code>Promise.all</code> for independent operations.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises" target="_blank" rel="noopener">MDN — Using promises</a></li>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function" target="_blank" rel="noopener">MDN — async function</a></li>
+        <li><a href="https://javascript.info/async" target="_blank" rel="noopener">javascript.info — Promises, async/await</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="classes-and-friends">
+    <div class="chapter-num">Chapter 09</div>
+    <h2>Classes, optional chaining &amp; nullish coalescing</h2>
+    <p>JavaScript has always been able to model objects and reuse behavior between them (via something called prototypes), but <code>class</code> syntax gives that a shape most other languages already look familiar in:</p>
+    <CodeBlock code={classExample} lang="js" />
+
+    <p>Classes can extend one another with <code>extends</code>, reusing and building on a parent class's behavior via <code>super</code>:</p>
+    <CodeBlock code={classExtends} lang="js" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>A class is a template for creating objects that share the same shape and behavior. <code>new Cart(...)</code> stamps out a fresh object following the <code>Cart</code> template every time. You won't write many classes by hand on this stack (React and the Shopify app template lean heavily on plain functions and objects instead), but you'll recognize them when a library uses one.</p>
+    </div>
+
+    <h3>Optional chaining (<code>?.</code>)</h3>
+    <p>Reading a deeply nested field safely used to mean guarding every step by hand. <code>?.</code> does that in one operator — it stops and returns <code>undefined</code> the instant something in the chain is missing, instead of throwing:</p>
+    <CodeBlock code={optionalChaining} lang="js" />
+
+    <h3>Nullish coalescing (<code>??</code>)</h3>
+    <p>Similar-looking to the familiar <code>||</code> fallback operator, but with an important difference: <code>||</code> falls back on <em>any</em> falsy value (<code>0</code>, <code>""</code>, <code>false</code>, <code>null</code>, <code>undefined</code>); <code>??</code> only falls back on <code>null</code> or <code>undefined</code> specifically:</p>
+    <CodeBlock code={nullishCoalescing} lang="js" />
+
+    <div class="compare">
+      <div class="bad">
+        <h4>|| (logical OR)</h4>
+        <p>Falls back on any falsy value — including <code>0</code>, <code>""</code>, and <code>false</code>, which are often legitimate, meaningful values.</p>
+      </div>
+      <div class="good">
+        <h4>?? (nullish coalescing)</h4>
+        <p>Falls back only on <code>null</code>/<code>undefined</code> — "this value is truly absent," not "this value happens to be falsy."</p>
+      </div>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself — checkpoint</div>
+      <p>You've now covered the core syntax every later course on this site writes fluently without pausing to explain: <code>let</code>/<code>const</code>, arrow functions, template literals, destructuring, spread/rest, modules, <code>async</code>/<code>await</code>, and <code>?.</code>/<code>??</code>. Before continuing, skim through a few files in the <a href="https://github.com/Shopify/shopify-app-template-react-router" target="_blank" rel="noopener">official Shopify app template</a> on GitHub — notice how much of it you can now read. The next five chapters round out the toolkit with everything ES2016 through today added on top of this foundation.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li><code>class</code> is syntax for creating objects with shared shape/behavior; <code>extends</code>/<code>super</code> build on a parent class.</li>
+        <li><code>?.</code> safely reads a possibly-missing nested value without throwing.</li>
+        <li><code>??</code> falls back only on <code>null</code>/<code>undefined</code>, unlike <code>||</code> which falls back on any falsy value.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes" target="_blank" rel="noopener">MDN — Classes</a></li>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining" target="_blank" rel="noopener">MDN — Optional chaining (?.)</a></li>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing" target="_blank" rel="noopener">MDN — Nullish coalescing (??)</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="array-object-utilities">
+    <div class="chapter-num">Chapter 10</div>
+    <h2>Array &amp; object utilities</h2>
+    <p>ES6 (Chapters 2–9) was the big syntax update. Every year since, JavaScript has added smaller, genuinely useful methods — the kind that quietly replace a clunky old pattern with a one-liner. This chapter and the next few are a reference tour: shorter than the earlier chapters, one feature at a time, each with a support tag telling you exactly how safe it is to reach for on this stack.</p>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>The support tags mean: <strong style="color: var(--ok)">baseline</strong> = safe everywhere this site's stack runs (evergreen browsers, current Node), no compiling needed, use it freely. <strong style="color: var(--warn)">newer</strong> = still needs a quick compatibility check if you have a reason to think you'll hit an older environment — rare for an embedded Shopify app, but worth knowing.</p>
+    </div>
+
+    <h3>Array.prototype.includes()</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2016) — no compiling needed.</p>
+    <p>Checks whether an array contains a value, returning a plain boolean instead of an index you have to compare against <code>-1</code>:</p>
+    <CodeBlock code={includesEx} lang="js" />
+
+    <h3>Array.prototype.flat() &amp; flatMap()</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2019) — no compiling needed.</p>
+    <p>Flattens nested arrays, or maps and flattens in one pass:</p>
+    <CodeBlock code={flatMapEx} lang="js" />
+
+    <h3>Object.entries() &amp; Object.values()</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2017) — no compiling needed.</p>
+    <p>Turns an object into an array so you can loop, map, or filter it like any other collection:</p>
+    <CodeBlock code={entriesValuesEx} lang="js" />
+
+    <h3>Object.fromEntries()</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2019) — no compiling needed.</p>
+    <p>The reverse direction — build an object back up from an array of key/value pairs:</p>
+    <CodeBlock code={fromEntriesEx} lang="js" />
+
+    <h3>Array.prototype.at()</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2022) — no compiling needed.</p>
+    <p>Index from the end with a negative number, instead of the <code>length - 1</code> arithmetic:</p>
+    <CodeBlock code={atMethodEx} lang="js" />
+
+    <h3>Array.prototype.findLast() &amp; findLastIndex()</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2023) — no compiling needed.</p>
+    <p><code>find()</code> already existed for "the first match" — these cover "the last match" without reversing the array first:</p>
+    <CodeBlock code={findLastEx} lang="js" />
+
+    <h3>Object.hasOwn()</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2022) — no compiling needed.</p>
+    <p>A cleaner, safer replacement for the old <code>Object.prototype.hasOwnProperty.call(...)</code> dance:</p>
+    <CodeBlock code={hasOwnEx} lang="js" />
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>All seven of these are safe to use on this stack right now — no build-tool configuration needed.</li>
+        <li>They exist to replace common hand-rolled patterns (index checks, manual loops for grouping/flattening) with a direct built-in method.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array" target="_blank" rel="noopener">MDN — Array reference (every method, one page)</a></li>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object" target="_blank" rel="noopener">MDN — Object reference</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="string-number-niceties">
+    <div class="chapter-num">Chapter 11</div>
+    <h2>String &amp; number niceties</h2>
+
+    <h3>String.padStart() &amp; padEnd()</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2017) — no compiling needed.</p>
+    <CodeBlock code={padEx} lang="js" />
+
+    <h3>String.trimStart() &amp; trimEnd()</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2019) — no compiling needed.</p>
+    <CodeBlock code={trimEx} lang="js" />
+
+    <h3>String.replaceAll()</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2021) — no compiling needed.</p>
+    <p>Before this existed, replacing every occurrence in a plain string (not a regex) required an awkward global-regex workaround. Now it's direct:</p>
+    <CodeBlock code={replaceAllEx} lang="js" />
+
+    <h3>String.matchAll()</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2020) — no compiling needed.</p>
+    <CodeBlock code={matchAllEx} lang="js" />
+
+    <h3>Numeric separators</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2021) — no compiling needed.</p>
+    <p>Purely readability — the underscore is ignored by JavaScript entirely:</p>
+    <CodeBlock code={numericSeparatorEx} lang="js" />
+
+    <h3>BigInt</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2020) — no compiling needed, but rarely needed day-to-day.</p>
+    <p>A second numeric type for integers larger than regular numbers can represent precisely:</p>
+    <CodeBlock code={bigIntEx} lang="js" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Where people get lost</div>
+      <ul>
+        <li><b>Mixing BigInt with regular numbers.</b> <code>{'1n + 1'}</code> throws a <code>TypeError</code> — the two types don't mix automatically. You'll almost never need BigInt for a Shopify app (prices, quantities, and IDs from the Admin API all fit comfortably in regular numbers or strings), so treat this one as "good to recognize," not "reach for often."</li>
+      </ul>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>All of these are safe to use right now on this stack.</li>
+        <li><code>replaceAll</code> and <code>padStart</code>/<code>padEnd</code> are the two you'll actually reach for constantly; <code>matchAll</code> and <code>BigInt</code> are more situational.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" target="_blank" rel="noopener">MDN — String reference</a></li>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt" target="_blank" rel="noopener">MDN — BigInt</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="more-promise-tools">
+    <div class="chapter-num">Chapter 12</div>
+    <h2>More Promise tools</h2>
+    <p>Chapter 8 covered the core of Promises and <code>async</code>/<code>await</code>. A few more pieces got added since — mostly for handling several promises at once more precisely than plain <code>Promise.all</code> allows.</p>
+
+    <h3>.finally()</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2018) — no compiling needed.</p>
+    <p>Runs regardless of whether the promise succeeded or failed — ideal for cleanup:</p>
+    <CodeBlock code={promiseFinallyEx} lang="js" />
+
+    <h3>Promise.allSettled()</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2020) — no compiling needed.</p>
+    <p><code>Promise.all</code> (Chapter 8) rejects entirely the moment any one promise fails, discarding the rest. <code>allSettled</code> always waits for everything and reports each outcome individually:</p>
+    <CodeBlock code={allSettledEx} lang="js" />
+
+    <h3>Promise.any()</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2021) — no compiling needed.</p>
+    <p>The opposite situation — take whichever one succeeds first, only fail if they all do:</p>
+    <CodeBlock code={promiseAnyEx} lang="js" />
+
+    <h3>Top-level await</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2022) — no compiling needed, ESM modules only.</p>
+    <CodeBlock code={topLevelAwaitEx} lang="js" />
+
+    <h3>for await...of</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2018) — no compiling needed, niche use case.</p>
+    <CodeBlock code={forAwaitEx} lang="js" />
+
+    <div class="compare">
+      <div class="bad">
+        <h4>Promise.all</h4>
+        <p>Fast-fails: one rejection loses all results. Use when every result is required for the next step to make sense.</p>
+      </div>
+      <div class="good">
+        <h4>Promise.allSettled</h4>
+        <p>Never fast-fails: always returns every outcome. Use when partial success is still useful (e.g. syncing 50 products where a couple failing shouldn't block the other 48).</p>
+      </div>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li><code>.finally()</code> — cleanup that runs either way.</li>
+        <li><code>allSettled</code> — every outcome, never fast-fails; <code>any</code> — first success wins.</li>
+        <li>Top-level <code>await</code> works directly in ESM module files, no wrapping function needed.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" target="_blank" rel="noopener">MDN — Promise reference</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="small-syntax-sugar">
+    <div class="chapter-num">Chapter 13</div>
+    <h2>Small syntax sugar</h2>
+
+    <h3>Logical assignment: ||=, &amp;&amp;=, ??=</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2021) — no compiling needed.</p>
+    <p>Combines a logical check with an assignment — "assign this, but only if that condition holds":</p>
+    <CodeBlock code={logicalAssignEx} lang="js" />
+
+    <h3>globalThis</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2020) — no compiling needed.</p>
+    <CodeBlock code={globalThisEx} lang="js" />
+
+    <h3>Dynamic import()</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2020) — no compiling needed.</p>
+    <p>A static <code>import</code> (Chapter 7) always loads at the top of a file. <code>import()</code> called as a function loads a module on demand, returning a Promise — this is what powers code-splitting in Vite and most modern bundlers:</p>
+    <CodeBlock code={dynamicImportEx} lang="js" />
+
+    <h3>Private class fields (#field)</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2022) — no compiling needed.</p>
+    <p>A <code>#</code> prefix makes a class field genuinely inaccessible from outside the class — not just a naming convention, actually enforced:</p>
+    <CodeBlock code={privateFieldsEx} lang="js" />
+
+    <h3>Error cause</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline (ES2022) — no compiling needed.</p>
+    <p>Wrap a lower-level error in a more specific one without losing the original:</p>
+    <CodeBlock code={errorCauseEx} lang="js" />
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Logical assignment operators save a repetitive "check, then maybe assign" pattern into one line.</li>
+        <li>Dynamic <code>import()</code> is the mechanism behind code-splitting/lazy-loading.</li>
+        <li><code>#field</code> gives classes real, enforced private state — not just a naming convention like <code>_field</code> used to be.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Logical_AND_assignment" target="_blank" rel="noopener">MDN — Logical assignment operators</a></li>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_properties" target="_blank" rel="noopener">MDN — Private class properties</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="brand-new">
+    <div class="chapter-num">Chapter 14</div>
+    <h2>Brand-new — check before you rely on these</h2>
+    <p>These landed in the last couple of JavaScript releases. They work today in current browsers and current Node — but "current" is doing real work in that sentence, and it's worth actually checking rather than assuming, especially if a project has any reason to support older environments.</p>
+
+    <h3>Immutable array methods: toSorted(), toReversed(), toSpliced(), with()</h3>
+    <p class="support-tag caution"><span class="support-icon">⚠</span> Newer (ES2023) — widely supported in current evergreen browsers and Node 20+; verify if you have a reason to support anything older.</p>
+    <p>The classic <code>.sort()</code>/<code>.reverse()</code>/<code>.splice()</code> all mutate the original array in place, which is a frequent source of bugs. These are the same operations, returning a new array instead:</p>
+    <CodeBlock code={immutableArrayMethodsEx} lang="js" />
+
+    <h3>Object.groupBy() &amp; Map.groupBy()</h3>
+    <p class="support-tag caution"><span class="support-icon">⚠</span> Newer (ES2024) — supported in current browsers and Node 21+; check <a href="https://caniuse.com/mdn-javascript_builtins_object_groupby" target="_blank" rel="noopener">caniuse.com</a> before relying on it without a fallback.</p>
+    <CodeBlock code={groupByEx} lang="js" />
+
+    <h3>Set methods: union(), intersection(), difference()</h3>
+    <p class="support-tag caution"><span class="support-icon">⚠</span> Newer (ES2025) — shipped in current browser versions and recent Node; the newest feature in this course, double-check before depending on it.</p>
+    <CodeBlock code={setMethodsEx} lang="js" />
+
+    <h3>structuredClone()</h3>
+    <p class="support-tag good"><span class="support-icon">✓</span> Baseline since 2022 — safe to use, no compiling needed.</p>
+    <p>Not brand-new, but worth knowing alongside spread (Chapter 6): a genuine deep clone, built into the language, no library required:</p>
+    <CodeBlock code={structuredCloneEx} lang="js" />
+
+    <h3>Promise.withResolvers()</h3>
+    <p class="support-tag caution"><span class="support-icon">⚠</span> Newer (ES2024) — supported in current browsers and Node 22+; check before relying on it in an older environment.</p>
+    <CodeBlock code={promiseWithResolversEx} lang="js" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">How to actually check</div>
+      <ul>
+        <li><b><a href="https://caniuse.com/" target="_blank" rel="noopener">caniuse.com</a></b> — browser support, feature by feature.</li>
+        <li><b><a href="https://node.green/" target="_blank" rel="noopener">node.green</a></b> — the same idea, for Node.js versions.</li>
+        <li>For an embedded Shopify app specifically: merchants view Admin in current evergreen browsers, and you control the Node version in your own deployment — so in practice, everything in this chapter is safe to use on this stack today. The caution is for anyone reusing this knowledge on a project with different, less controlled targets.</li>
+      </ul>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself — course wrap-up</div>
+      <p>You've now covered ES6 through the newest additions to JavaScript, with a clear sense of what's safe to use where. Before moving on, skim through a few files in the <a href="https://github.com/Shopify/shopify-app-template-react-router" target="_blank" rel="noopener">official Shopify app template</a> on GitHub — notice how much of it you can now read fluently.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Everything through ES2022 (Chapters 10–13) is safe to use on this stack right now, no exceptions.</li>
+        <li>This chapter's features are real and usable today, but new enough to be worth a quick compatibility check outside a controlled environment like an embedded Shopify app.</li>
+        <li>caniuse.com and node.green are the two references to actually check, rather than guessing.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://github.com/tc39/proposals/blob/main/finished-proposals.md" target="_blank" rel="noopener">TC39 — finished proposals (the official list of what's landed, by year)</a></li>
+        <li><a href="https://caniuse.com/" target="_blank" rel="noopener">caniuse.com</a></li>
+        <li><a href="https://node.green/" target="_blank" rel="noopener">node.green</a></li>
+      </ul>
+    </div>
+  </section>
+</CourseLayout>

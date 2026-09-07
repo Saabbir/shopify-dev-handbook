@@ -15,6 +15,14 @@ const platformBooks = [
 const toolkitBooks = [
   {
     order: 2,
+    title: 'Modern JavaScript (ES6+)',
+    href: '/crash-courses/modern-javascript',
+    chapters: 14,
+    time: '80–95 min',
+    desc: "ES6 through today (ES2024+), for readers whose JavaScript stopped at ES5 — with a support tag on every feature so you know what's safe to use where.",
+  },
+  {
+    order: 3,
     title: 'TypeScript',
     href: '/crash-courses/typescript',
     chapters: 8,
@@ -22,7 +30,7 @@ const toolkitBooks = [
     desc: 'JavaScript with a spell-checker for your data. Every other toolkit course assumes you can read a type.',
   },
   {
-    order: 3,
+    order: 4,
     title: 'React',
     href: '/crash-courses/react',
     chapters: 8,
@@ -30,7 +38,7 @@ const toolkitBooks = [
     desc: 'Stop hand-editing the DOM. Build UI by describing what it should look like, and let React handle the rest.',
   },
   {
-    order: 4,
+    order: 5,
     title: 'React Router 7',
     href: '/crash-courses/react-router-7',
     chapters: 6,
@@ -38,7 +46,7 @@ const toolkitBooks = [
     desc: 'The framework the Shopify app template runs on: file routes, loaders, and actions — how a page gets its data.',
   },
   {
-    order: 5,
+    order: 6,
     title: 'Node.js',
     href: '/crash-courses/node',
     chapters: 7,
@@ -46,7 +54,7 @@ const toolkitBooks = [
     desc: 'JavaScript running on a server instead of a browser. Modules, npm, async/await, and how a request gets a response.',
   },
   {
-    order: 6,
+    order: 7,
     title: 'GraphQL',
     href: '/crash-courses/graphql',
     chapters: 6,
@@ -54,7 +62,15 @@ const toolkitBooks = [
     desc: "The language you'll use to ask Shopify's Admin API for exactly the data you want — no more, no less.",
   },
   {
-    order: 7,
+    order: 8,
+    title: 'Databases (SQL Fundamentals)',
+    href: '/crash-courses/databases',
+    chapters: 9,
+    time: '55–70 min',
+    desc: 'Tables, primary keys, JOINs, and core SQL — what Prisma is generating for you underneath, and why it matters when a query is slow.',
+  },
+  {
+    order: 9,
     title: 'Prisma',
     href: '/crash-courses/prisma',
     chapters: 6,
@@ -63,32 +79,36 @@ const toolkitBooks = [
   },
 ];
 
-const soon = [
+const references = [
   { group: 'Languages & Frameworks', items: [
-    { title: 'JSX', desc: 'The markup-in-JS syntax React is built on.' },
-    { title: 'Preact', desc: 'A 3KB React alternative — where it fits.' },
-    { title: 'Remix → React Router', desc: 'What happened to Remix.' },
-    { title: 'Web Components', desc: 'The standard behind extension UI.' },
-  ]},
-  { group: 'Data & Backend', items: [
-    { title: 'Databases', desc: 'Tables, keys, and core SQL, fast.' },
+    { title: 'JSX', href: '/crash-courses/jsx', chapters: 4, time: '15–20 min', desc: 'The markup-in-JS syntax React is built on — and the specific gotchas that trip up HTML habits.' },
+    { title: 'Preact', href: '/crash-courses/preact', chapters: 4, time: '12–18 min', desc: 'A ~4KB React alternative that copies its API on purpose — where it fits, and where it doesn’t.' },
+    { title: 'Remix → React Router', href: '/crash-courses/remix-to-react-router', chapters: 3, time: '8–12 min', desc: 'What happened to Remix — a naming history, not a new framework to learn.' },
+    { title: 'Web Components', href: '/crash-courses/web-components', chapters: 4, time: '15–20 min', desc: 'The browser-native standard behind Shopify’s Polaris Web Components, used in Admin and Checkout extensions.' },
   ]},
   { group: 'Tooling & Config', items: [
-    { title: 'npm scripts', desc: 'What "npm run dev" actually runs.' },
-    { title: 'npx', desc: 'Running a package without installing it.' },
-    { title: 'ESLint', desc: 'Catching bugs before you run the code.' },
-    { title: 'TOML', desc: 'The config format behind shopify.app.toml.' },
+    { title: 'npm scripts', href: '/crash-courses/npm-scripts', chapters: 4, time: '15–20 min', desc: 'What "npm run dev" actually does under the hood, and why bare command names work inside one.' },
+    { title: 'npx', href: '/crash-courses/npx', chapters: 4, time: '12–18 min', desc: 'Running a package’s command-line tool without a permanent install.' },
+    { title: 'ESLint', href: '/crash-courses/eslint', chapters: 4, time: '15–20 min', desc: 'Catching likely bugs and style issues before you ever run the code.' },
+    { title: 'TOML', href: '/crash-courses/toml', chapters: 4, time: '12–18 min', desc: 'The config format behind shopify.app.toml, read line by line.' },
   ]},
 ];
 ---
 <BaseLayout
-  title="Crash Courses — Shopify Dev Handbook"
+  title="Crash Courses — Shopify App Handbook"
   description="Beginner-first, book-style crash courses on the individual pieces the Roadmap and Getting Started pages assume you know."
   accent="violet"
+  footerNote={`Have a topic you want prioritized? Just ask — this list grows on request. Deeper coverage of every topic here also lives in the full <a href="/roadmap">Roadmap</a>.`}
 >
   <div class="hero">
+    <p class="eyebrow">Fill in the toolkit</p>
     <h1 class="page-title">Crash Courses</h1>
-    <p class="lede">Seven short books, each written for one reader: someone who knows HTML, CSS, and plain JavaScript, and nothing else on this list. No prior Shopify, React, TypeScript, or backend experience assumed anywhere.</p>
+    <p class="lede">Nine short books, each written for one reader: someone who knows HTML, CSS, and plain (pre-2015) JavaScript, and nothing else on this list — not even modern JavaScript syntax. No prior Shopify, React, TypeScript, or backend experience assumed anywhere.</p>
+    <div class="meta-row">
+      <span class="meta-chip">9 courses</span>
+      <span class="meta-chip">8 quick references</span>
+      <span class="meta-chip">$0 required</span>
+    </div>
   </div>
 
   <div class="howread">
@@ -117,7 +137,7 @@ const soon = [
     ))}
   </ol>
 
-  <div class="path-label">02–07 &middot; Learn the toolkit</div>
+  <div class="path-label">02–09 &middot; Learn the toolkit</div>
   <ol class="booklist">
     {toolkitBooks.map((b) => (
       <li>
@@ -139,30 +159,33 @@ const soon = [
   </ol>
 
   <div class="soon-head">
-    <h2>Planned, not written yet</h2>
-    <p>Shorter references for the remaining pieces the Roadmap mentions. Ask and I'll prioritize one.</p>
+    <h2>Quick References</h2>
+    <p>Shorter than a full course — one sitting, no chapter-to-chapter build-up required. Each still follows the same zero-assumed-knowledge rule and links to real docs to go deeper.</p>
   </div>
 
-  {soon.map((group) => (
+  {references.map((group) => (
     <div class="catgroup">
       <h2>{group.group}</h2>
       <div class="topicgrid">
         {group.items.map((item) => (
-          <div class="topiccard soon">
-            <h3>{item.title} <span class="soon-tag">soon</span></h3>
+          <a class="topiccard" href={item.href}>
+            <h3>{item.title}</h3>
             <p>{item.desc}</p>
-          </div>
+            <div class="topiccard-meta">
+              <span>{item.chapters} chapters</span>
+              <span class="dot">&middot;</span>
+              <span>{item.time}</span>
+            </div>
+          </a>
         ))}
       </div>
     </div>
   ))}
 
-  <footer class="sitefooter">Have a topic you want prioritized? Just ask — this list grows on request. Deeper coverage of every topic here also lives in the full <a href="/roadmap">Roadmap</a>.</footer>
 </BaseLayout>
 
 <style>
   .hero { margin-bottom: 36px; }
-  .hero .lede { max-width: 62ch; }
 
   .howread {
     background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent);
@@ -206,6 +229,11 @@ const soon = [
     font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.1rem; margin: 0 0 8px; color: var(--text);
   }
   .soon-head p { font-size: var(--fs-small); color: var(--text-dim); margin: 0; }
+
+  .topiccard-meta {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; color: var(--text-dim); margin-top: 12px;
+  }
+  .topiccard-meta .dot { margin: 0 7px; opacity: 0.6; }
 
   @media (max-width: 620px) {
     .book { flex-wrap: wrap; }

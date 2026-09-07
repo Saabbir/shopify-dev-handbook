@@ -209,14 +209,14 @@ export async function action({ request }) {
 }`;
 ---
 <CourseLayout
-  title="Prisma Crash Course — Shopify Dev Handbook"
+  title="Prisma Crash Course — Shopify App Handbook"
   description="Prisma from first principles: what an ORM is, modeling data in schema.prisma, migrations, the generated typed client, and the CRUD/upsert patterns a Shopify app uses constantly."
   accent="teal"
   courseTitle="Prisma"
   courseTagline="A typed way to talk to a real database using JavaScript objects instead of hand-written SQL. This is where your app's own data lives — everything that isn't Shopify's, like saved notes and settings."
   readTime="35–45 min"
   chapters={chapters}
-  prev={{ href: '/crash-courses/graphql', title: 'GraphQL' }}
+  prev={{ href: '/crash-courses/databases', title: 'Databases (SQL Fundamentals)' }}
 >
   <section class="chapter" id="what-is-orm">
     <div class="chapter-num">Chapter 01</div>
@@ -240,6 +240,14 @@ export async function action({ request }) {
         <li>Prisma specifically generates a typed client tailored to your exact schema.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="/crash-courses/databases">This site's Databases (SQL Fundamentals) course</a> — the raw SQL vocabulary Prisma is generating for you underneath</li>
+        <li><a href="https://www.prisma.io/docs/orm/overview/introduction/what-is-prisma" target="_blank" rel="noopener">Prisma docs — What is Prisma?</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="schema">
@@ -254,6 +262,20 @@ export async function action({ request }) {
     <div class="plain">
       <div class="plain-label">In plain English</div>
       <p>A <code>model</code> block is a table's blueprint, written the way you'd describe it out loud: "a Note has an id, a shop, a productId, a body, and an updatedAt timestamp." Everything after the field's type — starting with <code>@</code> — is an extra rule about that field, not a new field itself.</p>
+    </div>
+
+    <div class="mistakes">
+      <div class="mistakes-label">Worth knowing</div>
+      <ul>
+        <li><b><code>provider = "sqlite"</code> above is specifically the local-dev database</b> the Shopify app template ships with out of the box — zero setup, a single file on disk. A real deployed app swaps this for hosted Postgres (Neon or Supabase, both free — see the <a href="/roadmap">Roadmap</a>'s setup checklist) by changing this one line and the <code>DATABASE_URL</code> value — the schema syntax, the generated client, and every query you write stay identical either way.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.prisma.io/docs/orm/prisma-schema/overview" target="_blank" rel="noopener">Prisma docs — The Prisma schema</a></li>
+      </ul>
     </div>
   </section>
 
@@ -275,6 +297,18 @@ export async function action({ request }) {
         <li><b>Editing <code>schema.prisma</code> and expecting the database to already match.</b> Nothing changes in the real database (or the typed client) until you actually run <code>migrate dev</code> — the schema file alone is just a plan.</li>
       </ul>
     </div>
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>If you've been through the <a href="/crash-courses/databases">Databases course</a>, the generated SQL above will look slightly different from what you learned there — this migration targets SQLite (this schema's local-dev provider), while Databases taught Postgres syntax throughout. The differences are small dialect details (SQLite's <code>TEXT</code> primary key here vs. Postgres's <code>SERIAL</code>/UUID approach there) — the underlying ideas (<code>CREATE TABLE</code>, columns, constraints, indexes) are exactly the same, and a production migration against Postgres would read much closer to what that course showed.</p>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.prisma.io/docs/orm/prisma-migrate/getting-started" target="_blank" rel="noopener">Prisma docs — Migrate</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="client">
@@ -290,6 +324,13 @@ export async function action({ request }) {
     <div class="tryit">
       <div class="tryit-label">✳ Try it yourself</div>
       <p>Open <code>node_modules/@prisma/client</code> in a real Shopify app project (after running a migration at least once) and skim the generated types for one of your models. Seeing that this is genuinely just ordinary, readable TypeScript — not some opaque black box — demystifies a lot of "where do these types even come from" confusion.</p>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.prisma.io/docs/orm/prisma-client" target="_blank" rel="noopener">Prisma docs — Prisma Client</a></li>
+      </ul>
     </div>
   </section>
 
@@ -316,6 +357,13 @@ export async function action({ request }) {
       <div class="tryit-label">✳ Try it yourself</div>
       <p>Notice the <code>where</code> key in the upsert example is <code>shop_productId</code>, not two separate keys. That name comes directly from <code>@@unique([shop, productId])</code> in the schema — Prisma joins the field names with an underscore to build a matcher for the whole compound constraint at once.</p>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.prisma.io/docs/orm/prisma-client/queries/crud" target="_blank" rel="noopener">Prisma docs — CRUD</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="relations">
@@ -341,9 +389,16 @@ export async function action({ request }) {
       </ul>
     </div>
 
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://www.prisma.io/docs/orm/prisma-client/queries/relation-queries" target="_blank" rel="noopener">Prisma docs — Relation queries</a></li>
+      </ul>
+    </div>
+
     <div class="tryit">
-      <div class="tryit-label">✳ You've finished the crash courses</div>
-      <p>That's every course, TypeScript through Prisma — the exact stack behind the <a href="/getting-started">Getting Started</a> build. If you haven't done that walkthrough yet, now's the moment: every piece of it should read as familiar rather than new. Or head to the <a href="/roadmap">Roadmap</a> for the full structured curriculum these courses were distilled from.</p>
+      <div class="tryit-label">✳ You've finished the toolkit courses</div>
+      <p>That's the full toolkit, Modern JavaScript through Prisma — the exact stack behind the <a href="/getting-started">Getting Started</a> build. If you haven't done that walkthrough yet, now's the moment: every piece of it should read as familiar rather than new. Or head to the <a href="/roadmap">Roadmap</a> for the full structured curriculum these courses were distilled from, or back to the <a href="/crash-courses">Crash Courses hub</a> for the shorter quick references (JSX, npm scripts, and the rest).</p>
     </div>
   </section>
 </CourseLayout>

@@ -1,0 +1,226 @@
+---
+import CourseLayout from '../../layouts/CourseLayout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const chapters = [
+  { id: 'linter-vs-typechecker', title: 'A linter vs. a type checker — different jobs' },
+  { id: 'reading-config', title: 'Reading a config file' },
+  { id: 'running-it', title: 'Running it, and reading a violation' },
+  { id: 'autofix-editor', title: 'Auto-fixing & catching problems as you type' },
+];
+
+const catchesDifferentThingsCode = `// Three different problems, three different tools catch them:
+
+const price: number = "19.99";
+// TypeScript catches this — a string assigned where a number was
+// declared. A TYPE error, caught before the code ever runs.
+
+if (userAge = 18) { /* ... */ }
+// ESLint catches this — assignment (=) where comparison (===) was
+// almost certainly meant. Valid JavaScript, valid types, runs
+// without crashing, and is very likely a real bug anyway.
+
+function total(price, qty) { return pryce * qty; }
+// A typo in a variable name. Plain JavaScript throws this at
+// RUNTIME, the moment this line executes. TypeScript (if used)
+// would also catch it — "pryce" isn't a declared variable.`;
+
+const noConsoleCode = `// Plain JavaScript has no opinion on whether this is fine to ship:
+console.log("debugging this later");
+// It's valid, it runs, it does exactly what it says. ESLint can
+// still flag it — not because it's WRONG, but because a team may
+// have decided a stray console.log is usually leftover debugging
+// output that shouldn't reach production. This is what "style/
+// convention," as opposed to "correctness," means in linting.`;
+
+const configFileCode = `// eslint.config.js — the current ("flat config") format. This is
+// the actual file, read top to bottom, that decides every rule:
+import js from "@eslint/js";
+import tseslint from "typescript-eslint";
+
+export default [
+  js.configs.recommended,       // a curated bundle of core JS rules
+  ...tseslint.configs.recommended, // adds TypeScript-aware rules
+  {
+    rules: {
+      // Override or add individual rules here. The value controls
+      // severity: "off" (0), "warn" (1), or "error" (2) — a
+      // 2-element array lets you also pass the rule its own options.
+      "no-console": "warn",
+      "eqeqeq": "error",
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+    },
+  },
+];`;
+
+const extendsExplainedCode = `// "js.configs.recommended" and "tseslint.configs.recommended" are
+// each just a PLAIN OBJECT — someone already decided on a
+// reasonable set of rules and packaged it up so you don't have to
+// list hundreds of rules by hand. Spreading them into the config
+// array (the "..." before tseslint.configs.recommended) is exactly
+// the same array-spread syntax from the Modern JavaScript course —
+// no special config-file magic, just plain JS array/object
+// operations building up a list of rule sets.`;
+
+const runLintCode = `npx eslint .
+// Lints every file in the current directory (respecting whatever
+// eslint.config.js says, plus any .gitignore-style ignore rules).
+// Exits with a non-zero status code if any rule with severity
+// "error" fired — this is exactly what lets CI pipelines and the
+// "prelint"/"prebuild" hooks from the npm scripts reference treat
+// a lint failure as a real, build-blocking failure.`;
+
+const violationOutputCode = `/src/routes/app.products.tsx
+  12:9   error    'productId' is assigned a value but never used  no-unused-vars
+  24:3   warning  Unexpected console statement                    no-console
+
+✖ 2 problems (1 error, 1 warning)
+// Read left to right: file path, then line:column, severity,
+// a plain-English description, and the exact rule name that
+// fired — search that rule name in ESLint's own docs (or the
+// plugin that defines it) for what it checks and why.`;
+
+const autofixCode = `npx eslint . --fix
+// Many rules (consistent quote style, unused import removal,
+// spacing) have a safe, unambiguous fix ESLint can apply itself.
+// --fix rewrites those files in place. Rules that require a real
+// judgment call (like the reassignment-vs-comparison example
+// above) are NEVER auto-fixed — ESLint reports them and leaves the
+// decision to you, since guessing wrong could silently change what
+// the code does.`;
+---
+<CourseLayout
+  title="ESLint Quick Reference — Shopify App Handbook"
+  description="What a linter actually checks that a type checker doesn't, how to read a flat eslint.config.js file (rules, severities, extends/plugins), running ESLint and reading a violation message, and what --fix will and won't touch automatically."
+  accent="violet"
+  courseTitle="ESLint"
+  courseTagline="A tool that reads your code without running it, looking for real bugs a type checker can't catch (like = where === was meant) and style/convention issues a team has agreed to enforce."
+  readTime="15–20 min"
+  kind="Quick Reference"
+  chapters={chapters}
+  prev={{ href: '/crash-courses/npx', title: 'npx' }}
+  next={{ href: '/crash-courses/toml', title: 'TOML' }}
+>
+  <section class="chapter" id="linter-vs-typechecker">
+    <div class="chapter-num">Reference</div>
+    <h2>A linter vs. a type checker — different jobs</h2>
+    <p>If you've read the <a href="/crash-courses/typescript">TypeScript course</a>, it's easy to assume ESLint does the same kind of checking. It doesn't — the two tools catch genuinely different classes of problem:</p>
+    <CodeBlock code={catchesDifferentThingsCode} lang="ts" />
+
+    <p>A linter also flags things that aren't bugs at all — just conventions a team has agreed to follow, for readability or consistency rather than correctness:</p>
+    <CodeBlock code={noConsoleCode} lang="js" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>TypeScript asks "does this value match the shape I declared?" ESLint asks a much broader question: "does this code do something that's usually a mistake, or break a rule this team agreed to follow?" Neither tool replaces the other — a real project typically runs both, and a Shopify app template ships with ESLint configured from the start for exactly this reason.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>TypeScript checks that values match their declared types, before the code runs.</li>
+        <li>ESLint checks for likely-bug patterns and team conventions, in both plain JS and TS — a separate, complementary kind of check.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://eslint.org/docs/latest/use/getting-started" target="_blank" rel="noopener">ESLint docs — Getting Started</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="reading-config">
+    <div class="chapter-num">Reference</div>
+    <h2>Reading a config file</h2>
+    <p>ESLint's rules for a project live in <code>eslint.config.js</code> — an array of configuration objects, read and merged top to bottom:</p>
+    <CodeBlock code={configFileCode} lang="js" title="eslint.config.js" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Each entry in that array is a bundle of rule decisions. <code>js.configs.recommended</code> isn't special syntax — it's a plain JavaScript object someone already filled in with sensible defaults, so a new project doesn't start from zero. Your own <code>rules</code> block, listed after it, overrides anything you want to change.</p>
+    </div>
+    <CodeBlock code={extendsExplainedCode} lang="text" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Trying to memorize hundreds of individual rule names.</b> You don't need to — start from a recommended bundle (as above) and only add or override the handful of rules a project specifically cares about.</li>
+      </ul>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li><code>eslint.config.js</code> exports an array of config objects, merged top to bottom.</li>
+        <li>A rule's value is its severity: <code>"off"</code>, <code>"warn"</code>, or <code>"error"</code> — optionally paired with its own settings in a 2-element array.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://eslint.org/docs/latest/use/configure/configuration-files" target="_blank" rel="noopener">ESLint docs — Configuration Files</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="running-it">
+    <div class="chapter-num">Reference</div>
+    <h2>Running it, and reading a violation</h2>
+    <CodeBlock code={runLintCode} lang="bash" />
+
+    <p>A real violation reads left to right — file, position, severity, description, and the specific rule that fired:</p>
+    <CodeBlock code={violationOutputCode} lang="text" />
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Try it yourself</div>
+      <p>Search a rule name like <code>no-unused-vars</code> directly on eslint.org — every built-in rule has its own documentation page explaining exactly what it checks, why, and showing both a passing and a failing example.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li><code>npx eslint .</code> lints the current directory and exits non-zero if any <code>"error"</code>-severity rule fired.</li>
+        <li>A violation message names the exact rule that fired — that name is searchable in ESLint's own docs for the full explanation.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://eslint.org/docs/latest/rules/" target="_blank" rel="noopener">ESLint — full rules reference</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="autofix-editor">
+    <div class="chapter-num">Reference</div>
+    <h2>Auto-fixing &amp; catching problems as you type</h2>
+    <p>Some violations have one unambiguous correct fix — ESLint can apply those itself:</p>
+    <CodeBlock code={autofixCode} lang="bash" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Expecting <code>--fix</code> to resolve every warning.</b> Only mechanical, unambiguous fixes (spacing, quote style, unused imports) are auto-fixable. A likely-logic-bug rule (like <code>=</code> vs. <code>===</code>) is always left for you to decide — auto-fixing it could silently change what the program does.</li>
+      </ul>
+    </div>
+
+    <p>Most editors (including VS Code, via its built-in or an installed ESLint extension) run these same checks live, underlining a violation the moment it's typed — the terminal command above is exactly what's running behind that red squiggly line, just triggered on every keystroke instead of on demand.</p>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li><code>--fix</code> auto-applies only unambiguous, safe fixes — never a rule that requires a judgment call.</li>
+        <li>An editor's live linting is running the same rules, just continuously rather than as a one-off terminal command.</li>
+      </ul>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Where to go next</div>
+      <p>Continue to <a href="/crash-courses/toml">TOML</a> — the config file format behind <code>shopify.app.toml</code>, one of the very first files the CLI generates for you.</p>
+    </div>
+  </section>
+</CourseLayout>

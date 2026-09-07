@@ -2,13 +2,19 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 <BaseLayout
-  title="Shopify App Extensions Guide — Shopify Dev Handbook"
+  title="Shopify App Extensions Guide — Shopify App Handbook"
   description="Everything your embedded admin app can't reach — the storefront, checkout, POS, and Shopify Admin's own surfaces — is reached through extensions instead."
   accent="green"
+  footerNote={`Extension targets, APIs, and size limits change more often than almost anything else in the Shopify ecosystem — always cross-check the <a href="https://shopify.dev/docs/apps/build/app-extensions" target="_blank" rel="noopener">official app extensions overview</a> and the <a href="/changelog">Changelog</a> before shipping.`}
 >
   <header>
+    <p class="eyebrow">Reach further</p>
     <h1 class="page-title">Shopify App Extensions</h1>
     <p class="lede">Everything your embedded admin app can't reach — the storefront, checkout, POS, and Shopify Admin's own surfaces — is reached through extensions instead. This page is the dedicated deep dive the Roadmap's extensions module only summarizes.</p>
+    <div class="meta-row">
+      <span class="meta-chip">4 extension families</span>
+      <span class="meta-chip">$0 required</span>
+    </div>
   </header>
 
   <div class="concept">
@@ -232,9 +238,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </div>
   </div>
 
-  <footer class="sitefooter">
-    Extension targets, APIs, and size limits change more often than almost anything else in the Shopify ecosystem — always cross-check the <a href="https://shopify.dev/docs/apps/build/app-extensions" target="_blank" rel="noopener">official app extensions overview</a> and the <a href="/changelog">Changelog</a> before shipping.
-  </footer>
 </BaseLayout>
 
 <style>

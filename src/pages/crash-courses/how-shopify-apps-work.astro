@@ -59,14 +59,14 @@ export async function action({ request }) {
 }`;
 ---
 <CourseLayout
-  title="How Shopify Apps Work — Shopify Dev Handbook"
+  title="How Shopify Apps Work — Shopify App Handbook"
   description="The conceptual foundation every other course on this site assumes: what a Shopify app actually is, how installation and permissions work, and how an app talks to a store. No code — just the shape of the platform, explained from zero."
   accent="gold"
   courseTitle="How Shopify Apps Work"
   courseTagline="Before any code: what a Shopify app actually is, how a merchant installs one, and how it's allowed to touch a store's data. Every other course on this site assumes you've read this one."
   readTime="45–55 min"
   chapters={chapters}
-  next={{ href: '/crash-courses/typescript', title: 'TypeScript' }}
+  next={{ href: '/crash-courses/modern-javascript', title: 'Modern JavaScript (ES6+)' }}
 >
   <section class="chapter" id="what-is-an-app">
     <div class="chapter-num">Chapter 01</div>
@@ -88,6 +88,13 @@ export async function action({ request }) {
         <li>A store has a public storefront and a private Admin (back office) — apps extend the Admin.</li>
         <li>An app's code runs on a server <em>you</em> control, not on Shopify's servers — Shopify only displays it.</li>
         <li>This is the architectural fact everything else in this course builds on.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://shopify.dev/docs/apps/build" target="_blank" rel="noopener">Shopify docs — Build apps overview</a></li>
       </ul>
     </div>
   </section>
@@ -134,6 +141,13 @@ export async function action({ request }) {
         <li>This site builds embedded apps throughout — the current recommended default, regardless of distribution.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://shopify.dev/docs/apps/launch/distribution" target="_blank" rel="noopener">Shopify docs — App distribution</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="sandboxes">
@@ -162,6 +176,13 @@ export async function action({ request }) {
       <ul>
         <li>Partner account = your developer identity; free; where apps and stores are created and managed.</li>
         <li>Development store = a free, fully functional practice store, isolated from any real business.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://shopify.dev/docs/apps/build/scaffold-app#step-1-create-a-development-store" target="_blank" rel="noopener">Shopify docs — Development stores</a></li>
       </ul>
     </div>
   </section>
@@ -199,6 +220,14 @@ export async function action({ request }) {
         <li><code>authenticate.admin()</code> in the app template handles every step of this for you.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://shopify.dev/docs/apps/auth/oauth" target="_blank" rel="noopener">Shopify docs — OAuth</a></li>
+        <li><a href="https://www.oauth.com/oauth2-servers/getting-ready/" target="_blank" rel="noopener">oauth.com — an OAuth primer (platform-agnostic)</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="scopes-tokens">
@@ -225,6 +254,14 @@ export async function action({ request }) {
         <li>Tokens are secrets — server-side only, never exposed to the browser.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://shopify.dev/docs/api/usage/access-scopes" target="_blank" rel="noopener">Shopify docs — Access scopes reference</a></li>
+        <li><a href="/crash-courses/toml">This site's TOML quick reference</a> — the file format <code>shopify.app.toml</code> is written in</li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="admin-api">
@@ -245,6 +282,14 @@ export async function action({ request }) {
         <li>The Admin API is how your app reads and writes actual store data, authenticated by the access token.</li>
         <li>It's GraphQL-only for new apps, and rate-limited by query cost, not a flat request count.</li>
         <li>See the <a href="/crash-courses/graphql">GraphQL course</a> for how to actually write a query.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://shopify.dev/docs/api/admin-graphql" target="_blank" rel="noopener">Shopify docs — Admin GraphQL API reference</a></li>
+        <li><a href="https://shopify.dev/docs/api/usage/limits" target="_blank" rel="noopener">Shopify docs — API rate limits</a></li>
       </ul>
     </div>
   </section>
@@ -275,6 +320,14 @@ export async function action({ request }) {
         <li>Shopify signs every webhook; <code>authenticate.webhook()</code> verifies that signature before your handler code runs.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://shopify.dev/docs/apps/build/webhooks" target="_blank" rel="noopener">Shopify docs — Webhooks</a></li>
+        <li><a href="https://shopify.dev/docs/apps/build/privacy-law-compliance" target="_blank" rel="noopener">Shopify docs — Privacy law (GDPR) compliance webhooks</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="billing">
@@ -302,6 +355,13 @@ export async function action({ request }) {
         <li>Test charges let you build and verify billing on a development store with zero real money involved.</li>
       </ul>
     </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://shopify.dev/docs/apps/launch/billing" target="_blank" rel="noopener">Shopify docs — Billing</a></li>
+      </ul>
+    </div>
   </section>
 
   <section class="chapter" id="extensions-bridge">
@@ -316,9 +376,16 @@ export async function action({ request }) {
       <p>Your app is a room you built and furnished yourself, that Shopify lets a merchant walk into. An extension is more like a poster you're allowed to hang in one of Shopify's <em>own</em> rooms — you don't control the room, only what's on that one spot of wall, and you have to follow Shopify's rules about posters.</p>
     </div>
 
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://shopify.dev/docs/api/app-extensions" target="_blank" rel="noopener">Shopify docs — App extensions overview</a></li>
+      </ul>
+    </div>
+
     <div class="tryit">
       <div class="tryit-label">✳ You've finished this course</div>
-      <p>You now have the full conceptual map: what an app is, who can install one and where it renders, the two sandboxes you build in, how installation and permissions actually work, how your app talks to a store and stays in sync with it, how billing works, and where extensions fit. Everything from here is <em>how</em>, not <em>what</em> — head into the <a href="/crash-courses/typescript">technical crash courses</a> for the pieces you're missing, or straight to <a href="/getting-started">Getting Started</a> to build a real one. The full <a href="/extensions">Extensions</a> page is the deep dive on everything introduced in this chapter.</p>
+      <p>You now have the full conceptual map: what an app is, who can install one and where it renders, the two sandboxes you build in, how installation and permissions actually work, how your app talks to a store and stays in sync with it, how billing works, and where extensions fit. Everything from here is <em>how</em>, not <em>what</em> — head into <a href="/crash-courses/modern-javascript">Modern JavaScript</a>, the first of the technical crash courses, for the pieces you're missing, or straight to <a href="/getting-started">Getting Started</a> to build a real one. The full <a href="/extensions">Extensions</a> page is the deep dive on everything introduced in this chapter.</p>
     </div>
   </section>
 </CourseLayout>

@@ -1,0 +1,209 @@
+---
+import CourseLayout from '../../layouts/CourseLayout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const chapters = [
+  { id: 'what-npx-solves', title: 'What npx solves' },
+  { id: 'three-ways', title: 'Three ways to run the same tool' },
+  { id: 'reading-real-commands', title: 'Reading real npx commands' },
+  { id: 'security-note', title: 'A security note worth taking seriously' },
+];
+
+const oldWayCode = `// Before npx existed (npm 5.2+, 2017), running a package's
+// command-line tool just once meant installing it globally first
+// — even for something you'd run exactly one time:
+npm install -g create-react-app
+create-react-app my-app
+// Now "create-react-app" is a global tool on your machine forever,
+// slowly going out of date, even though you likely only ever
+// needed it for that one moment of creating a project.`;
+
+const npxWayCode = `// npx downloads the package to a temporary cache, runs it once,
+// and doesn't add it to your project or install it globally:
+npx create-vite my-app
+// No lingering global install. Next time you run this, npx
+// fetches whatever the CURRENT version is — you're never stuck
+// running an old one without realizing it.`;
+
+const threeWaysCode = `// Three genuinely different ways the exact same tool can run,
+// and when each one applies:
+
+// 1. Global install — available everywhere, any project, forever,
+//    until you update or remove it yourself:
+npm install -g @shopify/cli
+shopify app dev
+// Right for a tool you use constantly, across many projects — the
+// Shopify CLI itself is installed this way (see Getting Started).
+
+// 2. A project's own devDependency, run through npm (see the npm
+//    scripts reference) — installed once per project, version
+//    pinned in package.json, exact same for every teammate:
+npm install --save-dev eslint
+npm run lint          // internally runs: eslint .
+
+// 3. npx — no install at all, fetched fresh (or reused from a
+//    short-lived local cache) each time you run it:
+npx eslint .
+// Right for a one-off command, or scaffolding a brand-new project
+// where nothing is installed yet.`;
+
+const localFirstCode = `// One detail worth knowing: if a package IS already installed in
+// the current project (as a devDependency, via npm install), npx
+// uses THAT local copy instead of fetching anything — it checks
+// node_modules/.bin first, exactly the folder from the npm scripts
+// reference, before ever reaching out to the registry:
+npx eslint .
+// If eslint is already a devDependency here, this runs the exact
+// same local copy "npm run lint" would — npx isn't always a
+// network fetch, it's "run this, checking locally installed first."`;
+
+const shopifyCliCode = `// The Shopify CLI is normally installed globally (see Getting
+// Started, Step 1) — but you'll also see it invoked through npx in
+// some docs and templates, particularly for a first-time run
+// before any global install exists yet:
+npx shopify app dev
+// Functionally the same result as "shopify app dev" once the CLI
+// is installed globally — npx is just an alternate path to get
+// there without a separate install step first.`;
+
+const versionPinCode = `// Pin an exact version instead of "whatever's newest" by adding
+// @<version> to the package name:
+npx eslint@9 .
+npx create-vite@latest my-app
+// Useful when a tutorial or a project's own docs specify an exact
+// version, or when you're deliberately checking behavior against
+// an older release.`;
+
+const securityRiskCode = `// npx (and "npm install", for that matter) both run arbitrary
+// code from the npm registry — anyone can publish a package there.
+// Before running an unfamiliar package:
+npx some-package-you-just-heard-about
+// ...it's worth a moment's thought: does this genuinely come from
+// a source you trust (an official org's docs, a widely-used tool),
+// or is it a random name from a link/chat message? A malicious or
+// compromised package doesn't need a security hole in npm itself
+// to cause damage — its own install/run step already has full
+// access to whatever your user account can touch.`;
+---
+<CourseLayout
+  title="npx Quick Reference — Shopify App Handbook"
+  description="What npx actually solves (running a package's CLI tool without a permanent global install), how it differs from a global install and a project's own devDependency, reading real npx commands from docs and templates, and a security note on running unfamiliar packages."
+  accent="gold"
+  courseTitle="npx"
+  courseTagline="A way to run a package's command-line tool without installing it globally first — fetched fresh (or reused from what's already local), used, and not left behind cluttering your machine."
+  readTime="12–18 min"
+  kind="Quick Reference"
+  chapters={chapters}
+  prev={{ href: '/crash-courses/npm-scripts', title: 'npm scripts' }}
+  next={{ href: '/crash-courses/eslint', title: 'ESLint' }}
+>
+  <section class="chapter" id="what-npx-solves">
+    <div class="chapter-num">Reference</div>
+    <h2>What npx solves</h2>
+    <p>Before npx shipped with npm (2017), running a command-line tool you only needed once — scaffolding a new project, say — still meant installing it globally first:</p>
+    <CodeBlock code={oldWayCode} lang="bash" />
+    <p>npx runs the same tool without leaving a permanent global install behind:</p>
+    <CodeBlock code={npxWayCode} lang="bash" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p>Think of a global install as buying a tool for your garage — worth it for something you'll reach for constantly. <code>npx</code> is more like borrowing the exact same tool for five minutes and handing it back — right for something you need once, or need to be certain is the latest version every single time.</p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li><code>npx &lt;package&gt;</code> runs a package's command-line tool without permanently installing it globally.</li>
+        <li>It ships bundled with npm itself — no separate install needed to use it.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="https://docs.npmjs.com/cli/v10/commands/npx" target="_blank" rel="noopener">npm docs — npx</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="three-ways">
+    <div class="chapter-num">Reference</div>
+    <h2>Three ways to run the same tool</h2>
+    <p>A command-line tool like ESLint or the Shopify CLI can genuinely be run three different ways — knowing which is which clears up a lot of confusing tutorial instructions:</p>
+    <CodeBlock code={threeWaysCode} lang="bash" />
+
+    <p>One detail that surprises people: npx checks whether the package is already installed locally in the current project before fetching anything from the network at all:</p>
+    <CodeBlock code={localFirstCode} lang="bash" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Assuming <code>npx</code> always downloads something over the network.</b> If the package is already a local <code>devDependency</code>, npx runs that exact copy — same as the <code>.bin</code> mechanism from the npm scripts reference — with no fetch involved.</li>
+      </ul>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>Global install: for a tool used constantly, across many projects (the Shopify CLI, per Getting Started).</li>
+        <li>Local devDependency + <code>npm run</code>: for a tool this specific project depends on, version-pinned for every teammate.</li>
+        <li><code>npx</code>: for a one-off command, or scaffolding a brand-new project where nothing is installed yet — and it reuses a local copy first if one already exists.</li>
+      </ul>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="/crash-courses/npm-scripts">This site's npm scripts reference</a> — the <code>.bin</code> mechanism npx also relies on</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="reading-real-commands">
+    <div class="chapter-num">Reference</div>
+    <h2>Reading real npx commands</h2>
+    <p>Getting Started has you install the Shopify CLI globally, but you'll also see it invoked through <code>npx</code> in some docs, especially before that install has happened yet:</p>
+    <CodeBlock code={shopifyCliCode} lang="bash" />
+
+    <p>Add <code>@&lt;version&gt;</code> to run a specific version instead of whatever's currently newest:</p>
+    <CodeBlock code={versionPinCode} lang="bash" />
+
+    <div class="plain">
+      <div class="plain-label">In plain English</div>
+      <p><code>npx shopify app dev</code> and (after a global install) plain <code>shopify app dev</code> end up running the exact same program — the difference is entirely in how that program got onto your machine for this one run, not in what it does once it's running.</p>
+    </div>
+
+    <div class="further">
+      <div class="further-label">Go deeper</div>
+      <ul>
+        <li><a href="/getting-started">This site's Getting Started walkthrough</a> — where the global-install path is used step by step</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter" id="security-note">
+    <div class="chapter-num">Reference</div>
+    <h2>A security note worth taking seriously</h2>
+    <p><code>npx</code> (like <code>npm install</code>) runs real code, published by whoever owns that package name on the npm registry — there's no automatic review process guaranteeing every package is safe:</p>
+    <CodeBlock code={securityRiskCode} lang="bash" />
+
+    <div class="mistakes">
+      <div class="mistakes-label">Common mistake</div>
+      <ul>
+        <li><b>Running an unfamiliar package name from a link or chat message without a second thought.</b> Stick to packages named directly in official docs (like <code>shopify</code>, <code>create-vite</code>, <code>eslint</code>) or ones you already recognize — the same caution you'd apply to running any downloaded executable applies here, since a package's code runs with your own user account's permissions the moment it's executed.</li>
+      </ul>
+    </div>
+
+    <div class="recap">
+      <div class="recap-label">Recap</div>
+      <ul>
+        <li>npx executes real code from the npm registry — treat an unfamiliar package name with the same caution as any other executable you didn't write yourself.</li>
+      </ul>
+    </div>
+
+    <div class="tryit">
+      <div class="tryit-label">✳ Where to go next</div>
+      <p>Continue to <a href="/crash-courses/eslint">ESLint</a> — a tool you'll very often run via exactly the mechanisms covered here (a global install, a project devDependency through <code>npm run</code>, or a one-off <code>npx</code> call).</p>
+    </div>
+  </section>
+</CourseLayout>
